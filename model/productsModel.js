@@ -1,0 +1,138 @@
+const mongoose = require("mongoose");
+const { FLOAT } = require("sequelize");
+const Schema = mongoose.Schema;
+const uuid = require("uuid");
+const schema = new Schema(
+  {
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
+    subcategory: {
+      type: Schema.Types.ObjectId,
+      ref: "SubCategory",
+      required: true,
+    },
+    name: {
+      type: String,
+    },
+    title: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    longDescription: {
+      type: String,
+      required: true,
+      default: "",
+    },
+    isColor: {
+      type: Boolean,
+      default: true,
+    },
+    variant: [
+      {
+        colorName: { type: String, default: "" },
+        colorHex: { type: String, default: "" },
+        actualPrice: { type: Number, required: true, min: 0, default: 0 },
+        discountedPrice: { type: Number, required: true, min: 0, default: 0 },
+        quantity: { type: Number, required: true, min: 0, default: 0 },
+        sku: { type: String, required: true, unique: true },
+        size: [String],
+      },
+    ],
+    thumbnail: {
+      type: String,
+    },
+    images: [String],
+    vendor: {
+      type: String,
+      required: true,
+      default: "",
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    isFeatured: {
+      type: Boolean,
+      default: true,
+    },
+    isSale: {
+      type: Boolean,
+      default: false,
+    },
+    isDeal: {
+      type: Boolean,
+      default: false,
+    },
+    inStock: {
+      type: Boolean,
+      default: true,
+    },
+    sequence: {
+      type: Number,
+      default: 0,
+    },
+    ratingCount: {
+      type: Number,
+      default: 0,
+    },
+    ratingNumber: {
+      type: Number,
+      default: 0,
+    },
+    isFavourite: {
+      type: Boolean,
+      default: false,
+    },
+    isTaxable: {
+      type: Boolean,
+      default: false,
+    },
+    taxHead: {
+      type: Schema.Types.ObjectId,
+      ref: "TaxHead",
+      default: null,
+    },
+    taxType: {
+      type: Schema.Types.ObjectId,
+      ref: "TaxType",
+      default: null,
+    },
+    isPercentage: {
+      type: Boolean,
+      default: false,
+    },
+    taxAmount: {
+      type: Number,
+      default: 0,
+    },
+    metaData: [String],
+    metaDescription: [String],
+    tags: {
+      type: String,
+    },
+    addons: [
+      {
+        product: {
+          type: Schema.Types.ObjectId,
+          ref: "Product",
+          default: "",
+        },
+        sku: {
+          type: String,
+          default: "",
+        },
+      },
+    ],
+  },
+  { timestamps: true }
+);
+
+const productsModel = new mongoose.model("Product", schema);
+module.exports = productsModel;
