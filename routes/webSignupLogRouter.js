@@ -11,7 +11,7 @@ webSignupLogRouter.get(
     if (result.length !== 0) {
       return res.status(200).send({ msg: "users", data: result });
     } else {
-      return res.status(400).send({ msg: "Users Not Found" });
+      return res.status(400).send({ msg: "Users Not Found", data: result });
     }
   })
 );
