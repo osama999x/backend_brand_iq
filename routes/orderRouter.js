@@ -143,7 +143,7 @@ orderRouter.post(
       var trackingId = Math.floor(Math.random() * 100000 + 100000)
         .toString()
         .substring(1);
-      trackingId = `ZStore-${trackingId}`;
+      trackingId = `MSAFA-${trackingId}`;
       const result = await orderServices.add(
         customer,
         product,
