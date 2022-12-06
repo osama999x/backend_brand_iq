@@ -331,20 +331,22 @@ const orderServices = {
     if (result) {
       //awarder with points to Order Holder
       let getPointPerOrder = await pointManageModel.find({});
-      pointOrderPrice = getPointPerOrder[0].pointOrderPrice;
-      pointPerOrder = getPointPerOrder[0].pointPerOrder;
-      let point = Math.ceil(orderBill / pointOrderPrice);
-      point = point * pointPerOrder;
-      const data = new pointModel({
-        customer: mongoose.Types.ObjectId(customerId),
-        points: point,
-        orderId: orderId,
-      });
-      await data.save();
-      await customerModel.findOneAndUpdate(
-        { _id: customerId },
-        { $inc: { points: +point } }
-      );
+      if (getPointPerOrder) {
+        pointOrderPrice = getPointPerOrder[0].pointOrderPrice;
+        pointPerOrder = getPointPerOrder[0].pointPerOrder;
+        let point = Math.ceil(orderBill / pointOrderPrice);
+        point = point * pointPerOrder;
+        const data = new pointModel({
+          customer: mongoose.Types.ObjectId(customerId),
+          points: point,
+          orderId: orderId,
+        });
+        await data.save();
+        await customerModel.findOneAndUpdate(
+          { _id: customerId },
+          { $inc: { points: +point } }
+        );
+      }
       //if order product is promotionlist then save into promorionBuyerLagModel
       var productLength = product.length;
       for (let i = 0; i < productLength; i++) {
@@ -391,32 +393,37 @@ const orderServices = {
         { _id: customerId },
         { points: 1 }
       );
-      customerPoints = customerPoints.points;
-      //var customerId = result._id;
-      const membershipCategories = ["Silver", "Gold", "Platinum", "Diamond"];
-      for (var category of membershipCategories) {
-        //category=category.membershipCategories;
-        var currentCategory = await membershipModel.findOne(
-          { membershipCategory: { $in: category } },
-          { thresholdFrom: 1, thresholdTo: 1, membershipCategory: 1 }
-        );
-        thresholdFrom = currentCategory.thresholdFrom;
-        thresholdTo = currentCategory.thresholdTo;
-        category = currentCategory.membershipCategory;
-        _id = currentCategory._id;
-        if (customerPoints >= thresholdFrom && customerPoints <= thresholdTo) {
-          await customerModel.findOneAndUpdate(
-            { _id: { $in: customerId } },
-            { membershipCategory: category }
+      if (customerPoints) {
+        customerPoints = customerPoints.points;
+        //var customerId = result._id;
+        const membershipCategories = ["Silver", "Gold", "Platinum", "Diamond"];
+        for (var category of membershipCategories) {
+          //category=category.membershipCategories;
+          var currentCategory = await membershipModel.findOne(
+            { membershipCategory: { $in: category } },
+            { thresholdFrom: 1, thresholdTo: 1, membershipCategory: 1 }
           );
-          const data = new customerMembershipModel({
-            customer: customerId,
-            membershipId: _id,
-            membershipCategory: category,
-            customerPoints: customerPoints,
-          });
-          await data.save();
-          break;
+          thresholdFrom = currentCategory.thresholdFrom;
+          thresholdTo = currentCategory.thresholdTo;
+          category = currentCategory.membershipCategory;
+          _id = currentCategory._id;
+          if (
+            customerPoints >= thresholdFrom &&
+            customerPoints <= thresholdTo
+          ) {
+            await customerModel.findOneAndUpdate(
+              { _id: { $in: customerId } },
+              { membershipCategory: category }
+            );
+            const data = new customerMembershipModel({
+              customer: customerId,
+              membershipId: _id,
+              membershipCategory: category,
+              customerPoints: customerPoints,
+            });
+            await data.save();
+            break;
+          }
         }
       }
     }
