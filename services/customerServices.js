@@ -82,7 +82,11 @@ const customerServices = {
       throw new Error("User already exist");
     } else {
       let getInitialPoint = await pointManageModel.find({});
-      let initialPoint = getInitialPoint[0].initialPoint;
+      if (getInitialPoint.length != 0) {
+        var initialPoint = getInitialPoint[0].initialPoint;
+      } else {
+        initialPoint = 0;
+      }
       const salt = await bcrypt.genSalt(10);
       password = await bcrypt.hash(password, salt);
       customer = new customerModel({
