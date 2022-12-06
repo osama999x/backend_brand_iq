@@ -173,7 +173,11 @@ const customerServices = {
       return user;
     } else {
       let getInitialPoint = await pointManageModel.find({});
-      let initialPoint = getInitialPoint[0].initialPoint;
+      if (getInitialPoint.length != 0) {
+        var initialPoint = getInitialPoint[0].initialPoint;
+      } else {
+        initialPoint = 0;
+      }
       var customer = new customerModel({
         firstName,
         lastName,
@@ -203,26 +207,28 @@ const customerServices = {
             { membershipCategory: { $in: category } },
             { thresholdFrom: 1, thresholdTo: 1, membershipCategory: 1 }
           );
-          thresholdFrom = currentCategory.thresholdFrom;
-          thresholdTo = currentCategory.thresholdTo;
-          category = currentCategory.membershipCategory;
-          id = currentCategory._id;
-          if (
-            customerPoints >= thresholdFrom &&
-            customerPoints <= thresholdTo
-          ) {
-            await customerModel.findOneAndUpdate(
-              { _id: { $in: customerId } },
-              { membershipCategory: category }
-            );
-            const data = new customerMembershipModel({
-              customer: customerId,
-              membershipId: id,
-              membershipCategory: category,
-              customerPoints: customerPoints,
-            });
-            await data.save();
-            break;
+          if (currentCategory) {
+            thresholdFrom = currentCategory.thresholdFrom;
+            thresholdTo = currentCategory.thresholdTo;
+            category = currentCategory.membershipCategory;
+            id = currentCategory._id;
+            if (
+              customerPoints >= thresholdFrom &&
+              customerPoints <= thresholdTo
+            ) {
+              await customerModel.findOneAndUpdate(
+                { _id: { $in: customerId } },
+                { membershipCategory: category }
+              );
+              const data = new customerMembershipModel({
+                customer: customerId,
+                membershipId: id,
+                membershipCategory: category,
+                customerPoints: customerPoints,
+              });
+              await data.save();
+              break;
+            }
           }
         }
         const unRead = new readNotficationModel({
@@ -423,7 +429,9 @@ const customerServices = {
               { membershipCategory: nextCategory },
               { thresholdFrom: 1 }
             );
-            var nextCategoryPoint = point.thresholdFrom;
+            if (point) {
+              var nextCategoryPoint = point.thresholdFrom;
+            }
             break;
           }
         }
