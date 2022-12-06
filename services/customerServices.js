@@ -114,26 +114,28 @@ const customerServices = {
             { membershipCategory: { $in: category } },
             { thresholdFrom: 1, thresholdTo: 1, membershipCategory: 1 }
           );
-          thresholdFrom = currentCategory.thresholdFrom;
-          thresholdTo = currentCategory.thresholdTo;
-          category = currentCategory.membershipCategory;
-          _id = currentCategory._id;
-          if (
-            customerPoints >= thresholdFrom &&
-            customerPoints <= thresholdTo
-          ) {
-            await customerModel.findOneAndUpdate(
-              { _id: { $in: customerId } },
-              { membershipCategory: category }
-            );
-            const data = new customerMembershipModel({
-              customer: customerId,
-              membershipId: _id,
-              membershipCategory: category,
-              customerPoints: customerPoints,
-            });
-            await data.save();
-            break;
+          if (currentCategory) {
+            thresholdFrom = currentCategory.thresholdFrom;
+            thresholdTo = currentCategory.thresholdTo;
+            category = currentCategory.membershipCategory;
+            _id = currentCategory._id;
+            if (
+              customerPoints >= thresholdFrom &&
+              customerPoints <= thresholdTo
+            ) {
+              await customerModel.findOneAndUpdate(
+                { _id: { $in: customerId } },
+                { membershipCategory: category }
+              );
+              const data = new customerMembershipModel({
+                customer: customerId,
+                membershipId: _id,
+                membershipCategory: category,
+                customerPoints: customerPoints,
+              });
+              await data.save();
+              break;
+            }
           }
         }
         const unRead = new readNotficationModel({
