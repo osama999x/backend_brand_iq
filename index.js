@@ -119,7 +119,7 @@ app.use("/api/v1/token", tokenRouter);
 
 //404 Handler
 app.get("/", (req, res, next) => {
-  res.status(200).send({ msg: "Welcome To Z-Store " });
+  res.status(200).send({ msg: "Welcome To M-SAFA " });
 });
 app.use((req, res, next) => {
   res.status(404).send({ msg: "Route Not found" });
