@@ -331,7 +331,7 @@ const orderServices = {
     if (result) {
       //awarder with points to Order Holder
       let getPointPerOrder = await pointManageModel.find({});
-      if (getPointPerOrder) {
+      if (getPointPerOrder.length != 0) {
         pointOrderPrice = getPointPerOrder[0].pointOrderPrice;
         pointPerOrder = getPointPerOrder[0].pointPerOrder;
         let point = Math.ceil(orderBill / pointOrderPrice);
@@ -403,26 +403,28 @@ const orderServices = {
             { membershipCategory: { $in: category } },
             { thresholdFrom: 1, thresholdTo: 1, membershipCategory: 1 }
           );
-          thresholdFrom = currentCategory.thresholdFrom;
-          thresholdTo = currentCategory.thresholdTo;
-          category = currentCategory.membershipCategory;
-          _id = currentCategory._id;
-          if (
-            customerPoints >= thresholdFrom &&
-            customerPoints <= thresholdTo
-          ) {
-            await customerModel.findOneAndUpdate(
-              { _id: { $in: customerId } },
-              { membershipCategory: category }
-            );
-            const data = new customerMembershipModel({
-              customer: customerId,
-              membershipId: _id,
-              membershipCategory: category,
-              customerPoints: customerPoints,
-            });
-            await data.save();
-            break;
+          if (currentCategory) {
+            thresholdFrom = currentCategory.thresholdFrom;
+            thresholdTo = currentCategory.thresholdTo;
+            category = currentCategory.membershipCategory;
+            _id = currentCategory._id;
+            if (
+              customerPoints >= thresholdFrom &&
+              customerPoints <= thresholdTo
+            ) {
+              await customerModel.findOneAndUpdate(
+                { _id: { $in: customerId } },
+                { membershipCategory: category }
+              );
+              const data = new customerMembershipModel({
+                customer: customerId,
+                membershipId: _id,
+                membershipCategory: category,
+                customerPoints: customerPoints,
+              });
+              await data.save();
+              break;
+            }
           }
         }
       }
