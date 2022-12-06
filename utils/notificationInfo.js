@@ -1,10 +1,10 @@
 const notificationInfo = {
   orderResponse: {
-    title: "Z-Store Order alert",
+    title: "M-SAFA Order alert",
     body: "You order has been placed succesfully",
   },
   login: {
-    title: "Z-Store login alert",
+    title: "M-SAFA login alert",
     body: "You are succesfully Logged in!",
   },
   otpSend: {
@@ -24,16 +24,16 @@ const notificationInfo = {
     body: "Your password has been updated!",
   },
   coupon: {
-    title: "Z-Store Coupon Alert",
-    Body: "Z-Store offering you a coupon. Open coupon and get spacial discount on order ",
+    title: "M-SAFA Coupon Alert",
+    Body: "M-SAFA offering you a coupon. Open coupon and get spacial discount on order ",
   },
   promotion: {
-    title: "Z-Store Promotion Alert",
-    body: "Z-Store offering promtion discount to customer. You can get benifits on promotion discount",
+    title: "M-SAFA Promotion Alert",
+    body: "M-SAFA offering promtion discount to customer. You can get benifits on promotion discount",
   },
   dealProduct: {
-    title: "Z-Store Deal Offer Alert",
-    body: "Z-Store offering spacial deal on product. You can get discount on every deal",
+    title: "M-SAFA Deal Offer Alert",
+    body: "M-SAFA offering spacial deal on product. You can get discount on every deal",
   },
 };
 module.exports = notificationInfo;

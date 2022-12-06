@@ -31,9 +31,9 @@ const sendEmail = async (email) => {
   // });
 
   var mailOptions = {
-    from: `Z-Store ${process.env.MAIL}`,
+    from: `M-SAFA ${process.env.MAIL}`,
     to: email,
-    subject: "Z-Store OTP",
+    subject: "M-SAFA OTP",
     text: "Your OTP is " + otp,
   };
   result = await transporter.sendMail(mailOptions);
