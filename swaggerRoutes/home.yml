@@ -1,0 +1,51 @@
+paths:
+  /api/v1/home/all:
+    get:
+      summary: All Product,Category and Subcategory list
+      tags: [Home Screen APIs]
+      responses:
+        "200":
+          description: All Product,Category and Subcategory list
+  /api/v1/home/getAllCategories:
+    get:
+      summary: Get All Categories
+      tags: [Home Screen APIs]
+      responses:
+        "200":
+          description: Get All Categories
+  /api/v1/home/limitedProduct:
+    get:
+      summary: All Product,Category and Subcategory list
+      tags: [Home Screen APIs]
+      responses:
+        "200":
+          description: All Product,Category and Subcategory list
+  /api/v1/home/recentProduct:
+    get:
+      summary: All Product,Category and Subcategory list
+      tags: [Home Screen APIs]
+      responses:
+        "200":
+          description: All Product,Category and Subcategory list
+  /api/v1/home/searchProduct:
+    get:
+      summary: Search Product
+      tags: [Home Screen APIs]
+      parameters:
+        - name: text
+          in: query
+          required: true
+      responses:
+        "200":
+          description: Result Search Text
+  /api/v1/home/getProductByTags:
+    get:
+      summary: Search Product By Tags
+      tags: [Home Screen APIs]
+      parameters:
+        - name: tags
+          in: query
+          required: true
+      responses:
+        "200":
+          description: Result Search Text

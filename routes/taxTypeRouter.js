@@ -7,14 +7,10 @@ taxTypeRouter.get(
   "/",
   expressAsyncHandler(async (req, res) => {
     const result = await taxTypeServices.get();
-    if (result.length !== 0) {
-      return res.status(200).send({
-        msg: "tax types",
-        data: result,
-      });
-    } else {
-      return res.status(400).send({ msg: "tax types Not Found" });
-    }
+    res.status(200).send({
+      msg: "tax types",
+      data: result,
+    });
   })
 );
 taxTypeRouter.get(

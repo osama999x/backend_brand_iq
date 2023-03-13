@@ -1,0 +1,9 @@
+path:
+  /api/v1/inventoryStatus/all:
+    get:
+      summary: Inventory Of All Product
+      tags:
+        - Inventory Managemnt
+      responses:
+        200:
+          descripiton: Inventory Of All Product

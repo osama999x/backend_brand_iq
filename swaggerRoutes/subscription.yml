@@ -1,0 +1,64 @@
+paths:
+  /api/v1/subscribe:
+    get:
+      summary: "Get all subscriber list"
+      tags:
+        - "Subscription Management"
+      responses:
+        200:
+          description: "Get all subscriber list"
+    post:
+      summary: "Add subscription"
+      tags:
+        - "Subscription Management"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+      responses:
+        200:
+          description: "Success"
+        400:
+          description: "Bad Request"
+    patch:
+      summary: "Update subscription"
+      tags:
+        - "Subscription Management"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subscriberId:
+                  type: string
+                email:
+                  type: string
+      responses:
+        200:
+          description: "Success"
+        400:
+          description: "Bad Request"
+
+  /api/v1/subscribe/details:
+    get:
+      summary: "Get subscriber details"
+      tags:
+        - "Subscription Management"
+      parameters:
+        - name: "subscriberId"
+          in: "query"
+          description: "Subscriber ID"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: "Get subscriber details"
+        400:
+          description: "Not Found"

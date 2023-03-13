@@ -1,0 +1,39 @@
+paths:
+  /api/v1/test/cipherToData:
+    post:
+      summary: Cipher To Data
+      tags:
+        - Test Apis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cipher:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+  /api/v1/test/dataToCipher:
+    post:
+      summary: Data To Cipher
+      tags:
+        - Test Apis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request

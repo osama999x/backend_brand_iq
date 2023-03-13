@@ -10,7 +10,7 @@ const schema = new Schema(
     },
     expireOtp: {
       type: Date,
-      default: Date.now() + 300000,
+      //default: Date.now() + 300000,
     },
   },
   { timestamps: true }

@@ -4,7 +4,7 @@ schema
   .is()
   .min(8) // Minimum length 8
   .is()
-  .max(10) // Maximum length 100
+  .max(20) // Maximum length 100
   .has()
   .uppercase() // Must have uppercase letters
   .has()

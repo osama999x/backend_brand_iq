@@ -6,12 +6,10 @@ const schema = new Schema(
     deliveryPartner: {
       type: Schema.Types.ObjectId,
       ref: "deliveryPartner",
-      required: true,
     },
     orderStatus: {
       type: Schema.Types.ObjectId,
       ref: "OrderStatus",
-      required: true,
     },
     orderId: {
       type: String,
@@ -20,6 +18,10 @@ const schema = new Schema(
     time: {
       type: Date,
       default: Date.now(),
+    },
+    message: {
+      type: String,
+      default: "",
     },
   },
 

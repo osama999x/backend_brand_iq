@@ -1,0 +1,120 @@
+paths:
+  /api/v1/category/all:
+    get:
+      summary: "All Category list"
+      tags:
+        - "Category Management"
+      responses:
+        200:
+          description: "Get All Category List"
+  /api/v1/category/products:
+    get:
+      summary: "Get Category By Product"
+      tags:
+        - "Category Management"
+      parameters:
+        - name: "categoryId"
+          in: "query"
+          required: true
+      responses:
+        200:
+          description: "Get Category Details By Product"
+        400:
+          description: "Not Found"
+  /api/v1/category/subcategories:
+    get:
+      summary: "Get Categories By Subcategory"
+      tags:
+        - "Category Management"
+      parameters:
+        - name: "categoryId"
+          in: "query"
+          required: true
+      responses:
+        200:
+          description: "Get Categories By Subcategory"
+        400:
+          description: "Not Found"
+  /api/v1/category/getOne:
+    get:
+      summary: "Get Category Details"
+      tags:
+        - "Category Management"
+      parameters:
+        - name: "categoryId"
+          in: "query"
+          required: true
+      responses:
+        200:
+          description: "Get Category By Id"
+        400:
+          description: "Not Found"
+  /api/v1/category:
+    post:
+      summary: "Add category"
+      tags:
+        - "Category Management"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                icon:
+                  type: string
+                description:
+                  type: string
+                isFeatured:
+                  type: boolean
+      responses:
+        200:
+          description: "Success"
+        400:
+          description: "Bad Request"
+    patch:
+      summary: "Update category"
+      tags:
+        - "Category Management"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categoryId:
+                  type: string
+                name:
+                  type: string
+                icon:
+                  type: string
+                description:
+                  type: string
+                isFeatured:
+                  type: boolean
+      responses:
+        200:
+          description: "Success"
+        400:
+          description: "Bad Request"
+    delete:
+      summary: "Delete Category"
+      tags:
+        - "Category Management"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categoryId:
+                  type: string
+      responses:
+        200:
+          description: "Success"
+        400:
+          description: "Bad Request"

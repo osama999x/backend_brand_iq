@@ -6,27 +6,95 @@ const productsServices = require("./productsServices");
 
 const favouriteServices = {
   getFavourites: async (customerId) => {
-    let list = await favouriteModel
-      .find({ customer: { $in: customerId } }, projection.projection)
-      .populate({
-        path: "product",
-        select: {
-          _id: 1,
-          name: 1,
-          thumbnail: 1,
-          variant: 1,
+    let list = await favouriteModel.aggregate([
+      {
+        $match: {
+          customer: new mongoose.Types.ObjectId(customerId),
         },
-      })
-      .lean();
-    if (list.length != 0) {
-      list = list.map((item) => {
-        const isFavourite = "true";
-        item.product.actualPrice = item.product.variant[0].actualPrice;
-        item.product.isFavourite = isFavourite;
-        delete item.product.variant;
-        return item;
-      });
-    }
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "product",
+          foreignField: "_id",
+          as: "product",
+        },
+      },
+      {
+        $unwind: {
+          path: "$product",
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          customer: 1,
+          "product._id": 1,
+          "product.name": 1,
+          "product.thumbnail": 1,
+          "product.isFavourite": true,
+          "product.variant": 1,
+        },
+      },
+      {
+        $addFields: {
+          "product.first_variant": {
+            $arrayElemAt: ["$product.variant", 0],
+          },
+        },
+      },
+      {
+        $unwind: {
+          path: "$product.variant",
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          customer: 1,
+          "product._id": 1,
+          "product.name": 1,
+          "product.thumbnail": 1,
+          "product.actualPrice": "$product.variant.actualPrice",
+        },
+      },
+      {
+        $addFields: {
+          "product.isFavourite": true,
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          customer: {
+            $first: "$customer",
+          },
+          product: {
+            $first: "$product",
+          },
+        },
+      },
+    ]);
+    //   .find({ customer: { $in: customerId } }, projection.projection)
+    //   .populate({
+    //     path: "product",
+    //     select: {
+    //       _id: 1,
+    //       name: 1,
+    //       thumbnail: 1,
+    //       variant: 1,
+    //     },
+    //   })
+    //   .lean();
+    // if (list.length != 0) {
+    //   list = list.map((item) => {
+    //     let isFavourite = "true";
+    //     item.product.actualPrice = item.product.variant[0].actualPrice;
+    //     item.product.isFavourite = isFavourite;
+    //     delete item.product.variant;
+    //     return item;
+    //   });
+    // }
     return list;
   },
   add: async (customer, product) => {

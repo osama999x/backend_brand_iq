@@ -4,38 +4,27 @@ const projection = require("../config/mongoProjection");
 
 const roleServices = {
   get: async () => {
-    const result = await roleModel
-      .find({ name: { $nin: "Super_Admin" } }, projection.projection)
-      .populate({
-        path: "permissions",
-        select: { _id: 1, name: 1 },
-      });
+    const result = await roleModel.find({}, projection.projection);
     return result;
   },
   getRoleByID: async (_id) => {
     var _id = mongoose.Types.ObjectId(_id);
-    const result = await roleModel
-      .findById({ _id }, projection.projection)
-      .populate({
-        path: "permissions",
-        select: { _id: 1, name: 1 },
-      });
+    const result = await roleModel.findById({ _id }, projection.projection);
     return result;
   },
-  addNew: async (permissions, name, description) => {
+  addNew: async (name, description) => {
     const role = new roleModel({
-      permissions,
       name,
       description,
     });
     const result = await role.save();
     return result;
   },
-  update: async (_id, permissions, name, description) => {
+  update: async (_id, name, description) => {
     var _id = mongoose.Types.ObjectId(_id);
     const result = await roleModel.findOneAndUpdate(
       { _id },
-      { permissions, name, description },
+      { name, description },
       { new: true }
     );
     return result;

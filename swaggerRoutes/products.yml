@@ -1,0 +1,154 @@
+paths:
+  /api/v1/products/all:
+    get:
+      summary: Get Products List
+      tags:
+        - Product Management
+      responses:
+        "200":
+          description: Get Products List
+  /api/v1/products:
+    patch:
+      summary: Update Product Quantity
+      tags:
+        - Product Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  type: string
+                sku:
+                  type: string
+                actualPrice:
+                  type: number
+                discountedPrice:
+                  type: number
+                quantity:
+                  type: number
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+    post:
+      summary: Add Product
+      tags:
+        - Product Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categoryId:
+                  type: string
+                subcategoryId:
+                  type: string
+                name:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                longDescription:
+                  type: string
+                isDiscount:
+                  type: boolean
+                isDeal:
+                  type: boolean
+                dealExpire:
+                  type: string
+                oneTimeDeal:
+                  type: boolean
+                discount:
+                  type: number
+                variant:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      colorName:
+                        type: string
+                      colorHex:
+                        type: string
+                      actualPrice:
+                        type: number
+                      discountedPrice:
+                        type: number
+                      quantity:
+                        type: number
+                      sku:
+                        type: string
+                      size:
+                        type: string
+                      image:
+                        type: string
+                images:
+                  type: array
+                  items:
+                    type: string
+                vendor:
+                  type: string
+                isTaxable:
+                  type: boolean
+                taxHead:
+                  type: string
+                taxType:
+                  type: string
+                isPercentage:
+                  type: boolean
+                taxAmount:
+                  type: number
+                metaData:
+                  type: string
+                metaDescription:
+                  type: string
+                tags:
+                  type: string
+                addons:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      product:
+                        type: string
+                      sku:
+                        type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+  /api/v1/products/details:
+    get:
+      summary: Get Products Details
+      tags:
+        - Product Management
+      parameters:
+        - name: productId
+          in: query
+          required: true
+      responses:
+        "200":
+          description: Get Products Details
+        "400":
+          description: Not Found
+  /api/v1/products/detailsWeb:
+    get:
+      summary: Get Products Details For
+      tags:
+        - Product Management
+      parameters:
+        - name: productId
+          in: query
+          required: true
+      responses:
+        "200":
+          description: Get Products Details
+        "400":
+          description: Not Found

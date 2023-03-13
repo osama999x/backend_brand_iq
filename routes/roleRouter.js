@@ -7,11 +7,7 @@ roleRouter.get(
   "/all",
   expressAsyncHandler(async (req, res) => {
     const result = await roleServices.get();
-    if (result.length !== 0) {
-      return res.status(200).send({ msg: "roles", data: result });
-    } else {
-      return res.status(400).send({ msg: "Roles Not Found" });
-    }
+    res.status(200).send({ msg: "roles", data: result });
   })
 );
 
@@ -33,11 +29,11 @@ roleRouter.post(
 roleRouter.post(
   "/",
   expressAsyncHandler(async (req, res) => {
-    const { permissionsId, name, description } = req.body;
-    if (!name || !description || !permissionsId) {
+    const { name, description } = req.body;
+    if (!name || !description) {
       return res.status(400).send({ msg: "Fields Missing" });
     }
-    const result = await roleServices.addNew(permissionsId, name, description);
+    const result = await roleServices.addNew(name, description);
     if (result) {
       return res.status(200).send({ msg: "Role added.", data: result });
     } else {
@@ -48,16 +44,11 @@ roleRouter.post(
 roleRouter.patch(
   "/",
   expressAsyncHandler(async (req, res) => {
-    const { roleId, permissionsId, name, description } = req.body;
-    if (!roleId || !name || !description || !permissionsId) {
+    const { roleId, name, description } = req.body;
+    if (!roleId || !name || !description) {
       return res.status(400).send({ msg: "Fields Missing" });
     }
-    const result = await roleServices.update(
-      roleId,
-      permissionsId,
-      name,
-      description
-    );
+    const result = await roleServices.update(roleId, name, description);
     if (result) {
       return res.status(200).send({ msg: "Role updated.", data: result });
     } else {

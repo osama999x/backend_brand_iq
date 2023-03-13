@@ -7,11 +7,7 @@ inventoryStatusRouter.get(
   expressAsyncHandler(async (req, res) => {
     // const { productId } = req.body;
     const result = await inventryStatusServices.get();
-    if (result) {
-      return res.status(200).send({ msg: "Inventory Status", data: result });
-    } else {
-      return res.status(400).send({ msg: "Inventory Status Not Found" });
-    }
+    res.status(200).send({ msg: "Inventory Status", data: result });
   })
 );
 

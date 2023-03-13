@@ -7,14 +7,10 @@ pointsRouter.get(
   "/all",
   expressAsyncHandler(async (req, res) => {
     const result = await pointsServices.get();
-    if (result.length != 0) {
-      return res.status(200).send({
-        msg: "Points",
-        data: result,
-      });
-    } else {
-      return res.status(400).send({ msg: "Points Not Found" });
-    }
+    res.status(200).send({
+      msg: "Points",
+      data: result,
+    });
   })
 );
 pointsRouter.get(

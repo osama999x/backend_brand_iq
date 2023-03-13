@@ -1,20 +1,19 @@
 const { response } = require("express");
 const express = require("express");
 const expressAsyncHandler = require("express-async-handler");
+const authIdServices = require("../services/authIdServices");
 const userServices = require("../services/userServices");
 const userRouter = express.Router();
 const validator = require("../utils/passwordValidator");
 const verfyToken = require("../utils/verfyToken");
+const { v4: uuidv4 } = require("uuid");
+const saveOtp = require("../utils/saveOtp");
 
 userRouter.get(
   "/all",
   expressAsyncHandler(async (req, res) => {
     const result = await userServices.get();
-    if (result.length !== 0) {
-      return res.status(200).send({ msg: "users", data: result });
-    } else {
-      return res.status(400).send({ msg: "Users Not Found" });
-    }
+    res.status(200).send({ msg: "users", data: result });
   })
 );
 userRouter.post(
@@ -36,6 +35,13 @@ userRouter.post(
     if (!name || !roleId || !email || !password || !contact) {
       return res.status(400).send({ msg: "Fields Missing" });
     }
+    if (!validator.schema.validate(password)) {
+      return res.status(400).send({
+        msg: "Password must have at least:1 uppercase letter,1 lowercase letter,1 number and 1 special character",
+
+        //validator.schema.validate(password, { list: true }),
+      });
+    }
     const result = await userServices.addNew(
       roleId,
       name,
@@ -44,7 +50,19 @@ userRouter.post(
       contact
     );
     if (result) {
-      return res.status(200).send({ msg: "User added", data: result });
+      const uuid = uuidv4();
+      const refreshToken = jwtServices.create({ uuid, type: "admin" });
+      const accessToken = jwtServices.create(
+        { userId: result._id, type: "admin" },
+        "5m"
+      );
+      authIdServices.add(result._id, uuid);
+      return res.status(200).send({
+        msg: "User added",
+        data: result,
+        accessToken,
+        refreshToken,
+      });
     } else {
       return res.status(400).send({ msg: "User Not added" });
     }
@@ -57,11 +75,27 @@ userRouter.post(
     if (!email || !password) {
       return res.status(400).send({ msg: "Fields Missing" });
     }
-    try {
-      const result = await userServices.login(email, password);
-      return res.status(200).send({ data: result });
-    } catch (e) {
-      res.status(400).send({ msg: e });
+    const user = await userServices.login(email);
+    console.log(user);
+    if (user) {
+      const validatePassword = await userServices.validatePassword(
+        password,
+        user.password
+      );
+      if (validatePassword) {
+        res.status(200).send({
+          msg: "Logged in Successfully",
+          data: user,
+        });
+      } else {
+        res.status(400).send({
+          msg: "Invalid Credentials!",
+        });
+      }
+    } else {
+      res.status(400).send({
+        msg: "Invalid Credentials!",
+      });
     }
   })
 );
@@ -71,9 +105,9 @@ userRouter.post(
     const { email } = req.body;
     const result = await userServices.resetPassword(email);
     if (result) {
-      res.status(200).json({ msg: "link sent" });
+      res.status(200).json({ msg: "OTP sent" });
     } else {
-      res.status(400).json({ msg: "link not sent" });
+      res.status(400).json({ msg: "OTP not sent" });
     }
   })
 );
@@ -81,11 +115,18 @@ userRouter.post(
   "/resetpassword/verify",
   expressAsyncHandler(async (req, res) => {
     const { email, otp } = req.body;
-    try {
-      const result = await userServices.verifyNewPassword(email, otp);
-      res.status(200).json({ msg: "OTP Verified" });
-    } catch (e) {
-      res.status(400).json({ msg: e });
+    const expireOtp = await saveOtp.adminValidateOTPExpiryByEmail(email);
+    if (!expireOtp) {
+      res.status(400).send({
+        msg: "Otp Expire please try again!",
+      });
+    } else {
+      const user = await saveOtp.adminVerifiyOtp(email, otp);
+      if (user) {
+        res.status(200).send({ msg: "OTP Verified" });
+      } else {
+        res.status(400).send({ msg: "Invalid OTP" });
+      }
     }
   })
 );
@@ -93,8 +134,16 @@ userRouter.post(
   "/resetpassword/set",
   expressAsyncHandler(async (req, res) => {
     const { userId, password, NewPassword } = req.body;
+    console.log(password, NewPassword);
     if (password !== NewPassword) {
       return res.status(400).send({ msg: "Passwords Don't Match" });
+    }
+    if (!validator.schema.validate(password)) {
+      return res.status(400).send({
+        msg: "Password must have at least:1 uppercase letter,1 lowercase letter,1 number and 1 special character",
+
+        //validator.schema.validate(password, { list: true }),
+      });
     }
     const result = await userServices.setNewPassword(userId, password);
     if (result) {
@@ -115,6 +164,12 @@ userRouter.post(
       res.status(400).send({
         msg: "Password And NewPaswword don't Match",
       });
+    } else if (!validator.schema.validate(password)) {
+      return res.status(400).send({
+        msg: "Password must have at least:1 uppercase letter,1 lowercase letter,1 number and 1 special character",
+
+        //validator.schema.validate(password, { list: true }),
+      });
     } else {
       const result = await userServices.forgetPassword(email, password);
       if (result) {
@@ -128,16 +183,22 @@ userRouter.post(
 userRouter.patch(
   "/",
   expressAsyncHandler(async (req, res) => {
-    const { userId, roleId, name, email, password, contact } = req.body;
-    if (!userId || !name || !roleId || !email || !password || !contact) {
+    const { userId, roleId, name, email, contact } = req.body;
+    if (!userId || !name || !roleId || !email || !contact) {
       return res.status(400).send({ msg: "Fields Missing" });
     }
+    // if (!validator.schema.validate(password)) {
+    //   return res.status(400).send({
+    //     msg: "Password must have at least:1 uppercase letter,1 lowercase letter,1 number and 1 special character",
+
+    //     //validator.schema.validate(password, { list: true }),
+    //   });
+    // }
     const result = await userServices.update(
       userId,
       roleId,
       name,
       email,
-      password,
       contact
     );
     if (result) {

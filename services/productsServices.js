@@ -5,6 +5,12 @@ const reviewModel = require("../model/reviewModel");
 const mongoose = require("mongoose");
 const uploadFile = require("../utils/uploadFile");
 const ProductQuantityLogModel = require("../model/productQuntityLogModel");
+const sendEmailNotificationInfo = require("../utils/sendEmailNotficationInfo");
+const promotionModel = require("../model/promotionModel");
+const SubscribeModel = require("../model/subscribeModel");
+const sendNotificationEmail = require("../utils/sendNotificationEmail");
+const productVariantServices = require("./productVariantServices");
+const dealBuyerLogModel = require("../model/dealBuyerLogModel");
 // const productsImagesModel = require("../model/productsImagesModel");
 
 const productsServices = {
@@ -19,7 +25,7 @@ const productsServices = {
         path: "subcategory",
         select: { _id: 1, title: 1, name: 1 },
       })
-      .sort({ createdAt: "asc", updatedAt: "asc" });
+      .sort({ createdAt: -1 });
     products = JSON.stringify(products);
     products = JSON.parse(products);
     var productLength = products.length;
@@ -69,72 +75,309 @@ const productsServices = {
     }
     return updateProduct;
   },
-  getProductsById: async (_id) => {
-    const list = await productsModel
-      .findById({ _id }, projection.projection)
+  getProductsByIdWeb: async (productId) => {
+    const product = await productsModel
+      .findById({ _id: productId })
       .populate({
         path: "category",
-        select: { _id: 1, title: 1, name: 1 },
       })
       .populate({
         path: "subcategory",
-        select: { _id: 1, title: 1, name: 1 },
-      })
-      .lean();
-    // if (list.length != 0 && list.addons.length != 0) {
-    //   addons = list.addons;
-    //   var addonsArr = [];
-    //   for (var i of addons) {
-    //     product = i.product;
-    //     sku = i.sku;
-    //     addons = await productsModel.findOne(
-    //       { _id: { $in: product } },
-    //       {
-    //         variant: { $elemMatch: { sku: { $eq: sku } } },
+      });
+    return product;
+  },
+  getProductsById: async (productId) => {
+    let today = new Date(new Date());
+    // let checkProduct = await productsModel.findOne(
+    //   {
+    //     _id: productId,
+    //   },
+    //   { isDeal: 1 }
+    // );
+    // if (checkProduct.isDeal === true) {
+    //   var product = await productsModel.aggregate([
+    //     {
+    //       $match: {
+    //         $and: [
+    //           { _id: new mongoose.Types.ObjectId(productId) },
+    //           { dealExpire: { $gte: today } },
+    //         ],
+    //       },
+    //     },
+    //     {
+    //       $project: {
+    //         _id: 1,
+    //         category: 1,
+    //         subcategory: 1,
     //         name: 1,
     //         title: 1,
+    //         description: 1,
+    //         longDescription: 1,
+    //         isColor: 1,
     //         thumbnail: 1,
-    //       }
-    //     );
-    //     addonsArr.push(addons);
-    //   }
-    //   list.addons = addonsArr;
-    // }
-    // list = JSON.stringify(list);
-    // list = JSON.parse(list);
-    // var variantQuantity = 0;
-    // if (list) {
-    //   let tag = list.tags;
-    //   let productId = list._id.toLocaleString();
-    //   var tags = await productsModel
-    //     .find(
-    //       { $and: [{ _id: { $nin: productId } }, { tags: { $in: tag } }] },
-    //       { name: 1, title: 1, thumbnail: 1, variant: 1 }
-    //     )
-    //     .lean();
-    //   list.tagProducts = tags.map((item) => {
-    //     item.actualPrice = item.variant[0].actualPrice;
-    //     item.discountedPrice = item.variant[0].discountedPrice;
-    //     delete item.variant;
-    //     return item;
-    //   });
-    // console.log(tags);
-    //   .populate({
-    //     path: "category",
-    //     select: { _id: 1, title: 1, name: 1 },
-    //   })
-    //   .populate({
-    //     path: "subcategory",
-    //     select: { _id: 1, title: 1, name: 1 },
-    //   });
-    // // var variantLength = list.variant.length;
-    // for (var j = 0; j < variantLength; j++) {
-    //   variantQuantity += list.variant[j].quantity;
-    // }
-    // list["AvailbeQuantity"] = variantQuantity;
-    // list.tagProducts = tags;
-    // }
-    return list;
+    //         images: 1,
+    //         isActive: 1,
+    //         vendor: 1,
+    //         isFeatured: 1,
+    //         isSale: 1,
+    //         isDeal: 1,
+    //         dealExpire: 1,
+    //         discount: 1,
+    //         isDiscount: 1,
+    //         inStock: 1,
+    //         sequence: 1,
+    //         ratingCount: 1,
+    //         ratingNumber: 1,
+    //         isFavourite: 1,
+    //         isTaxable: 1,
+    //         taxHead: 1,
+    //         taxType: 1,
+    //         isPercentage: 1,
+    //         taxAmount: 1,
+    //         metaData: 1,
+    //         metaDescription: 1,
+    //         addons: 1,
+    //         tags: 1,
+    //         variant: {
+    //           $map: {
+    //             input: "$variant",
+    //             as: "variant",
+    //             in: {
+    //               colorName: "$$variant.colorName",
+    //               colorHex: "$$variant.colorHex",
+    //               actualPrice: "$$variant.actualPrice",
+    //               quantity: "$$variant.quantity",
+    //               size: "$$variant.size",
+    //               image: "$$variant.image",
+    //               sku: "$$variant.sku",
+    //               _id: "$$variant._id",
+    //               discountedPrice: {
+    //                 $ifNull: [
+    //                   {
+    //                     $subtract: ["$$variant.actualPrice", "$discount"],
+    //                   },
+    //                   "$$variant.discountedPrice",
+    //                 ],
+    //               },
+    //             },
+    //           },
+    //         },
+    //       },
+    //     },
+    //     {
+    //       $lookup: {
+    //         from: "categories",
+    //         localField: "category",
+    //         foreignField: "_id",
+    //         let: {
+    //           id: "$category",
+    //         },
+    //         pipeline: [
+    //           {
+    //             $match: {
+    //               $expr: {
+    //                 $eq: ["$_id", "$$id"],
+    //               },
+    //             },
+    //           },
+    //           {
+    //             $project: {
+    //               _id: 1,
+    //               name: 1,
+    //             },
+    //           },
+    //         ],
+    //         as: "category",
+    //       },
+    //     },
+    //     {
+    //       $unwind: {
+    //         path: "$category",
+    //       },
+    //     },
+    //     {
+    //       $lookup: {
+    //         from: "subcategories",
+    //         localField: "subcategory",
+    //         foreignField: "_id",
+    //         let: {
+    //           id: "$subcategory",
+    //         },
+    //         pipeline: [
+    //           {
+    //             $match: {
+    //               $expr: {
+    //                 $eq: ["$_id", "$$id"],
+    //               },
+    //             },
+    //           },
+    //           {
+    //             $project: {
+    //               _id: 1,
+    //               name: 1,
+    //             },
+    //           },
+    //         ],
+    //         as: "subcategory",
+    //       },
+    //     },
+    //     {
+    //       $unwind: {
+    //         path: "$subcategory",
+    //       },
+    //     },
+    //   ]);
+    // } else {
+    var product = await productsModel.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(productId) },
+      },
+      {
+        $lookup: {
+          from: "promotions",
+          localField: "_id",
+          foreignField: "product",
+          pipeline: [{ $match: { expireDate: { $gte: today } } }],
+          as: "promotion",
+        },
+      },
+      {
+        $unwind: {
+          path: "$promotion",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          category: 1,
+          subcategory: 1,
+          name: 1,
+          title: 1,
+          description: 1,
+          longDescription: 1,
+          isColor: 1,
+          thumbnail: 1,
+          images: 1,
+          isActive: 1,
+          vendor: 1,
+          isFeatured: 1,
+          isSale: 1,
+          isDeal: 1,
+          discount: 1,
+          oneTimeDeal: 1,
+          isDiscount: 1,
+          inStock: 1,
+          sequence: 1,
+          ratingCount: 1,
+          ratingNumber: 1,
+          isFavourite: 1,
+          isTaxable: 1,
+          taxHead: 1,
+          taxType: 1,
+          isPercentage: 1,
+          taxAmount: 1,
+          metaData: 1,
+          metaDescription: 1,
+          addons: 1,
+          tags: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          variant: {
+            $map: {
+              input: "$variant",
+              as: "variant",
+              in: {
+                colorName: "$$variant.colorName",
+                colorHex: "$$variant.colorHex",
+                actualPrice: "$$variant.actualPrice",
+                quantity: "$$variant.quantity",
+                size: "$$variant.size",
+                image: "$$variant.image",
+                sku: "$$variant.sku",
+                _id: "$$variant._id",
+                discountedPrice: {
+                  $ifNull: [
+                    {
+                      $subtract: [
+                        "$$variant.actualPrice",
+                        {
+                          $multiply: [
+                            "$promotion.discount",
+                            {
+                              $divide: ["$$variant.actualPrice", 100],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    "$$variant.discountedPrice",
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          let: { id: "$category" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
+            { $project: { _id: 1, name: 1 } },
+          ],
+          as: "category",
+        },
+      },
+      {
+        $unwind: {
+          path: "$category",
+        },
+      },
+      {
+        $lookup: {
+          from: "subcategories",
+          localField: "subcategory",
+          foreignField: "_id",
+          let: { id: "$subcategory" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
+            { $project: { _id: 1, name: 1 } },
+          ],
+          as: "subcategory",
+        },
+      },
+      {
+        $unwind: {
+          path: "$subcategory",
+        },
+      },
+    ]);
+
+    if (product.length != 0 && product[0].isDeal === true) {
+      discount = product[0].discount;
+      images = product[0].images;
+      for (var item of product[0].variant) {
+        actualPrice = item.actualPrice;
+        item.discountedPrice = actualPrice - discount;
+        image = item.image;
+        if (!images.includes(image)) {
+          images.push(image);
+        }
+      }
+    } else {
+      images = product[0].images;
+      for (var item of product[0].variant) {
+        image = item.image;
+        if (image && !images.includes(image)) {
+          images.push(image);
+        }
+      }
+    }
+    return product[0];
   },
   getProductsDetails: async (productId, sku, quantity) => {
     var product = await productsModel.findOne({
@@ -156,15 +399,18 @@ const productsServices = {
   },
 
   add: async (
-    category,
-    subcategory,
+    categoryId,
+    subcategoryId,
     name,
     title,
     description,
     longDescription,
-    isColor,
+    isDiscount,
+    isDeal,
+    dealExpire,
+    oneTimeDeal,
+    discount,
     variant,
-    thumbnail,
     images,
     vendor,
     isTaxable,
@@ -174,75 +420,152 @@ const productsServices = {
     taxAmount,
     metaData,
     metaDescription,
-    size,
     tags,
     addons
   ) => {
-    thumbnail = await uploadFile(thumbnail);
+    // thumbnail = await uploadFile(thumbnail);
+    //console.log("images", images);
     var imgArr = [];
-    imgArr[0] = thumbnail;
     //Product have images
     if (images.length != 0) {
-      var arrayLength = images.length;
-      for (var i = 0; i < arrayLength; i++) {
-        img = await uploadFile(images[i]);
-        imgArr.push(img);
-      }
+      imgArr = await Promise.all(images.map(uploadFile));
+      console.log(imgArr);
+      var thumbnail = imgArr[0];
     }
-    if (isTaxable === true && isPercentage === false && variant.length != 0) {
-      var variantArr = [];
-      for (var i = 0; i < variant.length; i++) {
-        colorName = variant[i].colorName;
-        colorHex = variant[i].colorHex;
-        actualPrice = variant[i].actualPrice + taxAmount;
-        discountedPrice = variant[i].discountedPrice;
-        quantity = variant[i].quantity;
-        sku = variant[i].sku;
-        size = variant[i].size;
-        variantArr.push({
-          colorName: colorName,
-          colorHex: colorHex,
-          actualPrice: actualPrice,
-          discountedPrice: discountedPrice,
-          quantity: quantity,
-          sku: sku,
-          size: size,
-        });
-      }
-      variant = variantArr;
+    console.log("thumbnail", thumbnail);
+    let variants = [];
+    switch (variant.length !== 0) {
+      case variant[0].colorName === "" && variant[0].size.length === 0:
+        variants = await productVariantServices.handleNoColorNoSize(
+          variant,
+          isDiscount
+        );
+        break;
+      case variant[0].colorName !== "" && variant[0].size.length === 0:
+        variants = await productVariantServices.handleColorNoSize(
+          variant,
+          isDiscount
+        );
+        break;
+      case variant[0].colorName === "" && variant[0].size.length !== 0:
+        variants = await productVariantServices.handleNoColorSize(
+          variant,
+          isDiscount
+        );
+        break;
+      case variant[0].colorName !== "" && variant[0].size.length !== 0:
+        variants = await productVariantServices.handleColorSize(
+          variant,
+          isDiscount
+        );
+        break;
     }
-    if (isTaxable === true && isPercentage === true && variant.length != 0) {
-      let variantArr = [];
-      for (var i = 0; i < variant.length; i++) {
-        colorName = variant[i].colorName;
-        colorHex = variant[i].colorHex;
-        actualPrice = variant[i].actualPrice;
-        actualPrice = actualPrice + (taxAmount / 100) * actualPrice;
-        discountedPrice = variant[i].discountedPrice;
-        quantity = variant[i].quantity;
-        sku = variant[i].sku;
-        size = variant[i].size;
-        variantArr.push({
-          colorName: colorName,
-          colorHex: colorHex,
-          actualPrice: actualPrice,
-          discountedPrice: discountedPrice,
-          quantity: quantity,
-          sku: sku,
-          size: size,
-        });
-      }
-      variant = variantArr;
-    }
+    //case 1 no color no size
+    // if (variant[0].colorName === "" && variant[0].size.length === 0) {
+    //   let variants = [];
+    //   for (let i of variant) {
+    //     if (i.image) {
+    //       var image = await uploadFile(i.image);
+    //     } else {
+    //       image = "";
+    //     }
+    //     variants.push({
+    //       colorName: "",
+    //       colorHex: "",
+    //       actualPrice: i.actualPrice,
+    //       discountedPrice: i.discountedPrice,
+    //       quantity: i.quantity,
+    //       sku: `${i.sku}`,
+    //       size: "",
+    //       image: image,
+    //     });
+    //   }
+    //   variant = variants;
+    // }
+    //case 2 no size but color exist
+    // else if (variant[0].colorName != "" && variant[0].size.length === 0) {
+    //   let variants = [];
+    //   for (let i of variant) {
+    //     if (i.image) {
+    //       var image = await uploadFile(i.image);
+    //     } else {
+    //       image = "";
+    //     }
+    //     variants.push({
+    //       colorName: i.colorName,
+    //       colorHex: i.colorHex,
+    //       actualPrice: i.actualPrice,
+    //       discountedPrice: i.discountedPrice,
+    //       quantity: i.quantity,
+    //       sku: `${i.sku}`,
+    //       size: "",
+    //       image: image,
+    //     });
+    //   }
+    //   variant = variants;
+    // }
+    //case 3 no color but size exist
+    // else if (variant[0].colorName === "" && variant[0].size.length != 0) {
+    //   let variants = [];
+    //   for (var item of variant) {
+    //     if (item.image) {
+    //       var image = await uploadFile(item.image);
+    //     } else {
+    //       image = "";
+    //     }
+    //     for (var i of item.size) {
+    //       variants.push({
+    //         colorName: "",
+    //         colorHex: "",
+    //         actualPrice: i.actualPrice,
+    //         discountedPrice: i.discountedPrice,
+    //         quantity: i.quantity,
+    //         sku: `${item.sku}${i.name}`,
+    //         size: i.name,
+    //         image: image,
+    //       });
+    //     }
+    //   }
+    //   variant = variants;
+    // }
+    // case 3 color and size exist
+    // else if (variant[0].colorName != "" && variant[0].size.length != 0) {
+    //   let variants = [];
+    //   for (var item of variant) {
+    //     if (item.image) {
+    //       var image = await uploadFile(item.image);
+    //     } else {
+    //       image = "";
+    //     }
+    //     for (var i of item.size) {
+    //       variants.push({
+    //         colorName: item.colorName,
+    //         colorHex: item.colorHex,
+    //         actualPrice: i.actualPrice,
+    //         discountedPrice: i.discountedPrice,
+    //         quantity: i.quantity,
+    //         sku: `${item.sku}${i.name}`,
+    //         size: i.name,
+    //         image: image,
+    //       });
+    //     }
+    //   }
+    //   variant = variants;
+    // }
+
     products = new productsModel({
-      category: mongoose.Types.ObjectId(category),
-      subcategory: mongoose.Types.ObjectId(subcategory),
+      category: mongoose.Types.ObjectId(categoryId),
+      subcategory: mongoose.Types.ObjectId(subcategoryId),
       name,
       title,
       description,
       longDescription,
-      isColor,
-      variant,
+      isDiscount,
+      isDeal,
+      dealExpire,
+      oneTimeDeal,
+      discount,
+      variant: variants,
       thumbnail,
       images: imgArr,
       vendor,
@@ -253,18 +576,22 @@ const productsServices = {
       taxAmount,
       metaData,
       metaDescription,
-      size,
       tags,
       addons,
     });
     const result = await products.save({
       "variant.sku": { $ne: variant.sku },
     });
+    console.log(result);
     if (result) {
+      let subject = sendEmailNotificationInfo.product.title;
+      let text =
+        sendEmailNotificationInfo.product.body + `${name}. Now you can buy`;
+      await sendNotificationEmail(subject, text);
       productMeta = new productMetaModel({
         product: mongoose.Types.ObjectId(result._id),
-        category: mongoose.Types.ObjectId(category),
-        subcategory: mongoose.Types.ObjectId(subcategory),
+        category: mongoose.Types.ObjectId(result.category),
+        subcategory: mongoose.Types.ObjectId(result.subcategory),
         metaData,
         metaDescription,
       });
@@ -280,7 +607,11 @@ const productsServices = {
     title,
     description,
     longDescription,
-    isColor,
+    isDiscount,
+    isDeal,
+    dealExpire,
+    oneTimeDeal,
+    discount,
     variant,
     thumbnail,
     images,
@@ -290,111 +621,211 @@ const productsServices = {
     taxType,
     isPercentage,
     taxAmount,
-    isActive,
-    isFeatured,
-    isSale,
-    isDeal,
-    inStock,
-    sequence,
-    ratingNumber,
-    ratingCount,
     metaData,
     metaDescription,
-    size,
     tags,
-    addons
+    addons,
+    newImages
   ) => {
     var _id = mongoose.Types.ObjectId(_id);
+    var imgArr = [];
     if (thumbnail) {
       thumbnail = await uploadFile(thumbnail);
     }
-    var imgArr = [];
-    if (images.length != 0) {
-      var arrayLength = images.length;
-      for (var i = 0; i < arrayLength; i++) {
-        img = await uploadFile(images[i]);
-        imgArr.push(img);
-      }
+    // convert images to base64
+    if (newImages.length != 0) {
+      imgArr = await Promise.all(newImages.map(uploadFile));
+      images = [...images, ...imgArr];
     }
+    //new images
     let result = null;
-    if (isTaxable === true && isPercentage === false && variant.length != 0) {
-      var variantArr = [];
-      for (var i = 0; i < variant.length; i++) {
-        colorName = variant[i].colorName;
-        colorHex = variant[i].colorHex;
-        actualPrice = variant[i].actualPrice + taxAmount;
-        discountedPrice = variant[i].discountedPrice;
-        quantity = variant[i].quantity;
-        sku = variant[i].sku;
-        size = variant[i].size;
-        variantArr.push({
-          colorName: colorName,
-          colorHex: colorHex,
-          actualPrice: actualPrice,
-          discountedPrice: discountedPrice,
-          quantity: quantity,
-          sku: sku,
-          size: size,
-        });
-      }
-      variant = variantArr;
+    let variants = [];
+    switch (variant.length !== 0) {
+      case variant[0].colorName === "" && variant[0].size.length === 0:
+        variants = await productVariantServices.handleNoColorNoSize(
+          variant,
+          isDiscount
+        );
+        break;
+      case variant[0].colorName !== "" && variant[0].size.length === 0:
+        variants = await productVariantServices.handleColorNoSize(
+          variant,
+          isDiscount
+        );
+        break;
+      case variant[0].colorName === "" && variant[0].size.length !== 0:
+        variants = await productVariantServices.handleNoColorSize(
+          variant,
+          isDiscount
+        );
+        break;
+      case variant[0].colorName !== "" && variant[0].size.length !== 0:
+        variants = await productVariantServices.handleColorSize(
+          variant,
+          isDiscount
+        );
+        break;
     }
-    if (isTaxable === true && isPercentage === true && variant.length != 0) {
-      let variantArr = [];
-      for (var i = 0; i < variant.length; i++) {
-        colorName = variant[i].colorName;
-        colorHex = variant[i].colorHex;
-        actualPrice = variant[i].actualPrice;
-        actualPrice = actualPrice + (taxAmount / 100) * actualPrice;
-        discountedPrice = variant[i].discountedPrice;
-        quantity = variant[i].quantity;
-        sku = variant[i].sku;
-        size = variant[i].size;
-        variantArr.push({
-          colorName: colorName,
-          colorHex: colorHex,
-          actualPrice: actualPrice,
-          discountedPrice: discountedPrice,
-          quantity: quantity,
-          sku: sku,
-          size: size,
-        });
-      }
-      variant = variantArr;
-    }
+    // case 1 if color and image are empty
+    // if (variant[0].colorName === "" && variant[0].size.length === 0) {
+    //   let variants = [];
+    //   for (let i of variant) {
+    //     if (i.image) {
+    //       var image = await uploadFile(i.image);
+    //       variants.push({
+    //         colorName: "",
+    //         colorHex: "",
+    //         actualPrice: i.actualPrice,
+    //         discountedPrice: i.discountedPrice,
+    //         quantity: i.quantity,
+    //         sku: `${i.sku}`,
+    //         size: "",
+    //         image: image,
+    //       });
+    //     } else {
+    //       variants.push({
+    //         colorName: "",
+    //         colorHex: "",
+    //         actualPrice: i.actualPrice,
+    //         discountedPrice: i.discountedPrice,
+    //         quantity: i.quantity,
+    //         sku: `${i.sku}`,
+    //         size: "",
+    //       });
+    //     }
+    //   }
+    //   variant = variants;
+    // }
+    // case 2 if there is color but no size
+    // else if (variant[0].colorName != "" && variant[0].size.length === 0) {
+    //   let variants = [];
+    //   for (let i of variant) {
+    //     if (i.image) {
+    //       var image = await uploadFile(i.image);
+    //       variants.push({
+    //         colorName: i.colorName,
+    //         colorHex: i.colorHex,
+    //         actualPrice: i.actualPrice,
+    //         discountedPrice: i.discountedPrice,
+    //         quantity: i.quantity,
+    //         sku: `${i.sku}`,
+    //         size: "",
+    //         image: image,
+    //       });
+    //     } else {
+    //       variants.push({
+    //         colorName: i.colorName,
+    //         colorHex: i.colorHex,
+    //         actualPrice: i.actualPrice,
+    //         discountedPrice: i.discountedPrice,
+    //         quantity: i.quantity,
+    //         sku: `${i.sku}`,
+    //         size: "",
+    //       });
+    //     }
+    //   }
+    //   variant = variants;
+    // }
+    // case if there is size but no color
+    // else if (variant[0].colorName === "" && variant[0].size.length != 0) {
+    //   let variants = [];
+    //   for (var item of variant) {
+    //     if (item.image) {
+    //       var image = await uploadFile(item.image);
+    //       for (var i of item.size) {
+    //         variants.push({
+    //           colorName: "",
+    //           colorHex: "",
+    //           actualPrice: i.actualPrice,
+    //           discountedPrice: i.discountedPrice,
+    //           quantity: item.quantity,
+    //           sku: `${item.sku}${i.name}`,
+    //           size: i.name,
+    //           image: image,
+    //         });
+    //       }
+    //     } else {
+    //       for (var i of item.size) {
+    //         variants.push({
+    //           colorName: "",
+    //           colorHex: "",
+    //           actualPrice: i.actualPrice,
+    //           discountedPrice: i.discountedPrice,
+    //           quantity: item.quantity,
+    //           sku: `${item.sku}${i.name}`,
+    //           size: i.name,
+    //         });
+    //       }
+    //     }
+    //   }
+    //   variant = variants;
+    // }
+    // if we have size and color both
+    // else if (variant[0].colorName != "" && variant[0].size.length != 0) {
+    //   let variants = [];
+    //   for (var item of variant) {
+    //     if (item.image) {
+    //       var image = await uploadFile(item.image);
+    //       for (var i of item.size) {
+    //         variants.push({
+    //           colorName: item.colorName,
+    //           colorHex: item.colorHex,
+    //           actualPrice: i.actualPrice,
+    //           discountedPrice: i.discountedPrice,
+    //           quantity: i.quantity,
+    //           sku: `${item.sku}${i.name}`,
+    //           size: i.name,
+    //           image: image,
+    //         });
+    //       }
+    //     } else {
+    //       for (var i of item.size) {
+    //         variants.push({
+    //           colorName: item.colorName,
+    //           colorHex: item.colorHex,
+    //           actualPrice: i.actualPrice,
+    //           discountedPrice: i.discountedPrice,
+    //           quantity: i.quantity,
+    //           sku: `${item.sku}${i.name}`,
+    //           size: i.name,
+    //         });
+    //       }
+    //     }
+    //   }
+    //   variant = variants;
+    // }
+
+    // final update
     if (thumbnail) {
       result = await productsModel.findOneAndUpdate(
         { _id },
         {
-          category: mongoose.Types.ObjectId(category),
-          subcategory: mongoose.Types.ObjectId(subcategory),
-          name,
-          title,
-          description,
-          longDescription,
-          isColor,
-          variant,
-          $push: { images: imgArr },
-          vendor,
-          isTaxable,
-          taxHead,
-          taxType,
-          isPercentage,
-          taxAmount,
-          isActive,
-          isFeatured,
-          thumbnail,
-          isSale,
-          isDeal,
-          inStock,
-          sequence,
-          ratingNumber,
-          ratingCount,
-          metaData,
-          metaDescription,
-          size,
-          tags,
-          addons,
+          $set: {
+            category: mongoose.Types.ObjectId(category),
+            subcategory: mongoose.Types.ObjectId(subcategory),
+            name,
+            title,
+            description,
+            longDescription,
+            isDiscount,
+            isDeal,
+            dealExpire,
+            oneTimeDeal,
+            discount,
+            variant: variants,
+            thumbnail,
+            images,
+            vendor,
+            isTaxable,
+            taxHead,
+            taxType,
+            isPercentage,
+            taxAmount,
+            metaData,
+            metaDescription,
+            tags,
+            addons,
+          },
         },
         { new: true }
       );
@@ -402,34 +833,32 @@ const productsServices = {
       result = await productsModel.findOneAndUpdate(
         { _id },
         {
-          category: mongoose.Types.ObjectId(category),
-          subcategory: mongoose.Types.ObjectId(subcategory),
-          name,
-          title,
-          description,
-          longDescription,
-          isColor,
-          variant,
-          $push: { images: imgArr },
-          vendor,
-          isTaxable,
-          taxHead,
-          taxType,
-          isPercentage,
-          taxAmount,
-          isActive,
-          isFeatured,
-          isSale,
-          isDeal,
-          inStock,
-          sequence,
-          ratingNumber,
-          ratingCount,
-          metaData,
-          metaDescription,
-          size,
-          tags,
-          addons,
+          $set: {
+            category: mongoose.Types.ObjectId(category),
+            subcategory: mongoose.Types.ObjectId(subcategory),
+            name,
+            title,
+            description,
+            longDescription,
+            isDiscount,
+            isDeal,
+            dealExpire,
+            oneTimeDeal,
+            discount,
+            variant: variants,
+            thumbnail,
+            images,
+            vendor,
+            isTaxable,
+            taxHead,
+            taxType,
+            isPercentage,
+            taxAmount,
+            metaData,
+            metaDescription,
+            tags,
+            addons,
+          },
         },
         { new: true }
       );
@@ -450,7 +879,7 @@ const productsServices = {
   },
   delete: async (_id) => {
     var _id = mongoose.Types.ObjectId(_id);
-    const result = await productsModel.deleteOne({ _id });
+    const result = await productsModel.deleteOne({ _id: _id });
     return result;
   },
   getMultipleProducts: async (ids) => {
@@ -460,10 +889,87 @@ const productsServices = {
     );
     return list;
   },
-
+  logSoldDealProduct: async (product, customerId) => {
+    let currentDate = new Date(new Date().toLocaleDateString());
+    var productLength = product.length;
+    for (let i = 0; i < productLength; i++) {
+      productId = product[i].productId;
+      quantity = product[i].quantity;
+      price = product[i].price;
+      sku = product[i].sku;
+      size = product[i].size;
+      var dealProduct = await productsModel.findOne(
+        { _id: productId, isDeal: true, dealExpire: { $gte: currentDate } },
+        { dealExpire: 1 }
+      );
+      if (dealProduct) {
+        productId = dealProduct._id;
+        dealExpire = dealProduct.dealExpire;
+        const dealData = new dealBuyerLogModel({
+          customer: customerId,
+          product: productId,
+          dealExpire: dealExpire,
+        });
+        await dealData.save();
+      }
+    }
+  },
+  updateLogDealProduct: async (product, customerId) => {
+    let productIdArr = [];
+    for (var i of product) {
+      productIdArr.push(i.productId);
+    }
+    const deal = await dealBuyerLogModel.updateMany({
+      customer: customerId,
+      product: productIdArr,
+    });
+    return deal;
+  },
   test: async () => {
     let data = await productsModel.find({});
     return data;
+  },
+  productCategory: async (categoryId) => {
+    const result = await productsModel.find({
+      category: { $in: categoryId },
+    });
+    return result;
+  },
+  productsubCategory: async (subCategoryId) => {
+    const result = await productsModel.find({
+      subcategory: { $in: subCategoryId },
+    });
+    return result;
+  },
+  calculateTax: async (product) => {
+    const tax = await productsModel.aggregate([
+      {
+        $addFields: {
+          product: product,
+        },
+      },
+      {
+        $match: {
+          _id: "product.productId",
+        },
+      },
+      {
+        $project: {
+          totalTax: {
+            $multiply: ["$taxAmount", "$product.quantity"],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalTax: {
+            $sum: "$totalTax",
+          },
+        },
+      },
+    ]);
+    return tax;
   },
 };
 

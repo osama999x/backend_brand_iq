@@ -1,0 +1,149 @@
+paths:
+  /api/v1/zindigiWallet/varifyAcounToLink:
+    post:
+      summary: Verify Acount To Link
+      tags:
+        - Zindigi Payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "403":
+          description: Request Forbidden
+        "400":
+          description: Bad Request
+  /api/v1/zindigiWallet/linkAccount:
+    post:
+      summary: Link Account
+      tags:
+        - Zindigi Payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                mPin:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "403":
+          description: Request Forbidden
+        "400":
+          description: Bad Request
+  /api/v1/zindigiWallet/deLinkAccountOtp:
+    get:
+      summary: DeLink Account Send Otp
+      tags:
+        - Zindigi Payment
+      parameters:
+        - name: email
+          in: query
+          required: true
+      responses:
+        "200":
+          description: Success
+        "403":
+          description: Request Forbidden
+        "400":
+          description: Bad Request
+  /api/v1/zindigiWallet/deLinkAccount:
+    post:
+      summary: DeLink Account
+      tags:
+        - Zindigi Payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                otp:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "403":
+          description: Request Forbidden
+        "400":
+          description: Bad Request
+  /api/v1/zindigiWallet/paymentInquiry:
+    post:
+      summary: Payment Inquery
+      tags:
+        - Zindigi Payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                amount:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "403":
+          description: Request Forbidden
+  /api/v1/zindigiWallet/payment:
+    post:
+      summary: Payment
+      tags:
+        - Zindigi Payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                orderId:
+                  type: string
+                amount:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "403":
+          description: Request Forbidden
+  /api/v1/zindigiWallet/balanceInquiry:
+    post:
+      summary: Balance Inquery
+      tags:
+        - Zindigi Payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+      responses:
+        200:
+          description: Success
+        400:
+          description: Bad Request
+        403:
+          description: Request Forbidden

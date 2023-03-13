@@ -2,14 +2,23 @@ const notificationModel = require("../model/notificationModel");
 const readNotificationModel = require("../model/readNotificationModel");
 const projection = require("../config/mongoProjection");
 const notificationServices = {
-  addNew: async (title, body, message, topic) => {
+  addNew: async (title, body, message, topic, notificationType, icon) => {
     const notification = new notificationModel({
       title,
       body,
       message,
       topic,
+      notificationType,
+      icon,
     });
     const result = await notification.save();
+    if (result) {
+      notify = result._id;
+      await readNotificationModel.updateMany(
+        {},
+        { $push: { readNotification: notify } }
+      );
+    }
     return result;
   },
   getByTopic: async (notificationType) => {
@@ -19,26 +28,13 @@ const notificationServices = {
     return list;
   },
   userNotification: async (page) => {
-    // let unreadNotification = await readNotificationModel.findOne(
-    //   { customer: customerId },
-    //   { readNotification: 1 }
-    // );
-    // if (unreadNotification) {
-    //   unreadNotification = unreadNotification.readNotification;
     var list = await notificationModel
       .find({}, projection.projection)
       .limit(10 * 1)
       .skip((page - 1) * 10)
       .sort("-createdAt");
-    // if (list.length != 0) {
-    //   await readNotificationModel.findOneAndUpdate(
-    //     { customer: customerId },
-    //     { readNotification: [] }
-    //   );
-    // }
+
     return list;
-    // }
-    // return [];
   },
 };
 

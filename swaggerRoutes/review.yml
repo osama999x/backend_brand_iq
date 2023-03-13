@@ -1,0 +1,117 @@
+paths:
+  /api/v1/review/all:
+    get:
+      summary: All Review list
+      tags: [Review Management]
+      responses:
+        200:
+          description: Get All Review List
+
+  /api/v1/review/customerReviewDetails:
+    get:
+      summary: Get Review Details
+      tags: [Review Management]
+      parameters:
+        - name: reviewId
+          in: query
+          required: true
+      responses:
+        200:
+          description: Get Review Details
+        400:
+          description: Not Found
+
+  /api/v1/review/approvedReview:
+    patch:
+      summary: Approved Review
+      tags: [Review Management]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reviewId:
+                  type: string
+                isApproved:
+                  type: boolean
+      responses:
+        200:
+          description: success
+        400:
+          description: Bad Request
+
+  /api/v1/review/product:
+    get:
+      summary: Get Product Reviews
+      tags: [Review Management]
+      parameters:
+        - name: productId
+          in: query
+          required: true
+      responses:
+        200:
+          description: Get Product Reviews
+        400:
+          description: Not Found
+
+  /api/v1/review/getPoductAllReviews:
+    get:
+      summary: Get Product Reviews
+      tags: [Review Management]
+      parameters:
+        - name: productId
+          in: query
+          required: true
+      responses:
+        200:
+          description: Get Product Reviews
+        400:
+          description: Not Found
+
+  /api/v1/review:
+    post:
+      summary: Add Review
+      tags: [Review Management]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  type: string
+                customerId:
+                  type: string
+                rating:
+                  type: number
+                comment:
+                  type: string
+                images:
+                  type: array
+                  items:
+                    type: string
+                channel:
+                  type: string
+      responses:
+        200:
+          description: success
+        400:
+          description: Bad Request
+
+    delete:
+      summary: Delete Review
+      tags: [Review Management]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reviewId:
+                  type: string
+      responses:
+        200:
+          description: success
+        400:
+          description: Bad Request

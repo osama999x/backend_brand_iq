@@ -1,0 +1,215 @@
+paths:
+  /api/v1/order/all:
+    get:
+      summary: "Get Order List"
+      tags:
+        - "Order Management"
+      responses:
+        200:
+          description: "Get Order List"
+  /api/v1/order/orderTracking:
+    get:
+      summary: "Track Order"
+      tags:
+        - "Order Management"
+      parameters:
+        - name: "orderId"
+          in: "query"
+          required: true
+      responses:
+        200:
+          description: "Track Order"
+        400:
+          description: "Not Found"
+  /api/v1/order/orderDispatch:
+    post:
+      summary: "Dispatch Order"
+      tags:
+        - "Order Management"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deliveryPartnerId:
+                  type: string
+                orderStatus:
+                  type: string
+                orderId:
+                  type: string
+      responses:
+        200:
+          description: "Success"
+        400:
+          description: "Bad Request"
+  /api/v1/order/customerOrderHistory:
+    get:
+      summary: "Customer Order History"
+      tags:
+        - "Order Management"
+      parameters:
+        - name: "customerId"
+          in: "query"
+          required: true
+      responses:
+        200:
+          description: "Customer Order History"
+        400:
+          description: "Not Found"
+  /api/v1/order/orderHistoryDetail:
+    get:
+      summary: "Customer Order Details"
+      tags:
+        - "Order Management"
+      parameters:
+        - name: "orderId"
+          in: "query"
+          required: true
+      responses:
+        200:
+          description: "Customer Order Details"
+        400:
+          description: "Not Found"
+  /api/v1/order/customerClearHistory:
+    get:
+      summary: "Customer Order Clear History"
+      tags:
+        - "Order Management"
+      parameters:
+        - name: "orderId"
+          in: "query"
+          required: true
+      responses:
+        200:
+          description: "Customer Order Clear History"
+        400:
+          description: "Not Found"
+  /api/v1/order/detail:
+    get:
+      summary: "Customer Order Details"
+      tags:
+        - "Order Management"
+      parameters:
+        - name: "orderId"
+          in: "query"
+          required: true
+      responses:
+        200:
+          description: "Customer Order Details"
+        400:
+          description: "Not Found"
+  /api/v1/order/checkProductAvailbilty:
+    post:
+      summary: "Check Product Availability"
+      tags:
+        - "Order Management"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customerId:
+                  type: string
+                product:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      productId:
+                        type: string
+                      quantity:
+                        type: number
+                      price:
+                        type: number
+                      sku:
+                        type: string
+      responses:
+        200:
+          description: "Success"
+        400:
+          description: "Bad Request"
+  /api/v1/order:
+    post:
+      summary: Create Order
+      tags:
+        - Order Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customerId:
+                  type: string
+                product:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      productId:
+                        type: string
+                      quantity:
+                        type: number
+                      price:
+                        type: number
+                      sku:
+                        type: string
+                paymentMode:
+                  type: string
+                totalBill:
+                  type: string
+                totalAmount:
+                  type: number
+                redeemValue:
+                  type: number
+                address:
+                  type: string
+                contact:
+                  type: string
+                channel:
+                  type: string
+                couponCode:
+                  type: string
+      responses:
+        200:
+          description: Success
+        400:
+          description: Bad Request
+
+  /api/v1/order/orderReport:
+    get:
+      summary: Get Order List
+      tags:
+        - Order Management
+      responses:
+        200:
+          description: Get Order List
+        400:
+          description: Not Found
+
+  /api/v1/order/orderReportByChannel:
+    get:
+      summary: Get Order By Channel
+      tags:
+        - Order Management
+      responses:
+        200:
+          description: Get Order List
+        400:
+          description: Not Found
+
+  /api/v1/order/dashboard:
+    get:
+      summary: Get Order By Channel
+      tags:
+        - Order Management
+      responses:
+        200:
+          description: Get Order List
+        400:
+          description: Not Found

@@ -4,6 +4,7 @@ const schema = new Schema(
   {
     name: {
       type: String,
+      enum: ["view", "create", "manage"],
       required: true,
       unique: true,
     },

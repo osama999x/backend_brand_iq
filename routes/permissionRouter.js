@@ -7,11 +7,7 @@ permissionRouter.get(
   "/all",
   expressAsyncHandler(async (req, res) => {
     const result = await permissionServices.get();
-    if (result.length !== 0) {
-      return res.status(200).send({ msg: "permissions", data: result });
-    } else {
-      return res.status(400).send({ msg: "Data Not Found" });
-    }
+    res.status(200).send({ msg: "permissions", data: result });
   })
 );
 permissionRouter.post(

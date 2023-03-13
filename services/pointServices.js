@@ -1,6 +1,9 @@
 const orderModel = require("../model/orderModel");
 const pointModel = require("../model/pointModel");
 const customerModel = require("../model/customerModel");
+const membershipModel = require("../model/membershipModel");
+const customerMembershipModel = require("../model/customerMembershipModel");
+const readNotficationModel = require("../model/readNotificationModel");
 const pointServices = {
   customerOrderPoints: async (customer, date) => {
     var pointDate = new Date(
@@ -35,6 +38,10 @@ const pointServices = {
         for (var i = 0; i < orderPoint.length; i++) {
           var point = orderPoint[i].points;
           orderDetails[i].orderPoint = point;
+        }
+      } else {
+        for (var i = 0; i < orderDetails.length; i++) {
+          orderDetails[i].orderPoint = 0;
         }
       }
     }
@@ -107,23 +114,61 @@ const pointServices = {
     //   var OPoints = orderPoints[i].points;
     //   customerOrder[i]["points"] = OPoints;
     // }
-    let customerPoints = await pointModel
-      .find(
-        {
-          customer: { $in: customer },
-        },
-        { points: 1, customer: 1 }
-      )
-      .lean();
-    var totalPoints = 0;
-    var customerId = customerPoints[0].customer;
-    customerPoints.forEach((element) => {
-      totalPoints += element.points;
+    let customerPoints = await customerModel.findById(
+      {
+        _id: customer,
+      },
+      { points: 1 }
+    );
+    // if (customerPoints) {
+    //   var totalPoints = 0;
+    //   // var customerId = customerPoints[0].customer;
+    //   customerPoints.forEach((element) => {
+    //     totalPoints += element.points;
+    //   });
+    // }
+    // const result = {
+    //   customerId: customer,
+    //   totalPoints: totalPoints,
+    // };
+    return customerPoints;
+  },
+  assaignPointMembership: async (customerId, customerPoints) => {
+    const membershipCategories = ["Silver", "Gold", "Platinum", "Diamond"];
+    var currentCategory = await membershipModel.findOne(
+      {
+        membershipCategory: { $in: membershipCategories },
+        thresholdFrom: { $lte: customerPoints },
+        thresholdTo: { $gte: customerPoints },
+      },
+      { membershipCategory: 1 }
+    );
+    if (currentCategory) {
+      category = currentCategory.membershipCategory;
+      _id = currentCategory._id;
+      await customerModel.findOneAndUpdate(
+        { _id: { $in: customerId } },
+        { membershipCategory: category }
+      );
+      const data = new customerMembershipModel({
+        customer: customerId,
+        membershipId: _id,
+        membershipCategory: category,
+        customerPoints: customerPoints,
+      });
+      await data.save();
+    }
+    const unRead = new readNotficationModel({
+      customer: customerId,
+      readNotfication: [],
     });
-    const result = {
-      customerId: customerId,
-      totalPoints: totalPoints,
-    };
+    await unRead.save();
+  },
+  updateCustomerRedeemPoints: async (customerId, redeemValue) => {
+    const result = await customerModel.findOneAndUpdate(
+      { _id: customerId },
+      { $inc: { points: -redeemValue } }
+    );
     return result;
   },
 };

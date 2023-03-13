@@ -1,3 +1,4 @@
+const { text } = require("body-parser");
 const { query } = require("express");
 const express = require("express");
 const expressAsyncHandler = require("express-async-handler");
@@ -10,11 +11,7 @@ homeRouter.get(
     // const { page, limit } = req.query;
     // eq.query);
     const result = await homeServices.get();
-    if (result) {
-      return res.status(200).send({ msg: "Home Screen", data: result });
-    } else {
-      return res.status(400).send({ msg: "Not Found" });
-    }
+    res.status(200).send({ msg: "Home Screen", data: result });
   })
 );
 
@@ -24,11 +21,7 @@ homeRouter.get(
     // const { page, limit } = req.query;
     // eq.query);
     const result = await homeServices.getLimitedPorduct();
-    if (result.length!=0) {
-      return res.status(200).send({ msg: "Home Screen", data: result });
-    } else {
-      return res.status(400).send({ msg: "Not Found" });
-    }
+    res.status(200).send({ msg: "Home Screen", data: result });
   })
 );
 homeRouter.get(
@@ -37,11 +30,30 @@ homeRouter.get(
     // const { page, limit } = req.query;
     // eq.query);
     const result = await homeServices.getRecentPorduct();
-    if (result.length != 0) {
-      return res.status(200).send({ msg: "Home Screen Recent Products", data: result });
-    } else {
-      return res.status(400).send({ msg: "Not Found" });
-    }
+    res.status(200).send({ msg: "Home Screen Recent Products", data: result });
+  })
+);
+homeRouter.get(
+  "/searchProduct",
+  expressAsyncHandler(async (req, res) => {
+    const { text } = req.query;
+    const result = await homeServices.searchProductByTags(text);
+    res.status(200).send({ msg: "Searh Products", data: result });
+  })
+);
+homeRouter.get(
+  "/getProductByTags",
+  expressAsyncHandler(async (req, res) => {
+    const { tags } = req.query;
+    const result = await homeServices.getProductByTags(tags);
+    res.status(200).send({ msg: "Products", data: result });
+  })
+);
+homeRouter.get(
+  "/getAllCategories",
+  expressAsyncHandler(async (req, res) => {
+    const result = await homeServices.getAllCategories();
+    res.status(200).send({ msg: "Products", data: result });
   })
 );
 

@@ -1,0 +1,29 @@
+paths:
+  /api/v1/orderStatus/all:
+    get:
+      summary: Get all Order Status
+      tags:
+        - Order Status Management
+      responses:
+        200:
+          description: Get all Order Status
+
+  /api/v1/orderStatus:
+    post:
+      summary: Add Order Status
+      tags:
+        - Order Status Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderStatusName:
+                  type: string
+      responses:
+        200:
+          description: Success
+        400:
+          description: Bad Request
