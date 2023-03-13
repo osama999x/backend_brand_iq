@@ -1,0 +1,53 @@
+paths:
+  /api/v1/point/customerOrderPoints:
+    post:
+      summary: Get Customer Points
+      tags:
+        - Point Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customerId:
+                  type: string
+                date:
+                  type: number
+      responses:
+        "200":
+          description: Get Customer Points daily,weekly and monthly
+        "400":
+          description: Not Found
+    get:
+      summary: Get Customer Order Point
+      tags:
+        - Point Management
+      parameters:
+        - name: customerId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Get Customer Order Point
+        "400":
+          description: Not Found
+  /api/v1/point/orderPoints:
+    get:
+      summary: Get Order Point
+      tags:
+        - Point Management
+      parameters:
+        - name: orderId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Get Order Point
+        "400":
+          description: Not Found

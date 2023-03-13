@@ -1,0 +1,60 @@
+paths:
+  /api/v1/notification/get:
+    get:
+      summary: Get Notification By Notification Type
+      tags:
+        - System Notification Management
+      parameters:
+        - name: notificationType
+          in: query
+          description: Type of the notification to retrieve
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Get Notification By Notification Type
+        "400":
+          description: Not Found
+
+  /api/v1/notification/userNotification:
+    get:
+      summary: Get User Notification
+      tags:
+        - System Notification Management
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: true
+          type: integer
+      responses:
+        "200":
+          description: Get User Notification
+        "400":
+          description: Not Found
+
+  /api/v1/notification:
+    post:
+      summary: Add System Notification
+      tags:
+        - System Notification Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                body:
+                  type: string
+                message:
+                  type: string
+                topic:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request

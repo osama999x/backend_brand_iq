@@ -6,14 +6,10 @@ membershipBenifitRouter.get(
   "/all",
   expressAsyncHandler(async (req, res) => {
     const result = await membershipBenifitServices.get();
-    if (result.length != 0) {
-      return res.status(200).send({
-        msg: "Membership Benifits",
-        data: result,
-      });
-    } else {
-      return res.status(400).send({ msg: "Membership Benifits Not Found" });
-    }
+    res.status(200).send({
+      msg: "Membership Benifits",
+      data: result,
+    });
   })
 );
 membershipBenifitRouter.get(

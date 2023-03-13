@@ -7,6 +7,15 @@ const couponStatusModel = require("../model/couponStatusModel");
 const notificationModel = require("../model/notificationModel");
 const notificationInfo = require("../utils/notificationInfo");
 const readNotficationModel = require("../model/readNotificationModel");
+const couponProductModel = require("../model/couponProductModel");
+const { find } = require("../model/registeredUserModel");
+const SubscribeModel = require("../model/subscribeModel");
+const sendNotificationEmail = require("../utils/sendNotificationEmail");
+const sendEmailNotificationInfo = require("../utils/sendEmailNotficationInfo");
+const notificationServices = require("./notificationServices");
+const customerModel = require("../model/customerModel");
+const { test } = require("./productsServices");
+const { text } = require("body-parser");
 // const productsImagesModel = require("../model/productsImagesModel");
 
 const coupanPolicyServices = {
@@ -41,20 +50,12 @@ const coupanPolicyServices = {
       couponCode: couponCode,
     });
     if (checkCustomer) {
-      // const result = {
-      //   msg: "You have already taken this coupon",
-      //   isCoupan: false,
-      // };
       throw "You have already taken this coupon";
     } else {
       const coupan = await couponPolicyModel.findOne({
         couponCode: couponCode,
       });
       if (!coupan) {
-        // const result = {
-        //   msg: "Coupan doesn't exist",
-        //   isCoupan: false,
-        // };
         throw "Coupon doesn't exist";
       } else {
         var today = new Date().toLocaleDateString();
@@ -66,27 +67,33 @@ const coupanPolicyServices = {
               activeFrom: { $lte: today },
               activeTo: { $gte: today },
             },
-            { couponValue: 1, _id: 0 }
+            { couponValue: 1, _id: 0, isPercentage: 1, orderPriceLimit: 1 }
           )
           .lean();
         if (result) {
-          const data = new couponStatusModel({
-            couponCode: couponCode,
-            customer: mongoose.Types.ObjectId(customerId),
-            isBuy: true,
-          });
-          const newData = await data.save();
+          // const data = new couponStatusModel({
+          //   couponCode: couponCode,
+          //   customer: mongoose.Types.ObjectId(customerId),
+          //   isBuy: true,
+          // });
+          // await data.save();
           result.isCoupon = true;
           return result;
         } else {
-          // const result = {
-          //   msg: "Coupan expire",
-          //   isCoupan: false,
-          // };
           throw "Coupon expire";
         }
       }
     }
+  },
+  consumeCoupon: async (customerId, couponCode) => {
+    let data = new couponStatusModel({
+      couponCode: couponCode,
+      customer: mongoose.Types.ObjectId(customerId),
+      isBuy: true,
+    });
+    await data.save();
+    // const consumeCoupon = await data.save();
+    // return consumeCoupon;
   },
   getOne: async (_id) => {
     var _id = mongoose.Types.ObjectId(_id);
@@ -97,48 +104,44 @@ const coupanPolicyServices = {
   addNew: async (
     couponCode,
     image,
-    activeFrom,
-    activeTo,
+    expireDate,
+    orderPriceLimit,
     couponValue,
     isActive,
     isPercentage
   ) => {
     image = await uploadFile(image);
-    activeFrom = new Date(activeFrom);
-    activeTo = new Date(activeTo);
-    const data = new couponPolicyModel({
+    var data = new couponPolicyModel({
       couponCode,
       image,
-      activeFrom,
-      activeTo,
+      expireDate,
+      orderPriceLimit,
       couponValue,
       isActive,
       isPercentage,
     });
     const result = await data.save();
     if (result) {
-      activeFrom = result.activeFrom.toLocaleString();
-      activeTo = result.activeTo.toLocaleString();
+      let subject = sendEmailNotificationInfo.coupon.title;
+      let text = sendEmailNotificationInfo.coupon.body;
+      await sendNotificationEmail(subject, text);
+      expireDate = result.expireDate.toLocaleString();
       couponCode = result.coupanCode;
       couponValue = result.coupanValue;
       image = result.image;
-      console.log(image);
-      const notification = new notificationModel({
-        title: notificationInfo.coupon.title,
-        body: notificationInfo.coupon.Body,
-        message: `This Coupon  ${couponCode} has spacial discount of ${couponValue}.This offer for limited time start from ${activeFrom} and end ${activeTo}`,
-        topic: "Spacial discount Offer",
-        notificationType: "coupon",
-        icon: image,
-      });
-      var notify = await notification.save();
-      if (notify) {
-        notify = notify._id;
-        await readNotficationModel.updateMany(
-          {},
-          { $push: { readNotification: notify } }
-        );
-      }
+      title = notificationInfo.coupon.title;
+      body = notificationInfo.coupon.body;
+      var message = `This Coupon  ${couponCode} has spacial discount of ${couponValue}.This offer for limited time end on ${expireDate}`;
+      var topic = "Spacial discount Offer";
+      var notificationType = "coupon";
+      await notificationServices.addNew(
+        title,
+        body,
+        message,
+        topic,
+        notificationType,
+        image
+      );
     }
     return result;
   },
@@ -146,43 +149,40 @@ const coupanPolicyServices = {
     _id,
     couponCode,
     image,
-    activeFrom,
-    activeTo,
+    expireDate,
+    orderPriceLimit,
+    couponValue,
     isActive,
-    isPercentage,
-    couponValue
+    isPercentage
   ) => {
     if (image) {
       image = await uploadFile(image);
-      activeFrom = new Date(activeFrom);
-      activeTo = new Date(activeTo);
       var result = await couponPolicyModel.findOneAndUpdate(
         { _id },
         {
           couponCode,
           image,
-          activeFrom,
-          activeTo,
+          expireDate,
+          orderPriceLimit,
+          couponValue,
           isActive,
           isPercentage,
-          couponValue,
         },
         {
           new: true,
         }
       );
     } else {
-      activeFrom = new Date(activeFrom);
-      activeTo = new Date(activeTo);
       result = await couponPolicyModel.findOneAndUpdate(
         { _id },
         {
           couponCode,
-          activeFrom,
-          activeTo,
+          image,
+          expireDate,
+          orderPriceLimit,
+          couponValue,
           isActive,
           isPercentage,
-          couponValue,
         },
         {
           new: true,
@@ -195,6 +195,29 @@ const coupanPolicyServices = {
     var _id = mongoose.Types.ObjectId(_id);
     let result = await couponPolicyModel.deleteOne({ _id });
     return result;
+  },
+  refundCoupon: async (customerId, couponCode) => {
+    const now = new Date(new Date().toLocaleDateString());
+    let coupon = await couponPolicyModel.findOne({
+      couponCode: couponCode,
+      expireDate: { $gte: now },
+    });
+    if (coupon) {
+      const status = await couponStatusModel.deleteOne({
+        couponCode: couponCode,
+        customer: customerId,
+      });
+      console.log(status);
+      if (status) {
+        let customer = await customerModel.findById({ _id: customerId });
+        await sendNotificationEmail(
+          "Coupon Refunded",
+          `Your order ${coupon.orderId} has been canceled and coupon ${couponCode} can be reused.`,
+          customer.email
+        );
+      }
+    }
+    return;
   },
 };
 

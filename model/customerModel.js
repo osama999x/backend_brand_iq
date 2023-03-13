@@ -33,6 +33,10 @@ const schema = new Schema(
           "Password must have at least: 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.",
       },
     },
+    cnic: {
+      type: String,
+      required: true,
+    },
     contact: {
       type: String,
       required: true,
@@ -56,6 +60,7 @@ const schema = new Schema(
     points: {
       type: Number,
       default: 0,
+      min: 0,
     },
     membershipCategory: {
       type: String,
@@ -64,6 +69,21 @@ const schema = new Schema(
     fcmToken: {
       type: String,
       default: null,
+    },
+    token: {
+      type: String,
+      default: null,
+    },
+    zindigiWallet: {
+      zindigiWalletNumber: {
+        type: String,
+        default: null,
+      },
+      title: { type: String, default: null },
+      linked: {
+        type: Boolean,
+        default: false,
+      },
     },
   },
   { timestamps: true }

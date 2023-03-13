@@ -6,14 +6,10 @@ feedbackRouter.get(
   "/all",
   expressAsyncHandler(async (req, res) => {
     const result = await feedbackServices.get();
-    if (result) {
-      return res.status(200).send({
-        msg: "FeedBack",
-        data: result,
-      });
-    } else {
-      return res.status(400).send({ msg: "FeedBack Not Found" });
-    }
+    return res.status(200).send({
+      msg: "FeedBack",
+      data: result,
+    });
   })
 );
 feedbackRouter.get(

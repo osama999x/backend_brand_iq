@@ -6,7 +6,8 @@ const schema = new Schema(
     membershipCategory: {
       type: String,
       enum: ["Silver", "Gold", "Platinum", "Diamond"],
-      unique:true
+      required: true,
+      unique: true,
     },
     thresholdFrom: {
       type: Number,

@@ -39,6 +39,14 @@ const schema = new Schema(
       type: String,
       required: true,
     },
+    token: {
+      type: String,
+      default: null,
+    },
+    refreshToken: {
+      type: String,
+      default: null,
+    },
     isLogin: {
       type: Boolean,
       default: false,

@@ -1,0 +1,47 @@
+paths:
+  /api/v1/module/all:
+    get:
+      summary: All Module list
+      tags: [User Management]
+      responses:
+        "200":
+          description: Get All Module List
+  /api/v1/module/getById:
+    get:
+      summary: Get Module By Id
+      tags: [User Management]
+      parameters:
+        - in: query
+          name: moduleId
+          required: true
+      responses:
+        "200":
+          description: Get  Module By Id
+        "400":
+          description: Not Found
+  /api/v1/module:
+    post:
+      summary: Add module
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  type: string
+                route:
+                  type: string
+                isSubModule:
+                  type: boolean
+                permissions:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request

@@ -1,46 +1,41 @@
+const { truncate } = require("fs/promises");
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const uuid = require("uuid");
 const schema = new Schema(
   {
-    campaignName: {
-      type: String,
+    campaignId: {
+      type: Schema.Types.ObjectId,
+      ref: "Campaign",
       required: true,
-    },
-    banner: {
-      type: String,
     },
     product: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Product",
         required: true,
+        ref: "Product",
+        unique: true,
       },
     ],
-    category: {
-      type: Schema.Types.ObjectId,
-      ref: "Category",
-      required: true,
-    },
     subcategory: {
       type: Schema.Types.ObjectId,
       ref: "SubCategory",
       required: true,
+      unique: true,
     },
     discount: {
-      type: String,
+      type: Number,
       required: true,
+      min: 0,
+      max: 100,
     },
-    launchDate: {
+    expireDate: {
       type: Date,
-      default: Date.now,
-    },
-    endingDate: {
-      type: Date,
-      default: Date.now,
+      required: true,
     },
     status: {
       type: String,
+      required: true,
       default: "pending",
     },
   },

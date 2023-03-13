@@ -1,17 +1,17 @@
 const express = require("express");
 const expressAsyncHandler = require("express-async-handler");
+const productsModel = require("../model/productsModel");
+const subcategoryModel = require("../model/subCategoryModel");
 const categoryServices = require("../services/categoryServices");
+const productsServices = require("../services/productsServices");
+const subCategoryServices = require("../services/subCategoryServices");
 const categoryRouter = express.Router();
 
 categoryRouter.get(
   "/all",
   expressAsyncHandler(async (req, res) => {
     const result = await categoryServices.get();
-    if (result.length !== 0) {
-      res.status(200).send({ msg: "categories", data: result });
-    } else {
-      res.status(400).send({ msg: "No categories found" });
-    }
+    res.status(200).send({ msg: "categories", data: result });
   })
 );
 
@@ -99,6 +99,15 @@ categoryRouter.delete(
   "/",
   expressAsyncHandler(async (req, res) => {
     const { categoryId } = req.body;
+    const category = await productsServices.productCategory(categoryId);
+    const Subcategory = await subCategoryServices.subcategory(category);
+    console.log("category", category);
+    console.log("subcategory", Subcategory);
+    if (category.length != 0 || Subcategory.length != 0) {
+      return res
+        .status(400)
+        .send({ msg: "This category linked with subcategory or  product!" });
+    }
     const result = await categoryServices.delete(categoryId);
     if (result.deletedCount == 0) {
       return res.status(400).send({ msg: "ID Not found" });

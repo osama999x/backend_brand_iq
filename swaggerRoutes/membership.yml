@@ -1,0 +1,190 @@
+paths:
+  /api/v1/membership/all:
+    get:
+      summary: All Membership list
+      tags:
+        - Membership Management
+      responses:
+        200:
+          description: Get All Membership List
+  /api/v1/membership/getOne:
+    get:
+      summary: Get Membership Details
+      tags:
+        - Membership Management
+      parameters:
+        - name: membershipId
+          in: query
+          required: true
+      responses:
+        200:
+          description: Get Membership Details
+        400:
+          description: Not Found
+  /api/v1/membership:
+    post:
+      summary: Create Membership
+      tags:
+        - Membership Management
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                membershipCategory:
+                  type: string
+                thresholdFrom:
+                  type: string
+                thresholdTo:
+                  type: string
+      responses:
+        200:
+          description: success
+        400:
+          description: Bad Request
+    patch:
+      summary: Update Membership
+      tags:
+        - Membership Management
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                membershipId:
+                  type: string
+                membershipCategory:
+                  type: string
+                thresholdFrom:
+                  type: string
+                thresholdTo:
+                  type: string
+      responses:
+        200:
+          description: success
+        400:
+          description: Bad Request
+    delete:
+      summary: Delete Membership
+      tags:
+        - Membership Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                membershipId:
+                  type: string
+      responses:
+        200:
+          description: success
+        400:
+          description: Bad Request
+  /api/v1/membershipBenifit/all:
+    get:
+      summary: All Membership Benefit list
+      tags:
+        - Membership Management
+      responses:
+        200:
+          description: Get All Membership Benefit List
+  /api/v1/membershipBenifit/getOne:
+    get:
+      summary: Get Membership Benefit Details
+      tags:
+        - Membership Management
+      parameters:
+        - name: membershipId
+          in: query
+          required: true
+      responses:
+        200:
+          description: Get Membership Benefit Details
+        400:
+          description: Not Found
+  /api/v1/membershipBenifit:
+    post:
+      summary: Create Membership Benefit
+      tags:
+        - Membership Management
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                membershipCategory:
+                  type: string
+                label:
+                  type: string
+                description:
+                  type: string
+                image:
+                  type: string
+                expireDate:
+                  type: string
+      responses:
+        200:
+          description: success
+        400:
+          description: Bad Request
+    patch:
+      summary: Update Membership Benefit
+      tags:
+        - Membership Management
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Membership Benefit object
+          required: true
+          schema:
+            type: object
+            properties:
+              membershipBenifitId:
+                type: string
+              membershipCategory:
+                type: string
+              label:
+                type: string
+              description:
+                type: string
+              image:
+                type: string
+              expireDate:
+                type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+    delete:
+      summary: Delete Membership Benefit
+      tags:
+        - Membership Management
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Membership Benefit object
+          required: true
+          schema:
+            type: object
+            properties:
+              membershipBenifitId:
+                type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request

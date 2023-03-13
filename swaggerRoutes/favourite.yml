@@ -1,0 +1,60 @@
+paths:
+  /api/v1/favourite/customer:
+    get:
+      summary: Get Favourite List
+      tags:
+        - "Favourite Management"
+      parameters:
+        - name: customerId
+          in: query
+          description: "ID of the customer whose favourite list is to be retrieved"
+          required: true
+          type: string
+      responses:
+        200:
+          description: "Favourite list for the given customer"
+        400:
+          description: "Bad Request"
+
+  /api/v1/favourite:
+    post:
+      summary: Add Favourite
+      tags:
+        - "Favourite Management"
+      requestBody:
+        description: "Request body for adding a product to favourite list"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customerId:
+                  type: string
+                productId:
+                  type: string
+      responses:
+        200:
+          description: "Favourite added successfully"
+        400:
+          description: "Bad Request"
+
+    delete:
+      summary: Delete Favourite
+      tags:
+        - "Favourite Management"
+      requestBody:
+        description: "Request body for deleting a product from favourite list"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                favouriteId:
+                  type: string
+      responses:
+        200:
+          description: "Favourite deleted successfully"
+        400:
+          description: "Bad Request"

@@ -1,12 +1,16 @@
 const express = require("express");
 const expressAsyncHandler = require("express-async-handler");
 const customerModel = require("../model/customerModel");
+const authIdServices = require("../services/authIdServices");
 const customerServices = require("../services/customerServices");
 const systemNotificationServices = require("../services/systemNotificationServices");
 const notificationInfo = require("../utils/notificationInfo");
 const customerRouter = express.Router();
 const validator = require("../utils/passwordValidator");
 const uploadFile = require("../utils/uploadFile");
+const { v4: uuidv4 } = require("uuid");
+const saveOtp = require("../utils/saveOtp");
+const jwtService = require("../utils/jwtService");
 customerRouter.post(
   "/signup",
   expressAsyncHandler(async (req, res) => {
@@ -19,6 +23,7 @@ customerRouter.post(
       gender,
       password,
       reEnterPassword,
+      cnic,
     } = req.body;
 
     if (password !== reEnterPassword) {
@@ -38,10 +43,23 @@ customerRouter.post(
       contact,
       address,
       gender,
-      password
+      password,
+      cnic
     );
     if (result) {
-      return res.status(200).send({ msg: "Registered Succesfully" });
+      const uuid = uuidv4();
+      const refreshToken = jwtService.create({ uuid, type: "user" });
+      const accessToken = jwtService.create(
+        { userId: result._id, type: "user" },
+        "5m"
+      );
+      authIdServices.add(result._id, uuid);
+      return res.status(200).send({
+        msg: "Registered Successfully",
+        data: result,
+        accessToken,
+        refreshToken,
+      });
     } else {
       return res.status(400).send({ msg: "Customer Not Registered" });
     }
@@ -103,7 +121,7 @@ customerRouter.patch(
       if (result) {
         res
           .status(200)
-          .send({ msg: "Image Updated Succesfully", data: result });
+          .send({ msg: "Profile Updated Successfully", data: result });
       } else {
         res.status(400).send({ msg: "Failed to update profile image!" });
       }
@@ -115,13 +133,12 @@ customerRouter.patch(
 customerRouter.patch(
   "/updateCustomerProfile",
   expressAsyncHandler(async (req, res) => {
-    const { customerID, firstName, lastName, email, contact, address, gender } =
+    const { customerID, firstName, lastName, contact, address, gender } =
       req.body;
     if (
       !customerID ||
       !firstName ||
       !lastName ||
-      !email ||
       !contact ||
       !address ||
       !gender
@@ -133,15 +150,16 @@ customerRouter.patch(
       customerID,
       firstName,
       lastName,
-      email,
       contact,
       address,
       gender
     );
     if (result) {
-      return res.status(200).send({ msg: "customer updated.", data: result });
+      return res
+        .status(200)
+        .send({ msg: "User profile updated successfully", data: result });
     } else {
-      return res.status(400).send({ msg: "customer not updated" });
+      return res.status(400).send({ msg: "User profile not updated" });
     }
   })
 );
@@ -152,19 +170,41 @@ customerRouter.post(
     if (!email || !password || !fcmToken) {
       res.status(400).send({ msg: "Fields Missing" });
     }
-    try {
-      const result = await customerServices.login(email, password, fcmToken);
-      res.status(200).json({ msg: "Logged In Succesfully", data: result });
-      if (result) {
+    const result = await customerServices.login(email, password, fcmToken);
+    if (result) {
+      const validatePassword = await customerServices.validatePassword(
+        password,
+        result.password
+      );
+      if (validatePassword) {
+        await customerModel.findOneAndUpdate({ email }, { fcmToken: fcmToken });
         await systemNotificationServices.newNotification(
           notificationInfo.login.body,
           notificationInfo.login.title,
           fcmToken
         );
+        res.status(200).send({
+          msg: "Logged in Successfully",
+          data: result,
+        });
+      } else {
+        res.status(400).send({
+          msg: "Password Incorrect!",
+        });
       }
-    } catch (e) {
-      res.status(400).send({ msg: e });
+    } else {
+      res.status(400).send({
+        msg: "User doesn't exist!",
+      });
     }
+    // res.status(200).json({ msg: "Logged In Successfully", data: result });
+    // if (result) {
+    //   await systemNotificationServices.newNotification(
+    //     notificationInfo.login.body,
+    //     notificationInfo.login.title,
+    //     fcmToken
+    //   );
+    // }
   })
 );
 customerRouter.post(
@@ -173,9 +213,9 @@ customerRouter.post(
     const { customerID } = req.body;
     const result = await customerServices.customerDetails(customerID);
     if (result) {
-      res.status(400).json({
+      res.status(200).json({
         msg: "Customer",
-        Detail: result,
+        data: result,
       });
     } else {
       res.status(200).json({ msg: "Customer doesn't exists" });
@@ -206,12 +246,30 @@ customerRouter.post(
   "/resetpassword/verify",
   expressAsyncHandler(async (req, res) => {
     const { email, otp } = req.body;
-    try {
-      const result = await customerServices.verifyNewPassword(email, otp);
-      res.status(200).json({ msg: "OTP Varified" });
-    } catch (e) {
-      res.status(400).json({ msg: e });
+    const expireOtp = await saveOtp.validateOTPExpiryByEmail(email);
+    if (!expireOtp) {
+      res.status(400).send({
+        msg: "Otp Expire please try again!",
+      });
+    } else {
+      const user = await saveOtp.verifiyOtp(email, otp);
+      if (user) {
+        await customerModel.findOneAndUpdate(
+          { email },
+          { isVarified: true },
+          { new: true }
+        );
+        res.status(200).send({ msg: "OTP Verified" });
+      } else {
+        res.status(400).send({ msg: "Invalid OTP" });
+      }
     }
+    // try {
+    //   const result = await customerServices.verifyNewPassword(email, otp);
+    //   res.status(200).json({ msg: "OTP Verified " });
+    // } catch (e) {
+    //   res.status(400).json({ msg: e.message });
+    // }
   })
 );
 customerRouter.post(
@@ -220,6 +278,13 @@ customerRouter.post(
     const { userId, password, reEnterPassword } = req.body;
     if (password !== reEnterPassword) {
       return res.status(400).send({ msg: "Passwords Don't Match" });
+    }
+    if (!validator.schema.validate(password)) {
+      return res.status(400).send({
+        msg: "Password must have at least:1 uppercase letter,1 lowercase letter,1 number and 1 special character",
+
+        //validator.schema.validate(password, { list: true }),
+      });
     }
     const result = await customerServices.setNewPassword(userId, password);
     if (result) {
@@ -244,6 +309,13 @@ customerRouter.post(
     const { email, password, reEnterPassword } = req.body;
     if (password !== reEnterPassword) {
       return res.status(400).send({ msg: "Passwords Don't Match" });
+    }
+    if (!validator.schema.validate(password)) {
+      return res.status(400).send({
+        msg: "Password must have at least:1 uppercase letter,1 lowercase letter,1 number and 1 special character",
+
+        //validator.schema.validate(password, { list: true }),
+      });
     }
     const result = await customerServices.setForgotPassword(email, password);
     if (result) {

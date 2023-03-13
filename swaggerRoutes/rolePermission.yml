@@ -1,0 +1,158 @@
+paths:
+  /api/v1/rolePermission/all:
+    get:
+      summary: All role Permission list
+      tags: [User Management]
+      responses:
+        "200":
+          description: Get All role Permission List
+  /api/v1/rolePermission:
+    post:
+      summary: Create a new role permission
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  description: The ID of the associated role
+                history:
+                  type: string
+                  description: The history of the role permission
+                modules:
+                  type: array
+                  description: The list of modules and submodules associated with the role permission
+                  items:
+                    type: object
+                    properties:
+                      module:
+                        type: string
+                        description: The ID of the associated module
+                      isSubmodule:
+                        type: boolean
+                        description: Module has sub module or not
+                      permissions:
+                        type: array
+                        description: The list of permissions associated with the module
+                        items:
+                          type: string
+                      sub_Modules:
+                        type: array
+                        description: The list of submodules associated with the module
+                        items:
+                          type: object
+                          properties:
+                            subModule:
+                              type: array
+                              description: The list of sub module
+                              items:
+                                type: string
+                            permissions:
+                              type: array
+                              description: The list of permissions associated with the module
+                              items:
+                                type: string
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad request
+    patch:
+      summary: Update role permission
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role_permissionId:
+                  type: string
+                  description: The id of updated role permission Id
+                role:
+                  type: string
+                  description: The ID of the associated role
+                history:
+                  type: string
+                  description: The history of the role permission
+                modules:
+                  type: array
+                  description: The list of modules and submodules associated with the role permission
+                  items:
+                    type: object
+                    properties:
+                      module:
+                        type: string
+                        description: The ID of the associated module
+                      isSubmodule:
+                        type: boolean
+                        description: Module has sub module or not
+                      permissions:
+                        type: array
+                        description: The list of permissions associated with the module
+                        items:
+                          type: string
+                      sub_Modules:
+                        type: array
+                        description: The list of submodules associated with the module
+                        items:
+                          type: object
+                          properties:
+                            subModule:
+                              type: array
+                              description: The list of sub module
+                              items:
+                                type: string
+                            permissions:
+                              type: array
+                              description: The list of permissions associated with the module
+                              items:
+                                type: string
+      responses:
+        "200":
+          description: Update
+        "400":
+          description: Bad request
+    delete:
+      summary: Delete A Role Permission
+      tags: [User Management]
+      parameters:
+        - in: query
+          name: role_permissionId
+          required: true
+      responses:
+        200:
+          description: success
+        400:
+          description: Bad Request
+  /api/v1/rolePermission/getById:
+    get:
+      summary: Get Role Permission By Id
+      tags: [User Management]
+      parameters:
+        - in: query
+          name: role_permissionId
+          required: true
+      responses:
+        200:
+          description: Get Role Permission By
+        400:
+          description: Not Found
+  /api/v1/rolePermission/getByRole:
+    get:
+      summary: Get Role Permission By roleId
+      tags: [User Management]
+      parameters:
+        - in: query
+          name: roleId
+          required: true
+      responses:
+        200:
+          description: Get Role Permission By roleId
+        400:
+          description: Not Found

@@ -1,0 +1,66 @@
+paths:
+  /api/v1/permission/all:
+    get:
+      summary: All Permission list
+      tags:
+        - User Management
+      responses:
+        200:
+          description: Get All Permission List
+  /api/v1/permission:
+    post:
+      summary: Add Permission
+      tags:
+        - User Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        200:
+          description: Success
+        400:
+          description: Bad Request
+    patch:
+      summary: Update Permission
+      tags:
+        - User Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permissionId:
+                  type: string
+                name:
+                  type: string
+      responses:
+        200:
+          description: Success
+        400:
+          description: Bad Request
+    delete:
+      summary: Delete Permission
+      tags:
+        - User Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permissionId:
+                  type: string
+      responses:
+        200:
+          description: Success
+        400:
+          description: Bad Request

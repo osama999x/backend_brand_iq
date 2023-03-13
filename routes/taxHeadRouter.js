@@ -1,5 +1,6 @@
 const express = require("express");
 const expressAsyncHandler = require("express-async-handler");
+const productsServices = require("../services/productsServices");
 const taxHeadServices = require("../services/taxHeadServices");
 const taxHeadRouter = express.Router();
 
@@ -7,14 +8,10 @@ taxHeadRouter.get(
   "/",
   expressAsyncHandler(async (req, res) => {
     const result = await taxHeadServices.get();
-    if (result.length !== 0) {
-      return res.status(200).send({
-        msg: "tax heads",
-        data: result,
-      });
-    } else {
-      return res.status(400).send({ msg: "tax heads Not Found" });
-    }
+    res.status(200).send({
+      msg: "tax heads",
+      data: result,
+    });
   })
 );
 taxHeadRouter.get(
@@ -68,6 +65,18 @@ taxHeadRouter.patch(
       return res.status(200).send({ msg: "tax head updated.", data: result });
     } else {
       return res.status(400).send({ msg: "Tax head not updated" });
+    }
+  })
+);
+taxHeadRouter.post(
+  "/tax",
+  expressAsyncHandler(async (req, res) => {
+    const { product } = req.body;
+    const result = await productsServices.calculateTax(product);
+    if (result) {
+      return res.status(200).send({ msg: "Tax ", data: result });
+    } else {
+      return res.status(400).send({ msg: "Tax Not Calculated!" });
     }
   })
 );

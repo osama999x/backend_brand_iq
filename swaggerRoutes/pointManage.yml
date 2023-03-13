@@ -1,0 +1,90 @@
+paths:
+  /api/v1/pointManage/all:
+    get:
+      summary: Get Initial Point Manage
+      tags:
+        - Point Management
+      responses:
+        "200":
+          description: Get Initial Point Manage
+  /api/v1/pointMange/getOne:
+    get:
+      summary: Get Details
+      tags:
+        - Point Management
+      parameters:
+        - name: pointId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Get Details
+        "400":
+          description: Not Found
+  /api/v1/pointManage:
+    post:
+      summary: Add Initial Point
+      tags:
+        - Point Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                initialPoint:
+                  type: string
+                pointOrderPrice:
+                  type: string
+                pointPerOrder:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+    patch:
+      summary: Update Initial Point
+      tags:
+        - Point Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pointManageId:
+                  type: string
+                initialPoint:
+                  type: string
+                pointOrderPrice:
+                  type: string
+                pointPerOrder:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+    delete:
+      summary: Delete Initial Point
+      tags:
+        - Point Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pointManageId:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request

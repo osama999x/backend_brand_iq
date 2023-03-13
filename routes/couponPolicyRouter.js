@@ -7,14 +7,10 @@ couponPolicyRouter.get(
   "/all",
   expressAsyncHandler(async (req, res) => {
     const result = await couponPolicyServices.get();
-    if (result.length != 0) {
-      return res.status(200).send({
-        msg: "Coupon",
-        data: result,
-      });
-    } else {
-      return res.status(400).send({ msg: "Coupon Not Found" });
-    }
+    res.status(200).send({
+      msg: "Coupon",
+      data: result,
+    });
   })
 );
 couponPolicyRouter.get(
@@ -56,10 +52,34 @@ couponPolicyRouter.post(
         res.status(400).send({ msg: "Coupon Not Found", isCoupon: false });
       }
     } catch (e) {
-      res.status(200).send({ msg: e, isCoupon: false });
+      res.status(400).send({ msg: e.message, isCoupon: false });
     }
   })
 );
+// couponPolicyRouter.post(
+//   "/consumeCoupon",
+//   expressAsyncHandler(async (req, res) => {
+//     const { couponCode, customerId } = req.body;
+//     if (!couponCode || !customerId) {
+//       res.status(400).send({
+//         msg: "Fields Missing",
+//       });
+//     }
+//     const result = await couponPolicyServices.consumeCoupon(
+//       couponCode,
+//       customerId
+//     );
+//     if (result) {
+//       res.status(200).send({
+//         isCouponConsume: true,
+//       });
+//     } else {
+//       res.status(200).send({
+//         msg: "Coupon Not Consume",
+//       });
+//     }
+//   })
+// );
 couponPolicyRouter.get(
   "/getOne",
   expressAsyncHandler(async (req, res) => {
@@ -81,20 +101,20 @@ couponPolicyRouter.post(
     const {
       couponCode,
       image,
-      activeFrom,
-      activeTo,
+      expireDate,
+      orderPriceLimit,
       couponValue,
       isActive,
       isPercentage,
     } = req.body;
-    if (!couponCode || !activeFrom || !activeTo || !couponValue) {
+    if (!couponCode || !expireDate || !couponValue || !orderPriceLimit) {
       return res.status(400).send({ msg: "Fields Missing" });
     }
     const result = await couponPolicyServices.addNew(
       couponCode,
       image,
-      activeFrom,
-      activeTo,
+      expireDate,
+      orderPriceLimit,
       couponValue,
       isActive,
       isPercentage
@@ -112,23 +132,23 @@ couponPolicyRouter.patch(
   expressAsyncHandler(async (req, res) => {
     const {
       couponId,
-      coupanCode,
+      couponCode,
       image,
-      activeFrom,
-      activeTo,
+      expireDate,
+      orderPriceLimit,
+      couponValue,
       isActive,
       isPercentage,
-      couponValue,
     } = req.body;
     const result = await couponPolicyServices.update(
       couponId,
-      coupanCode,
+      couponCode,
       image,
-      activeFrom,
-      activeTo,
+      expireDate,
+      orderPriceLimit,
+      couponValue,
       isActive,
-      isPercentage,
-      couponValue
+      isPercentage
     );
     if (result) {
       return res.status(200).send({ msg: "Coupon updated.", data: result });

@@ -1,0 +1,76 @@
+paths:
+  /api/v1/returnOrder:
+    post:
+      summary: Return Order
+      tags: [Dispute Policy Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderId:
+                  type: string
+                isOrderReturn:
+                  type: boolean
+                shipmentType:
+                  type: string
+                returnProduct:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      productId:
+                        type: string
+                      quantity:
+                        type: number
+                      price:
+                        type: number
+                      sku:
+                        type: string
+                      size:
+                        type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+  /api/v1/returnOrder/list:
+    get:
+      summary: Get Return Order List
+      tags: [Dispute Policy Management]
+      responses:
+        "200":
+          description: Get Return Order List
+  /api/v1/returnOrder/details:
+    get:
+      summary: Get Return Order Details
+      tags: [Dispute Policy Management]
+      responses:
+        "200":
+          description: Get Return Order Details
+        "400":
+          description: Not Found
+  /api/v1/returnOrder/dispatchReturnOrder:
+    post:
+      summary: Return Order Dispatch
+      tags: [Dispute Policy Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                orderId:
+                  type: string
+                message:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request

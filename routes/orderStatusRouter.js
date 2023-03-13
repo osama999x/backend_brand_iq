@@ -7,11 +7,7 @@ orderStatusRouter.get(
   "/all",
   expressAsyncHandler(async (req, res) => {
     const result = await orderStatusServices.get();
-    if (result.length !== 0) {
-      return res.status(200).send({ msg: "Order Status", data: result });
-    } else {
-      return res.status(400).send({ msg: "Order Status Not Found" });
-    }
+    res.status(200).send({ msg: "Order Status", data: result });
   })
 );
 orderStatusRouter.post(

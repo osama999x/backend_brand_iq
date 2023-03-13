@@ -7,6 +7,14 @@ const schema = new Schema(
       type: String,
       required: true,
       unique: true,
+      enum: [
+        "Pending",
+        "Confirmed",
+        "Canceled",
+        "Rejected",
+        "Delivered",
+        "Returned",
+      ],
     },
   },
   { timestamps: true }
