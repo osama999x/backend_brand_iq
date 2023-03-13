@@ -1,0 +1,30 @@
+paths:
+  /api/v1/permissionAction/all:
+    get:
+      summary: Get All Permission Action
+      tags:
+        - User Management
+      responses:
+        200:
+          description: Success
+  /api/v1/permissionAction:
+    post:
+      summary: Add Permission Action
+      tags:
+        - User Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                route:
+                  type: string
+                perm_name:
+                  type: string
+      responses:
+        200:
+          description: Permssion Action Added Successfully
+        400:
+          description: Bad Request

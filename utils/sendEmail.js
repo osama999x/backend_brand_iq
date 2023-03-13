@@ -1,12 +1,11 @@
 var nodemailer = require("nodemailer");
-const resetPasswordModel = require("../model/resetPasswordModel");
-
+const customerModel = require("../model/customerModel");
+const customerServices = require("../services/customerServices");
+const otp = require("./otp");
+const saveOtp = require("./saveOtp");
+const smsServices = require("./sendSMS");
 const sendEmail = async (email) => {
-  // var otp = 1111;
-  var otp = Math.floor(Math.random() * 10000 + 10000)
-    .toString()
-    .substring(1);
-
+  const Otp = otp();
   var transporter = nodemailer.createTransport({
     host: process.env.MAILHOST,
     port: process.env.MAILPORT,
@@ -16,35 +15,23 @@ const sendEmail = async (email) => {
       pass: process.env.MAILPASS,
     },
   });
-  //me
-  // user: "b18a05acfef5ec",
-  //       pass: "02111fbf35a0cd",
-  //not me
-  // "33a56286703d6c",
-  //     pass: "8516845217e803"
-  // var transporter = nodemailer.createTransport({
-  //   service: "gmail",
-  //   auth: {
-  //     user: "hkhan7017@@gmail.com",
-  //     pass: "ybgycemeqpjjgkge",
-  //   },
-  // });
-
   var mailOptions = {
-    from: `M-SAFA ${process.env.MAIL}`,
+    from: `M-Safa ${process.env.MAIL}`,
     to: email,
-    subject: "M-SAFA OTP",
-    text: "Your OTP is " + otp,
+    subject: "M-Safa OTP",
+    text: "Your OTP is " + Otp,
   };
-  result = await transporter.sendMail(mailOptions);
+  let user = await saveOtp.otpById(email, Otp);
   //If email is sent
-  if (result) {
-    let reset = new resetPasswordModel({
-      email,
-      otp,
-    });
-    const reslt = await reset.save();
-    let list = [email, otp];
+  if (user) {
+    let userContact = await customerModel.findOne(
+      { email: email },
+      { contact: 1 }
+    );
+    await smsServices.sendSMS(userContact.contact, Otp);
+    result = await transporter.sendMail(mailOptions);
+    console.log(email, Otp);
+    let list = [email, Otp];
     return list;
   }
   //if email is not sent

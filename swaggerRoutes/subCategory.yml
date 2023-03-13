@@ -1,0 +1,138 @@
+paths:
+  /api/v1/subCategory/all:
+    get:
+      summary: "All Sub Category list"
+      tags:
+        - "Sub_Category Management"
+      responses:
+        200:
+          description: "Get All Sub Category List"
+  /api/v1/subCategory/products:
+    get:
+      summary: "Get Sub Category By Pruduct"
+      tags:
+        - "Sub_Category Management"
+      parameters:
+        - name: "subCategoryId"
+          in: "query"
+          required: true
+      responses:
+        200:
+          description: "Get Sub Category Details By Product"
+        400:
+          description: "Not Found"
+  /api/v1/subCategory/productsBySubcategory:
+    get:
+      summary: "Get Products By Subcategory"
+      tags:
+        - "Sub_Category Management"
+      parameters:
+        - name: "subCategoryId"
+          in: "query"
+          required: true
+      responses:
+        200:
+          description: "Get Products By Subcategory"
+        400:
+          description: "Not Found"
+  /api/v1/subCategory/getSubcategoryByCategoryId:
+    get:
+      summary: "Get Sub Categories By Category Id"
+      tags:
+        - "Sub_Category Management"
+      parameters:
+        - name: "categoryId"
+          in: "query"
+          required: true
+      responses:
+        200:
+          description: "Get Categories By Category Id"
+        400:
+          description: "Not Found"
+  /api/v1/subCategory/getOne:
+    get:
+      summary: "Get Sub Categories By Id"
+      tags:
+        - "Sub_Category Management"
+      parameters:
+        - name: "subcategoryId"
+          in: "query"
+          required: true
+      responses:
+        200:
+          description: "Get Categories By Id"
+        400:
+          description: "Not Found"
+  /api/v1/subCategory:
+    post:
+      summary: "Add category"
+      tags:
+        - "Sub_Category Management"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categoryId:
+                  type: string
+                name:
+                  type: string
+                icon:
+                  type: string
+                description:
+                  type: string
+                isFeatured:
+                  type: boolean
+      responses:
+        200:
+          description: "Success"
+        400:
+          description: "Bad Request"
+    patch:
+      summary: "Update Sub category"
+      tags:
+        - "Sub_Category Management"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subcategoryId:
+                  type: string
+                categoryId:
+                  type: string
+                name:
+                  type: string
+                icon:
+                  type: string
+                description:
+                  type: string
+                isFeatured:
+                  type: boolean
+      responses:
+        200:
+          description: "Success"
+        400:
+          description: "Bad Request"
+    delete:
+      summary: "Delete Category"
+      tags:
+        - "Sub_Category Management"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subcategoryId:
+                  type: string
+      responses:
+        200:
+          description: "Success"
+        400:
+          description: "Bad Request"

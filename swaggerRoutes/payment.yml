@@ -1,0 +1,47 @@
+paths:
+  /api/v1/payment/payfast/success?:
+    get:
+      summary: "Payfast Success"
+      tags:
+        - "Payfast Payment"
+      parameters:
+        - name: "err_code"
+          in: "query"
+        - name: "transaction_amount"
+          in: "query"
+      responses:
+        "200":
+          description: "Success"
+        "400":
+          description: "Bad Request"
+  /api/v1/payment/payfast/checkout?:
+    post:
+      summary: "Payfast Checkout"
+      tags:
+        - "Payfast Payment"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                err_code:
+                  type: "string"
+                transaction_amount:
+                  type: "string"
+      responses:
+        "200":
+          description: "Success"
+        "400":
+          description: "Bad Request"
+  /api/v1/payment/payfast/failure?:
+    get:
+      summary: "Payfast Failure"
+      tags:
+        - "Payfast Payment"
+      parameters:
+        - in: "query"
+      responses:
+        "200":
+          description: "Success"

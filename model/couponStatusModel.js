@@ -12,6 +12,9 @@ const schema = new Schema(
       ref: "Customer",
       required: true,
     },
+    orderId: {
+      type: String,
+    },
     isBuy: {
       type: Boolean,
       default: false,

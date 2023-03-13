@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const productModel = require("../model/productsModel");
 const categoryModel = require("../model/categoryModel");
 const subcategoryModel = require("../model/subCategoryModel");
-const mPromotionModel = require("../model/mPromotionModel");
+const promotionCampaignModel = require("../model/promotionCampaignModel");
 // const productsImagesModel = require("../model/productsImagesModel");
 
 const homeServices = {
@@ -14,18 +14,26 @@ const homeServices = {
         { isFeatured: true },
         projection.homecategoryprojection
       );
+      // .limit(6);
       // .skip((page - 1) * limit)
       // .limit(limit)
       // .sort("name");
-      const subcategories = await subcategoryModel.find(
-        { isFeatured: true },
-        projection.homesubcategoryprojection
-      );
+      const subcategories = await subcategoryModel
+        .find({ isFeatured: true }, projection.homesubcategoryprojection)
+        .limit(6);
       // .skip(page * limit)
       // .limit(limit)
       // .sort("name");
       let products = await productModel
-        .find({ isFeatured: true }, projection.hometrendprojection)
+        .find(
+          {
+            $and: [
+              { isDeal: false },
+              { $or: [{ isFeatured: true }, { isDiscount: true }] },
+            ],
+          },
+          projection.hometrendprojection
+        )
         .lean();
       if (products.length != 0) {
         products = products.map((item) => {
@@ -35,52 +43,40 @@ const homeServices = {
           return item;
         });
       }
-      let currentDate = new Date().toLocaleDateString();
-      currentDate = new Date(currentDate);
-      var promotion = await mPromotionModel
-        .find({ "promotion.status": { $in: "active" } }, projection.projection)
-        .populate({
-          path: "promotion.category",
-          select: { _id: 1, name: 1 },
-        })
-        .populate({
-          path: "promotion.subcategory",
-          select: { _id: 1, name: 1 },
-        })
-        .populate({
-          path: "promotion.product",
-          select: {
-            _id: 1,
-            name: 1,
-            title: 1,
-            thumbnail: 1,
-            description: 1,
-            variant: 1,
+      let currentDate = new Date(new Date().toLocaleDateString());
+      let deals = await productModel
+        .find(
+          {
+            isFeatured: true,
+            isDiscount: false,
+            isDeal: true,
+            expireDate: { $gte: currentDate },
           },
-        })
+          projection.hometrendprojection
+        )
+        .limit(6)
         .lean();
-      if (promotion.length != 0) {
-        promotion = promotion.map((item) => {
-          for (var i of item.promotion) {
-            for (var j of i.product) {
-              actualPrice = j.variant[0].actualPrice;
-              j.actualPrice = actualPrice;
-              j.discountedPrice = j.variant[0].discountedPrice;
-              promotionalPrice = i.discount;
-              j.promotionalPrice =
-                actualPrice - (promotionalPrice / 100) * actualPrice;
-              delete j.variant;
-            }
-          }
+      if (deals.length != 0) {
+        deals = deals.map((item) => {
+          discount = item.discount;
+          actualPrice = item.variant[0].actualPrice;
+          item.actualPrice = actualPrice;
+          item.dealPrice = actualPrice - discount;
+          delete item.variant;
           return item;
         });
       }
-      console.log(promotion);
+
+      const campaign = await promotionCampaignModel.find(
+        { activeFrom: { $lte: currentDate }, activeTo: { $gte: currentDate } },
+        projection.projection
+      );
       const result = {
         categories: categories,
         subcategories: subcategories,
         allProducts: products,
-        promotionionalHeader: promotion,
+        campaign: campaign,
+        deals: deals,
       };
       return result;
     } catch (error) {
@@ -101,12 +97,21 @@ const homeServices = {
     // .limit(limit)
     // .sort("name");
     let products = await productModel
-      .find({}, projection.hometrendprojection)
+      .find(
+        {
+          $and: [
+            { isDeal: false },
+            { $or: [{ isFeatured: true }, { isDiscount: true }] },
+          ],
+        },
+        projection.hometrendprojection
+      )
       .limit(10)
       .lean();
     if (products.length != 0) {
       products = products.map((item) => {
         item.actualPrice = item.variant[0].actualPrice;
+        item.discountedPrice = item.variant[0].discountedPrice;
         delete item.variant;
         return item;
       });
@@ -122,7 +127,15 @@ const homeServices = {
   },
   getRecentPorduct: async () => {
     let products = await productModel
-      .find({}, projection.hometrendprojection)
+      .find(
+        {
+          $and: [
+            { isDeal: false },
+            { $or: [{ isFeatured: true }, { isDiscount: true }] },
+          ],
+        },
+        projection.hometrendprojection
+      )
       .limit(10)
       .sort({ $natural: -1 })
       .lean();
@@ -135,6 +148,161 @@ const homeServices = {
       });
     }
     return products;
+  },
+  searchProductByTags: async (text) => {
+    const products = await productModel.find(
+      {
+        tags: { $regex: new RegExp(text), $options: "si" },
+      },
+      { tags: 1 }
+    );
+    return products;
+  },
+  getProductByTags: async (tags) => {
+    let today = new Date(new Date());
+    let products = await productModel.aggregate([
+      {
+        $match: { tags: { $eq: tags } },
+        // $match: { name: { $regex: new RegExp(text), $options: "si" } },
+      },
+      {
+        $lookup: {
+          from: "promotions",
+          localField: "_id",
+          foreignField: "product",
+          pipeline: [{ $match: { expireDate: { $gte: today } } }],
+          as: "promotion",
+        },
+      },
+      {
+        $unwind: {
+          path: "$promotion",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          thumbnail: 1,
+          isDeal: 1,
+          discount: 1,
+          isDiscount: 1,
+          variant: {
+            $map: {
+              input: "$variant",
+              as: "variant",
+              in: {
+                colorName: "$$variant.colorName",
+                colorHex: "$$variant.colorHex",
+                actualPrice: "$$variant.actualPrice",
+                quantity: "$$variant.quantity",
+                size: "$$variant.size",
+                image: "$$variant.image",
+                sku: "$$variant.sku",
+                _id: "$$variant._id",
+                discountedPrice: {
+                  $ifNull: [
+                    {
+                      $subtract: [
+                        "$$variant.actualPrice",
+                        {
+                          $multiply: [
+                            "$promotion.discount",
+                            {
+                              $divide: ["$$variant.actualPrice", 100],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    "$$variant.discountedPrice",
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    ]);
+    if (products.length != 0) {
+      products = products.map((item) => {
+        if (item.isDeal === true) {
+          // actualPrice = item.variant[0].actualPrice;
+          // discountedPrice = item.variant[0].actualPrice - item.discount;
+          var price = item.variant[0].actualPrice - item.discount;
+        } else if (item.isDiscount === true) {
+          //actualPrice = item.variant[0].actualPrice;
+          //discountedPrice = item.variant[0].discountedPrice;
+          price = item.variant[0].discountedPrice;
+        } else {
+          //actualPrice = item.variant[0].actualPrice;
+          //discountedPrice = item.variant[0].discountedPrice;
+          if (item.variant[0].discountedPrice > 0) {
+            price = item.variant[0].discountedPrice;
+          } else {
+            price = item.variant[0].actualPrice;
+          }
+        }
+        item.price = price;
+        //item.discountedPrice = discountedPrice;
+        delete item.variant;
+        delete item.isDiscount;
+        delete item.discount;
+        delete item.isDeal;
+
+        return item;
+      });
+    }
+
+    // .find(
+    //   { name: { $regex: new RegExp(text), $options: "si" } },
+    //   { name: 1, variant: 1, thumbnail: 1 }
+    // )
+    // .limit(10)
+    // .lean();
+    // if (products.length != 0) {
+    //   products = products.map((item) => {
+    //     if (item.isDiscount === true) {
+    //       productName = item.name;
+    //       price = item.variant[0].discountedPrice;
+    //       thumbnail = item.thumbnail;
+    //     } else {
+    //       productName = item.name;
+    //       price = item.variant[0].actualPrice;
+    //       thumbnail = item.thumbnail;
+    //     }
+    //     delete item;
+    //     return { name: productName, price: price, thumbnail: thumbnail };
+    //   });
+    // }
+    return products;
+  },
+  getAllCategories: async () => {
+    const categories = await categoryModel.aggregate([
+      {
+        $lookup: {
+          from: "subcategories",
+          localField: "_id",
+          foreignField: "category",
+          as: "subcategories",
+        },
+      },
+      {
+        $project: {
+          isActive: 0,
+          isFeatured: 0,
+          createdAt: 0,
+          updatedAt: 0,
+          __v: 0,
+          "subcategories.isActive": 0,
+          "subcategories.isFeatured": 0,
+          "subcategories.createdAt": 0,
+          "subcategories.updatedAt": 0,
+          "subcategories.__v": 0,
+        },
+      },
+    ]);
+    return categories;
   },
 };
 

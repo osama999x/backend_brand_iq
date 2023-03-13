@@ -6,16 +6,10 @@ registeredUserRouter.get(
   "/all",
   expressAsyncHandler(async (req, resp) => {
     const result = await registeredUserServices.get();
-    if (result.length != 0) {
-      resp.status(200).send({
-        msg: "Registered User",
-        data: result,
-      });
-    } else {
-      resp.status(400).send({
-        mse: "Registered User Not Found",
-      });
-    }
+    resp.status(200).send({
+      msg: "Registered User",
+      data: result,
+    });
   })
 );
 registeredUserRouter.post(

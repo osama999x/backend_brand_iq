@@ -1,0 +1,47 @@
+paths:
+  /api/v1/feedback/all:
+    get:
+      summary: All Feedback list
+      tags:
+        - Feedback Management
+      responses:
+        "200":
+          description: Get All Feedback List
+  /api/v1/feedback/CustomerFeedback:
+    get:
+      summary: Get all customer feedback
+      tags:
+        - Feedback Management
+      parameters:
+        - name: customerId
+          in: query
+          required: true
+      responses:
+        "200":
+          description: Get all customer feedback
+        "400":
+          description: Not Found
+  /api/v1/feedback:
+    post:
+      summary: Create Feedback
+      tags:
+        - Feedback Management
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customerId:
+                  type: string
+                channel:
+                  type: string
+                rating:
+                  type: number
+                comments:
+                  type: string
+      responses:
+        "200":
+          description: success
+        "400":
+          description: Bad Request

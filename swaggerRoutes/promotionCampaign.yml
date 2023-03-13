@@ -1,0 +1,211 @@
+paths:
+  /api/v1/category/all:
+    get:
+      summary: All Campaign list
+      tags:
+        - Promotion Management
+      responses:
+        "200":
+          description: Get All Campaign List
+  /api/v1/promotion/allPromotions:
+    get:
+      summary: Get all promotion list
+      tags:
+        - Promotion Management
+      responses:
+        "200":
+          description: Get promotion list
+        "400":
+          description: Not Found
+  /api/v1/promotion/getOneCampaign:
+    get:
+      summary: Get campaign details
+      tags:
+        - Promotion Management
+      parameters:
+        - name: campaignId
+          in: query
+          required: true
+      responses:
+        "200":
+          description: Get campaign details
+        "400":
+          description: Not Found
+  /api/v1/promotion/getOne:
+    get:
+      summary: Get Campaign Promotion Details
+      tags:
+        - Promotion Management
+      parameters:
+        - name: campaignId
+          in: query
+          required: true
+      responses:
+        "200":
+          description: Get Campaign Promotion Details
+        "400":
+          description: Not Found
+  /api/v1/promotion/getOnePromotion:
+    get:
+      summary: Get Promotion Details
+      tags:
+        - Promotion Management
+      parameters:
+        - name: promotionId
+          in: query
+          required: true
+      responses:
+        "200":
+          description: Get Promotion Details
+        "400":
+          description: Not Found
+  /api/v1/promotion/promotionProductDetail:
+    get:
+      summary: Get Promotion Product Details
+      tags:
+        - Promotion Management
+      parameters:
+        - name: promotionId
+          in: query
+          required: true
+      responses:
+        "200":
+          description: Get Promotion Product Details
+        "400":
+          description: Not Found
+  /api/v1/promotion:
+    post:
+      summary: Add Campaign
+      tags:
+        - Promotion Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                campaignName:
+                  type: string
+                description:
+                  type: string
+                banner:
+                  type: string
+                activeFrom:
+                  type: string
+                activeTo:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+    patch:
+      summary: Update Campaign
+      tags:
+        - Promotion Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                campaignId:
+                  type: string
+                campaignName:
+                  type: string
+                description:
+                  type: string
+                banner:
+                  type: string
+                activeFrom:
+                  type: string
+                activeTo:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+
+  /api/v1/promotion/updatePromotion:
+    post:
+      summary: Update Campaign Promotion
+      tags:
+        - Promotion Management
+      parameters:
+        - in: body
+          name: body
+          description: Request body for updating promotion
+          required: true
+          schema:
+            type: object
+            properties:
+              promotionId:
+                type: string
+              campaignId:
+                type: string
+              productId:
+                type: string
+              subcategory:
+                type: string
+              expireDate:
+                type: string
+              discount:
+                type: number
+              status:
+                type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+  /api/v1/promtion:
+    delete:
+      summary: Delete Campaign
+      tags:
+        - Promotion Management
+      parameters:
+        - name: promotionId
+          in: query
+          description: ID of the promotion to be deleted
+          required: true
+          type: string
+      responses:
+        "200":
+          description: success
+        "400":
+          description: Bad Request
+  /api/v1/promotion/promotionDetailById:
+    get:
+      summary: Get Campaign Details By Id
+      tags:
+        - Promotion Management
+      parameters:
+        - name: campaignId
+          in: query
+          description: ID of the promotion to get the details of
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Campaign Promotion
+        "400":
+          description: Not Found
+  /api/v1/promtion/deletePromotion:
+    delete:
+      summary: Delete Promotion
+      tags:
+        - Promotion Management
+      parameters:
+        - name: promotionId
+          in: query
+          description: ID of the promotion to be deleted
+          required: true
+          type: string
+      responses:
+        "200":
+          description: success
+        "400":
+          description: Bad Request

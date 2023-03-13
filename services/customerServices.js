@@ -14,58 +14,108 @@ const membershipBenifitModel = require("../model/membershipBenifitModel");
 const readNotficationModel = require("../model/readNotificationModel");
 const jwt = require("jsonwebtoken");
 const encryptRequest = require("../middleware/encryptRequest");
+const pointServices = require("./pointServices");
+const saveOtp = require("../utils/saveOtp");
+const jwtServices = require("../utils/jwtService");
+const { v4: uuidv4 } = require("uuid");
+const authIdServices = require("./authIdServices");
 
 const customerServices = {
-  login: async (email, password, fcmToken) => {
+  validatePassword: async (password, realPassword) => {
+    const valid = await bcrypt.compare(password, realPassword);
+    return valid;
+  },
+  login: async (email) => {
     const customer = await customerModel.findOne({ email: email });
+    // if (customer) {
+    //   // check customer password with hashed password stored in the database
+    //   const validPassword = await bcrypt.compare(password, customer.password);
+    //   if (validPassword) {
+    //     await customerModel.findOneAndUpdate({ email }, { fcmToken: fcmToken });
+    //     var result = await customerModel
+    //       .findOne(
+    //         { email: email },
+    //         { createdAt: 0, updatedAt: 0, __v: 0, password: 0 }
+    //       )
+    //       .lean();
     if (customer) {
-      // check customer password with hashed password stored in the database
-      const validPassword = await bcrypt.compare(password, customer.password);
-      if (validPassword) {
-        await customerModel.findOneAndUpdate({ email }, { fcmToken: fcmToken });
-        var result = await customerModel
-          .findOne(
-            { email: email },
-            { createdAt: 0, updatedAt: 0, __v: 0, password: 0 }
-          )
-          .lean();
-        if (result) {
-          let token = jwt.sign(
-            {
-              email: result.email,
-            },
-            process.env.SECRET_KEY,
-            {
-              expiresIn: "5m",
-            }
-          );
-          let refreshToken = jwt.sign(
-            { email: result.email },
-            process.env.SECRET_KEY,
-            {
-              expiresIn: "30m",
-            }
-          );
-          refreshToken = encryptRequest(refreshToken);
-          token = encryptRequest(token);
+      const uuid = uuidv4();
+      console.log("uuid", uuid);
+      const refreshToken = jwtServices.create({ uuid, type: "user" });
+      const token = jwtServices.create(
+        { userId: customer._id, type: "user" },
+        "5m"
+      );
+      authIdServices.add(customer._id, uuid);
+      await customerModel.findOneAndUpdate(
+        { _id: customer._id },
+        { token },
+        { new: true }
+      );
 
-          result.accessToken = token;
-          result.resfreshToken = refreshToken;
-        }
-        return result;
-      } else {
-        throw "Incorrect Password";
-      }
-    } else {
-      throw "Customer doesn't exists";
+      // jwt.sign(
+      //   {
+      //     email: result.email,
+      //   },
+      //   process.env.SECRET_KEY,
+      //   {
+      //     expiresIn: "5m",
+      //   }
+      // );
+
+      //  jwt.sign(
+      //   { email: result.email },
+      //   process.env.SECRET_KEY,
+      //   {
+      //     expiresIn: "30m",
+      //   }
+      // );
+      // refreshToken = encryptRequest(refreshToken);
+      // token = encryptRequest(token);
+
+      customer.token = token;
+      customer.refreshToken = refreshToken;
     }
+    return customer;
+    //   } else {
+    //     throw "Incorrect Password";
+    //   }
+    // } else {
+    //   throw "Customer doesn't exists";
+    // }
   },
   customerDetails: async (_id) => {
     var _id = mongoose.Types.ObjectId(_id);
-    const customer = await customerModel.findOne(
-      { _id: _id },
-      projection.projection
-    );
+    let customer = await customerModel
+      .findOne({ _id: _id }, projection.projection)
+      .lean();
+    if (customer) {
+      const uuid = uuidv4();
+      console.log("uuid", uuid);
+      const refreshToken = jwtServices.create({ uuid, type: "user" });
+      const token = jwtServices.create(
+        { userId: customer._id, type: "user" },
+        "5m"
+      );
+      authIdServices.add(customer._id, uuid);
+      await customerModel.findOneAndUpdate(
+        { _id: customer._id },
+        { token },
+        { new: true }
+      );
+      //  jwt.sign(
+      //   { email: result.email },
+      //   process.env.SECRET_KEY,
+      //   {
+      //     expiresIn: "30m",
+      //   }
+      // );
+      // refreshToken = encryptRequest(refreshToken);
+      // token = encryptRequest(token);
+
+      // customer.accessToken = token;
+      customer.refreshToken = refreshToken;
+    }
     return customer;
   },
   addNew: async (
@@ -75,7 +125,8 @@ const customerServices = {
     contact,
     address,
     gender,
-    password
+    password,
+    cnic
   ) => {
     const checkCustomer = await customerModel.findOne({ email: email });
     if (checkCustomer) {
@@ -93,56 +144,18 @@ const customerServices = {
         firstName,
         lastName,
         email,
-        password,
         contact,
         address,
         gender,
+        password,
+        cnic,
         points: initialPoint,
       });
       const result = await customer.save();
       if (result) {
-        let customerPoints = await customerModel.findById(
-          { _id: result._id },
-          { points: 1 }
-        );
-        customerPoints = customerPoints.points;
-        var customerId = result._id;
-        const membershipCategories = ["Silver", "Gold", "Platinum", "Diamond"];
-        for (var category of membershipCategories) {
-          //category=category.membershipCategories;
-          var currentCategory = await membershipModel.findOne(
-            { membershipCategory: { $in: category } },
-            { thresholdFrom: 1, thresholdTo: 1, membershipCategory: 1 }
-          );
-          if (currentCategory) {
-            thresholdFrom = currentCategory.thresholdFrom;
-            thresholdTo = currentCategory.thresholdTo;
-            category = currentCategory.membershipCategory;
-            _id = currentCategory._id;
-            if (
-              customerPoints >= thresholdFrom &&
-              customerPoints <= thresholdTo
-            ) {
-              await customerModel.findOneAndUpdate(
-                { _id: { $in: customerId } },
-                { membershipCategory: category }
-              );
-              const data = new customerMembershipModel({
-                customer: customerId,
-                membershipId: _id,
-                membershipCategory: category,
-                customerPoints: customerPoints,
-              });
-              await data.save();
-              break;
-            }
-          }
-        }
-        const unRead = new readNotficationModel({
-          customer: customerId,
-          readNotfication: [],
-        });
-        await unRead.save();
+        id = result._id;
+        points = result.points;
+        await pointServices.assaignPointMembership(id, points);
       }
       return result;
     }
@@ -176,7 +189,7 @@ const customerServices = {
       if (getInitialPoint.length != 0) {
         var initialPoint = getInitialPoint[0].initialPoint;
       } else {
-        initialPoint = 0;
+        getInitialPoint = 0;
       }
       var customer = new customerModel({
         firstName,
@@ -185,8 +198,9 @@ const customerServices = {
         contact,
         address,
         gender,
-        points: initialPoint,
+        cnic,
         fcmToken,
+        points: initialPoint,
       });
       const result = await customer.save();
       const webCustomer = new WebSignupLogModel({
@@ -240,21 +254,12 @@ const customerServices = {
       return result;
     }
   },
-  updateDetails: async (
-    _id,
-    firstName,
-    lastName,
-    email,
-    contact,
-    address,
-    gender
-  ) => {
+  updateDetails: async (_id, firstName, lastName, contact, address, gender) => {
     result = await customerModel.findOneAndUpdate(
       { _id },
       {
         firstName,
         lastName,
-        email,
         contact,
         address,
         gender,
@@ -279,26 +284,20 @@ const customerServices = {
     });
     if (customer) {
       result = await sendEmail(email);
+      console.log(result);
       return result;
     } else {
       return null;
     }
   },
   verifyNewPassword: async (email, otp) => {
-    const customer = await resetPasswordModel
-      .findOne({
-        email: email,
-        otp: otp,
-      })
-      .limit(1)
-      .sort({ $natural: -1 });
-    if (customer) {
-      var expireOtp = customer.expireOtp;
-      const currentTime = new Date();
-      if (currentTime > expireOtp) {
-        throw "OTP Expire Please Try Again";
+    const expireOtp = await saveOtp.validateOTPExpiryByEmail(email);
+    if (expireOtp) {
+      const user = await saveOtp.verifiyOtp(email, otp);
+      if (!user) {
+        throw "OTP not varified!";
       } else {
-        await customerModel.findOneAndUpdate(
+        const customer = await customerModel.findOneAndUpdate(
           { email },
           { isVarified: true },
           { new: true }
@@ -306,7 +305,7 @@ const customerServices = {
         return customer;
       }
     } else {
-      throw "OTP Not Varified";
+      throw "OTP Expire Please Try Again";
     }
   },
   setNewPassword: async (_id, password) => {
@@ -436,7 +435,7 @@ const customerServices = {
           }
         }
 
-        result.msg = `Complete ${nextCategoryPoint} to acheive ${nextCategory} till ${neaxtDate}`;
+        result.msg = `Complete ${nextCategoryPoint} to acheive ${nextCategory} category till ${neaxtDate}`;
         result.expire_msg = `150 points will expire on ${expireDate}`;
         result.nextCategoryPoint = nextCategoryPoint;
         delete result._id;
@@ -461,6 +460,44 @@ const customerServices = {
       result.benifits = benifits;
       // return result;
     }
+    return result;
+  },
+  addZindigiAccount: async (_id, mobileNo, accountTitle) => {
+    const customer = await customerModel.findOneAndUpdate(
+      { _id },
+      {
+        zindigiWallet: {
+          zindigiWalletNumber: mobileNo,
+          title: accountTitle,
+          linked: true,
+        },
+      },
+      { new: true }
+    );
+    if (customer) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+  getUser: async (userId) => {
+    const result = await customerModel.findById({ _id: userId });
+    return result;
+  },
+  deLinkZindigiAccount: async (email) => {
+    const result = await customerModel
+      .findOneAndUpdate(
+        { email },
+        {
+          zindigiWallet: {
+            zindigiWalletNumber: "",
+            linked: false,
+            title: "",
+          },
+        },
+        { new: true }
+      )
+      .lean();
     return result;
   },
 };

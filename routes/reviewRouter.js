@@ -7,21 +7,21 @@ reviewRouter.get(
   "/all",
   expressAsyncHandler(async (req, res) => {
     const result = await reviewServices.get();
-    if (result.length != 0) {
-      return res.status(200).send({
-        msg: "Reviews",
-        data: result,
-      });
-    } else {
-      return res.status(400).send({ msg: "Review Not Found" });
-    }
+    return res.status(200).send({
+      msg: "Reviews",
+      data: result,
+    });
   })
 );
 reviewRouter.patch(
   "/approvedReview",
   expressAsyncHandler(async (req, res) => {
-    const { reviewId, isApproved } = req.body;
-    const result = await reviewServices.approvedReview(reviewId, isApproved);
+    const { reviewId } = req.body;
+    let isApproved = await reviewServices.checkApproved(reviewId);
+    if (isApproved) {
+      return res.status(400).send({ msg: "Review already Approved!" });
+    }
+    const result = await reviewServices.approvedReview(reviewId);
     if (result) {
       return res.status(200).send({
         msg: "Review Approved",

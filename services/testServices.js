@@ -2,6 +2,8 @@ const projection = require("../config/mongoProjection");
 const mongoose = require("mongoose");
 const testModel = require("../model/testModel");
 const reader = require("xlsx");
+const { findOne, findOneAndUpdate } = require("../model/testModel");
+const orderModel = require("../model/orderModel");
 
 const testServices = {
   get: async () => {
@@ -23,6 +25,16 @@ const testServices = {
     }
     const result = await testModel.insertMany(data);
     return result;
+  },
+  updateOrder: async (orderId, productId) => {
+    console.log(orderId, productId);
+    const order = await orderModel.updateOne(
+      { _id: orderId },
+      { $pull: { product: { productId: productId } } },
+      { new: true }
+    );
+    console.log(order);
+    return order;
   },
 };
 

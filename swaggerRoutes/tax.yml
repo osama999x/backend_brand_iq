@@ -1,0 +1,165 @@
+paths:
+  /api/v1/tax/head:
+    get:
+      summary: All Tax Head list
+      tags:
+        - Tax Management
+      responses:
+        "200":
+          description: Get All Tax Head List
+    post:
+      summary: Add Tax Head
+      tags:
+        - Tax Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                taxTypeId:
+                  type: string
+                taxHead:
+                  type: string
+                description:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+    patch:
+      summary: Update Tax Head
+      tags:
+        - Tax Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                taxHeadId:
+                  type: string
+                taxTypeId:
+                  type: string
+                taxHead:
+                  type: string
+                description:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+    delete:
+      summary: Delete Tax Head
+      tags:
+        - Tax Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                taxHeadId:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+  /api/v1/tax/head/getOne:
+    get:
+      summary: Get Tax Head By Id
+      tags:
+        - Tax Management
+      parameters:
+        - name: taxHeadId
+          in: query
+          required: true
+      responses:
+        "200":
+          description: Get Tax Head By Id
+        "400":
+          description: Not Found
+  /api/v1/tax/type:
+    get:
+      summary: All Tax Type list
+      tags:
+        - Tax Management
+      responses:
+        "200":
+          description: Get All Tax Type List
+  /api/v1/tax/type/getOne:
+    get:
+      summary: Get Tax Head By Id
+      tags:
+        - Tax Management
+      parameters:
+        - name: taxTypeId
+          in: query
+          required: true
+      responses:
+        "200":
+          description: Get Tax Head By Id
+        "400":
+          description: Not Found
+    post:
+      summary: Add Tax Type
+      tags:
+        - Tax Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                taxType:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+    patch:
+      summary: Update Tax type
+      tags:
+        - Tax Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                taxTypeId:
+                  type: string
+                taxType:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+    delete:
+      summary: Delete Tax Type
+      tags:
+        - Tax Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                taxTypeId:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description:

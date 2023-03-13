@@ -7,14 +7,10 @@ deliveryPartnerRouter.get(
   "/all",
   expressAsyncHandler(async (req, res) => {
     const result = await deliveryPartnerServices.get();
-    if (result.length != 0) {
-      return res.status(200).send({
-        msg: "Delivery Partner",
-        data: result,
-      });
-    } else {
-      return res.status(400).send({ msg: "Delivery Partner Not Found" });
-    }
+    res.status(200).send({
+      msg: "Delivery Partner",
+      data: result,
+    });
   })
 );
 deliveryPartnerRouter.get(

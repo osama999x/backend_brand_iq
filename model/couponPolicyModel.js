@@ -8,20 +8,15 @@ const schema = new Schema(
       required: true,
       unique: true,
     },
-    isProductCoupon: {
-      type: Boolean,
-      default: false,
-    },
     image: {
       type: String,
     },
-    activeFrom: {
+    expireDate: {
       type: Date,
       required: true,
     },
-    activeTo: {
-      type: Date,
-      required: true,
+    orderPriceLimit: {
+      type: Number,
     },
     isActive: {
       type: Boolean,

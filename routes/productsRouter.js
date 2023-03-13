@@ -3,6 +3,7 @@ const expressAsyncHandler = require("express-async-handler");
 const var_dump = require("var_dump");
 const productsModel = require("../model/productsModel");
 const productsServices = require("../services/productsServices");
+const promotionModel = require("../model/promotionModel");
 const productsRouter = express.Router();
 
 productsRouter.get(
@@ -11,14 +12,10 @@ productsRouter.get(
     // const limit = 5;
     // var { pageNumber } = req.query;
     const result = await productsServices.getproducts();
-    if (result.length != 0) {
-      return res.status(200).send({
-        msg: "products",
-        data: result,
-      });
-    } else {
-      return res.status(400).send({ msg: "Products Not Found" });
-    }
+    res.status(200).send({
+      msg: "products",
+      data: result,
+    });
   })
 );
 productsRouter.patch(
@@ -56,7 +53,22 @@ productsRouter.get(
     }
   })
 );
-
+productsRouter.get(
+  "/detailsWeb?",
+  expressAsyncHandler(async (req, res) => {
+    const { productId } = req.query;
+    const result = await productsServices.getProductsByIdWeb(productId);
+    console.log("result", result);
+    if (result) {
+      return res.status(200).send({
+        msg: "Products",
+        data: result,
+      });
+    } else {
+      return res.status(400).send({ msg: "Products Not Found" });
+    }
+  })
+);
 productsRouter.post(
   "/productDetails",
   expressAsyncHandler(async (req, res) => {
@@ -79,7 +91,7 @@ productsRouter.post(
         });
       }
     } catch (e) {
-      return res.status(400).send({ msg: e });
+      return res.status(400).send({ msg: e.message });
     }
   })
 );
@@ -94,9 +106,12 @@ productsRouter.post(
       title,
       description,
       longDescription,
-      isColor,
+      isDiscount,
+      isDeal,
+      dealExpire,
+      oneTimeDeal,
+      discount,
       variant,
-      thumbnail,
       images,
       vendor,
       isTaxable,
@@ -106,10 +121,15 @@ productsRouter.post(
       taxAmount,
       metaData,
       metaDescription,
-      size,
       tags,
       addons,
     } = req.body;
+    console.log(categoryId, subcategoryId);
+    if (isDeal === true && (!dealExpire || !discount)) {
+      return res.status(400).send({
+        msg: "Fields Missing",
+      });
+    }
     const result = await productsServices.add(
       categoryId,
       subcategoryId,
@@ -117,9 +137,12 @@ productsRouter.post(
       title,
       description,
       longDescription,
-      isColor,
+      isDiscount,
+      isDeal,
+      dealExpire,
+      oneTimeDeal,
+      discount,
       variant,
-      thumbnail,
       images,
       vendor,
       isTaxable,
@@ -129,7 +152,6 @@ productsRouter.post(
       taxAmount,
       metaData,
       metaDescription,
-      size,
       tags,
       addons
     );
@@ -152,7 +174,11 @@ productsRouter.patch(
       title,
       description,
       longDescription,
-      isColor,
+      isDiscount,
+      isDeal,
+      dealExpire,
+      oneTimeDeal,
+      discount,
       variant,
       thumbnail,
       images,
@@ -162,20 +188,31 @@ productsRouter.patch(
       taxType,
       isPercentage,
       taxAmount,
-      isActive,
-      isFeatured,
-      isSale,
-      isDeal,
-      inStock,
-      sequence,
-      ratingNumber,
-      ratingCount,
       metaData,
       metaDescription,
-      size,
       tags,
       addons,
+      newImages,
     } = req.body;
+    let checkProduct = await productsModel.findById(
+      { _id: productId },
+      { isDeal: 1, isDiscount: 1 }
+    );
+    let checkProductPromotion = await promotionModel.findOne({
+      product: { $in: productId },
+    });
+    if (
+      (checkProduct.isDiscount === true && isDeal === true) ||
+      (checkProduct.isDeal === true && isDiscount === true) ||
+      checkProductPromotion
+    ) {
+      return res.status(400).send({ msg: "product already discounted" });
+    }
+    if (isDeal === true && (!dealExpire || !discount)) {
+      return res.status(400).send({
+        msg: "Fields Missing",
+      });
+    }
     const result = await productsServices.update(
       productId,
       categoryId,
@@ -184,7 +221,11 @@ productsRouter.patch(
       title,
       description,
       longDescription,
-      isColor,
+      isDiscount,
+      isDeal,
+      dealExpire,
+      oneTimeDeal,
+      discount,
       variant,
       thumbnail,
       images,
@@ -194,19 +235,11 @@ productsRouter.patch(
       taxType,
       isPercentage,
       taxAmount,
-      isActive,
-      isFeatured,
-      isSale,
-      isDeal,
-      inStock,
-      sequence,
-      ratingNumber,
-      ratingCount,
       metaData,
       metaDescription,
-      size,
       tags,
-      addons
+      addons,
+      newImages
     );
     if (result) {
       return res.status(200).send({ msg: "product Updated", data: result });
@@ -220,9 +253,6 @@ productsRouter.delete(
   expressAsyncHandler(async (req, res) => {
     const { productId } = req.body;
     const result = await productsServices.delete(productId);
-    if (result) {
-      return res.status(400).send({ msg: "ID Not found" });
-    }
     if (result) {
       return res.status(200).send({ msg: "product deleted.", data: result });
     } else {

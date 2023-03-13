@@ -7,14 +7,10 @@ membershipRouter.get(
   "/all",
   expressAsyncHandler(async (req, res) => {
     const result = await membershipServices.get();
-    if (result.length != 0) {
-      return res.status(200).send({
-        msg: "Membership",
-        data: result,
-      });
-    } else {
-      return res.status(400).send({ msg: "Membership Not Found" });
-    }
+    res.status(200).send({
+      msg: "Membership",
+      data: result,
+    });
   })
 );
 membershipRouter.get(
@@ -38,9 +34,9 @@ membershipRouter.post(
   "/",
   expressAsyncHandler(async (req, res) => {
     const { membershipCategory, thresholdFrom, thresholdTo } = req.body;
-    if (!membershipCategory || !thresholdFrom || !thresholdTo) {
-      return res.status(400).send({ msg: "Fields Missing" });
-    }
+    // if (!membershipCategory || !thresholdFrom || !thresholdTo) {
+    //   return res.status(400).send({ msg: "Fields Missing" });
+    // }
     const result = await membershipServices.addNew(
       membershipCategory,
       thresholdFrom,

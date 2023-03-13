@@ -7,6 +7,11 @@ const userResetPasswordModel = require("../model/userResetPaswordModel");
 const jwt = require("jsonwebtoken");
 const userSendEmail = require("../utils/userSendEmail");
 const { json } = require("body-parser");
+const saveOtp = require("../utils/saveOtp");
+const jwtService = require("../utils/jwtService");
+const { v4: uuidv4 } = require("uuid");
+const authIdServices = require("./authIdServices");
+const rolePermissionServices = require("./rolePermissionServices");
 
 const userServices = {
   get: async () => {
@@ -18,49 +23,59 @@ const userServices = {
   },
   getByUserID: async (_id) => {
     var _id = mongoose.Types.ObjectId(_id);
-    const result = await userModel
-      .findById({ _id }, projection.projection)
-      .populate({
-        path: "role",
-        select: { _id: 1, name: 1 },
-      });
+    const result = await userModel.findById({ _id }, projection.projection);
+    // .populate({
+    //   path: "role",
+    //   select: { _id: 1, name: 1 },
+    // });
+    if (result) {
+      const role_permission = await rolePermissionServices.getRolePermission(
+        result.role
+      );
+      if (role_permission) {
+        result.modules = role_permission.modules;
+      } else {
+        result.modules = [];
+      }
+    }
     return result;
   },
-  login: async (email, password, res) => {
-    const customer = await userModel.findOne({ email: email });
-    if (customer) {
-      // check customer password with hashed password stored in the database
-      const validPassword = await bcrypt.compare(password, customer.password);
-      if (validPassword) {
-        await userModel.findOneAndUpdate({ email: email }, { isLogin: true });
-        const result = await userModel
-          .findOne(
-            { email: email },
-            { createdAt: 0, updatedAt: 0, __v: 0, password: 0 }
-          )
-          .lean();
-        if (result) {
-          const token = jwt.sign(
-            {
-              email: result.email,
-              password: result.password,
-            },
-            process.env.SECRET_KEY,
-            {
-              expiresIn: "1 hours",
-            }
-          );
-          result.token = token;
-        }
-        return result;
+  validatePassword: async (password, realPassword) => {
+    console.log(password, realPassword);
+    const valid = await bcrypt.compare(password, realPassword);
+    return valid;
+  },
+  login: async (email) => {
+    const result = await userModel.findOne(
+      { email: email },
+      { createdAt: 0, updatedAt: 0, __v: 0 }
+    );
+    if (result) {
+      const role_permission = await rolePermissionServices.getRolePermission(
+        result.role
+      );
+      if (role_permission) {
+        result.modules = role_permission.modules;
       } else {
-        throw "Password Incorrect";
-        // return;
+        result.modules = [];
       }
-    } else {
-      throw "User Doesn't Exist";
-      // return;
+      const uuid = uuidv4();
+      console.log("uuid", uuid);
+      const refreshToken = jwtService.create({ uuid, type: "admin" });
+      const accessToken = jwtService.create(
+        { userId: result._id, type: "admin" },
+        "5m"
+      );
+      authIdServices.add(result._id, uuid);
+      await userModel.findOneAndUpdate(
+        { _id: result._id },
+        { token: accessToken },
+        { new: true }
+      );
+      // (result.accessToken = accessToken),
+      result.refreshToken = refreshToken;
     }
+    return result;
   },
   addNew: async (role, name, email, password, contact) => {
     const salt = await bcrypt.genSalt(10);
@@ -85,23 +100,16 @@ const userServices = {
     }
   },
   verifyNewPassword: async (email, otp) => {
-    const customer = await userResetPasswordModel
-      .findOne({
-        email: email,
-        otp: otp,
-      })
-      .limit(1)
-      .sort({ $natural: -1 });
-    if (customer) {
-      const currentTime = new Date();
-      expireOtp = customer.expireOtp;
-      if (currentTime > expireOtp) {
-        throw "OTP expire please try again";
+    const expireOtp = await saveOtp.adminValidateOTPExpiryByEmail(email);
+    if (expireOtp) {
+      const user = await saveOtp.adminVerifiyOtp(email, otp);
+      if (!user) {
+        throw "OTP not varified!";
       } else {
-        return customer;
+        return true;
       }
     } else {
-      throw "OTP Not Verified";
+      throw "OTP Expire Please Try Again";
     }
   },
   setNewPassword: async (_id, password) => {
@@ -128,13 +136,13 @@ const userServices = {
     );
     return result;
   },
-  update: async (_id, role, name, email, password, contact) => {
+  update: async (_id, role, name, email, contact) => {
     var _id = mongoose.Types.ObjectId(_id);
-    const salt = await bcrypt.genSalt(10);
-    password = await bcrypt.hash(password, salt);
+    // const salt = await bcrypt.genSalt(10);
+    // password = await bcrypt.hash(password, salt);
     const result = await userModel.findOneAndUpdate(
       { _id },
-      { role: mongoose.Types.ObjectId(role), name, email, password, contact },
+      { role: mongoose.Types.ObjectId(role), name, email, contact },
       { new: true }
     );
     return result;

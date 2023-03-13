@@ -1,0 +1,131 @@
+paths:
+  /api/v1/coupon/all:
+    get:
+      summary: All Coupon list
+      tags: [Coupon Policy Management]
+      responses:
+        200:
+          description: Get All Coupon List
+  /api/v1/coupon/validAll:
+    get:
+      summary: Get all valid coupon of customer
+      tags: [Coupon Policy Management]
+      parameters:
+        - name: customerId
+          in: query
+          required: true
+      responses:
+        200:
+          description: Get all valid coupon of customer
+        400:
+          description: Not Found
+  /api/v1/coupon/customerCoupon:
+    post:
+      summary: customer coupon
+      tags: [Coupon Policy Management]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                couponCode:
+                  type: string
+                customerId:
+                  type: string
+      responses:
+        200:
+          description: success
+        400:
+          description: Not Found
+  /api/v1/coupon/getOne:
+    get:
+      summary: Get Coupon Details
+      tags: [Coupon Policy Management]
+      parameters:
+        - name: couponId
+          in: query
+          required: true
+      responses:
+        200:
+          description: Get Coupon Details By Id
+        400:
+          description: Not Found
+  /api/v1/coupon:
+    post:
+      summary: Add coupon
+      tags: [Coupon Policy Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                couponCode:
+                  type: string
+                image:
+                  type: string
+                expireDate:
+                  type: string
+                orderPriceLimit:
+                  type: string
+                couponValue:
+                  type: string
+                isActive:
+                  type: boolean
+                isPercentage:
+                  type: boolean
+      responses:
+        200:
+          description: Success
+        400:
+          description: Bad Request
+    patch:
+      summary: Update Coupon
+      tags: [Coupon Policy Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                couponId:
+                  type: string
+                couponCode:
+                  type: string
+                image:
+                  type: string
+                expireDate:
+                  type: string
+                orderPriceLimit:
+                  type: string
+                couponValue:
+                  type: string
+                isActive:
+                  type: boolean
+                isPercentage:
+                  type: boolean
+      responses:
+        200:
+          description: Success
+        400:
+          description: Bad Request
+    delete:
+      summary: Delete Coupon
+      tags: [Coupon Policy Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                couponId:
+                  type: string
+      responses:
+        200:
+          description: success
+        400:
+          description: Bad Request

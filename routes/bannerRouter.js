@@ -6,16 +6,10 @@ bannerRouter.get(
   "/all",
   expressAsyncHandler(async (req, res) => {
     const result = await bannerServices.get();
-    if (result.length != 0) {
-      res.status(200).send({
-        msg: "Banner",
-        data: result,
-      });
-    } else {
-      res.status(400).send({
-        msg: "Banner Not Found",
-      });
-    }
+    res.status(200).send({
+      msg: "Banner",
+      data: result,
+    });
   })
 );
 bannerRouter.post(

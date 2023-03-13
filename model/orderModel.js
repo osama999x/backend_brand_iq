@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const uuid = require("uuid");
 const { generateLongLowercaseUuid, generateShortUuid } = require("custom-uuid");
+const { boolean } = require("zod");
 
 const schema = new Schema(
   {
@@ -17,14 +18,6 @@ const schema = new Schema(
           ref: "Product",
           required: true,
         },
-        categoryId: {
-          type: Schema.Types.ObjectId,
-          ref: "Category",
-        },
-        subcategoryId: {
-          type: Schema.Types.ObjectId,
-          ref: "SubCategory",
-        },
         quantity: {
           type: Number,
           required: true,
@@ -39,7 +32,6 @@ const schema = new Schema(
         },
         size: {
           type: String,
-          required: true,
         },
       },
     ],
@@ -56,6 +48,14 @@ const schema = new Schema(
       default: "Pending",
     },
     totalBill: {
+      type: Number,
+      required: true,
+    },
+    totalAmount: {
+      type: Number,
+      required: true,
+    },
+    redeemValue: {
       type: Number,
       required: true,
     },
@@ -84,6 +84,18 @@ const schema = new Schema(
     channel: {
       type: String,
       required: true,
+    },
+    payment: {
+      type: Boolean,
+      default: false,
+    },
+    couponCode: {
+      type: String,
+      default: "00",
+    },
+    isAdminReturn: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

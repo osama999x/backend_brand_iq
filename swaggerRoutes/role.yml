@@ -1,0 +1,84 @@
+paths:
+  /api/v1/role/all:
+    get:
+      summary: All role list
+      tags: [User Management]
+      responses:
+        "200":
+          description: Get All role List
+  /api/v1/role:
+    post:
+      summary: Add Role
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+    patch:
+      summary: Update role
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                roleId:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+    delete:
+      summary: Delete role
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                roleId:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request
+  /api/v1/role/roleDetails:
+    post:
+      summary: Get Role Details
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                roleId:
+                  type: string
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request

@@ -30,19 +30,16 @@ const schema = new Schema(
       required: true,
       default: "",
     },
-    isColor: {
-      type: Boolean,
-      default: true,
-    },
     variant: [
       {
         colorName: { type: String, default: "" },
         colorHex: { type: String, default: "" },
         actualPrice: { type: Number, required: true, min: 0, default: 0 },
-        discountedPrice: { type: Number, required: true, min: 0, default: 0 },
+        discountedPrice: { type: Number, min: 0, default: 0 },
         quantity: { type: Number, required: true, min: 0, default: 0 },
         sku: { type: String, required: true, unique: true },
-        size: [String],
+        size: { type: String, default: "" },
+        image: { type: String },
       },
     ],
     thumbnail: {
@@ -69,6 +66,24 @@ const schema = new Schema(
     isDeal: {
       type: Boolean,
       default: false,
+      required: true,
+    },
+    dealExpire: {
+      type: Date,
+    },
+    discount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    oneTimeDeal: {
+      type: Boolean,
+      default: true,
+    },
+    isDiscount: {
+      type: Boolean,
+      default: false,
+      required: true,
     },
     inStock: {
       type: Boolean,
@@ -112,8 +127,8 @@ const schema = new Schema(
       type: Number,
       default: 0,
     },
-    metaData: [String],
-    metaDescription: [String],
+    metaData: { type: String },
+    metaDescription: { type: String },
     tags: {
       type: String,
     },

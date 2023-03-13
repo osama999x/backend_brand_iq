@@ -1,5 +1,7 @@
 const express = require("express");
 const expressAsyncHandler = require("express-async-handler");
+const productsModel = require("../model/productsModel");
+const productsServices = require("../services/productsServices");
 const subCategoryServices = require("../services/subCategoryServices");
 const subCategoryRouter = express.Router();
 
@@ -21,7 +23,21 @@ subCategoryRouter.get(
     const result = await subCategoryServices.getProductsBySubCategory(
       subCategoryId
     );
-    if (result.length !== 0) {
+    if (result) {
+      res.status(200).send({ msg: "products by subcategory", data: result });
+    } else {
+      res.status(400).send({ msg: "Not found" });
+    }
+  })
+);
+subCategoryRouter.get(
+  "/productsBySubcategory",
+  expressAsyncHandler(async (req, res) => {
+    const { subCategoryId } = req.query;
+    const result = await subCategoryServices.ProductsBySubCategory(
+      subCategoryId
+    );
+    if (result) {
       res.status(200).send({ msg: "products by subcategory", data: result });
     } else {
       res.status(400).send({ msg: "Not found" });
@@ -80,17 +96,11 @@ subCategoryRouter.post(
 subCategoryRouter.patch(
   "/",
   expressAsyncHandler(async (req, res) => {
-    const {
-      subcategoryId,
-      categoryId,
-      name,
-      icon,
-      description,
-      isFeatured,
-    } = req.body;
-    if (!subcategoryId || !name || !icon || !description || !categoryId) {
-      return res.status(400).send({ msg: "Fields Missing" });
-    }
+    const { subcategoryId, categoryId, name, icon, description, isFeatured } =
+      req.body;
+    // if (!subcategoryId || !name || !icon || !description || !categoryId) {
+    //   return res.status(400).send({ msg: "Fields Missing" });
+    // }
     const result = await subCategoryServices.update(
       subcategoryId,
       categoryId,
@@ -112,8 +122,18 @@ subCategoryRouter.delete(
   "/",
   expressAsyncHandler(async (req, res) => {
     const { subcategoryId } = req.body;
+    const checkSubcategory = await productsServices.productsubCategory(
+      subcategoryId
+    );
+    console.log("subcategory", checkSubcategory);
+    if (checkSubcategory.length != 0) {
+      return res
+        .status(400)
+        .send({ msg: "This subcategory linked with product!" });
+    }
+    console.log("subcate", subcategoryId);
     const result = await subCategoryServices.delete(subcategoryId);
-    if (result.deletedCount == 0) {
+    if (result.deletedCount === 0) {
       return res.status(400).send({ msg: "ID Not found" });
     }
     if (result) {
