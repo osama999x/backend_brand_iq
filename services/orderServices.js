@@ -704,73 +704,7 @@ const orderServices = {
     couponCode
   ) => {
     try {
-      // //check customer already buy deal product or not
-      // var productArr = [];
       var currentDate = new Date(new Date().toLocaleDateString());
-      // var productLength = product.length;
-      // for (let i = 0; i < productLength; i++) {
-      //   productId = product[i].productId;
-      //   quantity = product[i].quantity;
-      //   price = product[i].price;
-      //   sku = product[i].sku;
-      //   size = product[i].size;
-      //   if (price <= 0) {
-      //     return;
-      //   }
-      //   var Product = await productModel.findOne(
-      //     { _id: productId, isDeal: true },
-      //     {
-      //       variant: {
-      //         $elemMatch: { sku: sku },
-      //         name: 1,
-      //         discount: 1,
-      //         dealExpire: 1,
-      //       },
-      //     }
-      //   );
-      //   if (
-      //     Product != null &&
-      //     price === Product.variant[0].actualPrice - Product.discount
-      //   ) {
-      //     if (Product.dealExpire >= currentDate) {
-      //       let buy = await dealBuyerLogModel.findOne({
-      //         customer: customer,
-      //         product: productId,
-      //       });
-      //       if (buy) {
-      //         const result = {
-      //           message: {
-      //             msg: `You are already bought this product with deal price. Please remove ${Product.name} from the cart!`,
-      //           },
-      //         };
-      //         throw result;
-      //       } else {
-      //         productArr.push({
-      //           productId: mongoose.Types.ObjectId(productId),
-      //           quantity: quantity,
-      //           price: price,
-      //           sku: sku,
-      //           size: size,
-      //         });
-      //       }
-      //     } else {
-      //       const result = {
-      //         message: {
-      //           msg: `Deal expire .Please remove ${Product.name} from the cart!`,
-      //         },
-      //       };
-      //       throw result;
-      //     }
-      //   } else {
-      //     productArr.push({
-      //       productId: mongoose.Types.ObjectId(productId),
-      //       quantity: quantity,
-      //       price: price,
-      //       sku: sku,
-      //       size: size,
-      //     });
-      //   }
-      // }
       var order = new orderModel({
         customer: mongoose.Types.ObjectId(customer),
         product,
@@ -815,24 +749,6 @@ const orderServices = {
         }
         //UPDATE PRODUCT QUANTITY
         await productLogServices.productLog(product, "SOLD", customerId);
-
-        // var productLength = result.product.length;
-        // for (let i = 0; i < productLength; i++) {
-        //   productId = product[i].productId;
-        //   quantity = product[i].quantity;
-        //   price = product[i].price;
-        //   sku = product[i].sku;
-        //   size = product[i].size;
-        //   const filter = { _id: productId, "variant.sku": sku };
-        //   const update = { $inc: { "variant.$.quantity": -quantity } };
-        //   //Log the Sales Product
-        //   await productModel.findOneAndUpdate(filter, update);
-        //   productLog = new productLogModel({
-        //     product: mongoose.Types.ObjectId(productId),
-        //     description: `SOLD,PRODUCTID:${productId},SKU:${sku},QUANTITY:${quantity},PRICE:${price},CUSTOMER:${customer},Size:${size}`,
-        //   });
-        //   await productLog.save();
-
         //save customer logs if he buy deal product
         await productsServices.logSoldDealProduct(product, customerId);
         if (redeemValue > 0) {
@@ -850,6 +766,7 @@ const orderServices = {
       return Result;
     } catch (e) {
       console.log(e);
+      throw e;
     }
   },
   customerClearHistory: async (customer) => {
