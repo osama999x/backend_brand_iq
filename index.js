@@ -100,6 +100,7 @@ var corOptions = {
 //cors
 app.use(cors(corOptions));
 //test Router
+//authentication
 //app.use(authentication);
 //app.use(decryptRequest);
 //app.use(encryptRequest);
