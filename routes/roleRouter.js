@@ -68,7 +68,7 @@ roleRouter.delete(
     let role_permission = await rolePermissionServices.getRolePermissions(
       roleId
     );
-    let userRole = await userServices.userRole(roleId);
+    let userRole = await roleServices.userRole(roleId);
     if (role_permission.length !== 0 || userRole.length !== 0) {
       return res.status(400).send({
         msg: "This role cannot be deleted because it has been assigned to one or more users",

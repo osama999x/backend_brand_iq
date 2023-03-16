@@ -22,7 +22,7 @@ const rolePermissionServices = {
     return result;
   },
   getRolePermissions: async (roleId) => {
-    const rolePermission = await find({ role: roleId });
+    const rolePermission = await rolePermissionModel.find({ role: roleId });
     return rolePermission;
   },
   getByRole: async (roleId) => {
