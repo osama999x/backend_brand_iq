@@ -75,7 +75,7 @@ roleRouter.delete(
       });
     }
     const result = await roleServices.delete(roleId);
-    if (result.deletedCount == 0) {
+    if (result.deletedCount === 0) {
       return res.status(400).send({ msg: "ID Not found" });
     }
     if (result) {
