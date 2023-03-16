@@ -65,7 +65,7 @@ roleRouter.delete(
     if (!roleId) {
       return res.status(400).send({ msg: "Fields Missing" });
     }
-    let role_permission = await rolePermissionServices.getRolePermission(
+    let role_permission = await rolePermissionServices.getRolePermissions(
       roleId
     );
     let userRole = await userServices.userRole(roleId);
