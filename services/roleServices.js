@@ -1,6 +1,7 @@
 const roleModel = require("../model/roleModel");
 const mongoose = require("mongoose");
 const projection = require("../config/mongoProjection");
+const userModel = require("../model/userModel");
 
 const roleServices = {
   get: async () => {
@@ -34,6 +35,10 @@ const roleServices = {
     var _id = mongoose.Types.ObjectId(_id);
     const result = await roleModel.deleteOne({ _id });
     return result;
+  },
+  userRole: async (roleId) => {
+    let role = await userModel.find({ role: roleId });
+    return role;
   },
 };
 
