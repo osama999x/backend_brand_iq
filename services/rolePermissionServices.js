@@ -21,6 +21,10 @@ const rolePermissionServices = {
     const result = await permission.save();
     return result;
   },
+  getRolePermission: async (roleId) => {
+    const rolePermission = await find({ role: roleId });
+    return rolePermission;
+  },
   getByRole: async (roleId) => {
     const roleDetails = await rolePermissionModel
       .findOne(

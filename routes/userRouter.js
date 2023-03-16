@@ -8,6 +8,7 @@ const validator = require("../utils/passwordValidator");
 const verfyToken = require("../utils/verfyToken");
 const { v4: uuidv4 } = require("uuid");
 const saveOtp = require("../utils/saveOtp");
+const jwtService = require("../utils/jwtService");
 
 userRouter.get(
   "/all",
@@ -51,8 +52,8 @@ userRouter.post(
     );
     if (result) {
       const uuid = uuidv4();
-      const refreshToken = jwtServices.create({ uuid, type: "admin" });
-      const accessToken = jwtServices.create(
+      const refreshToken = jwtService.create({ uuid, type: "admin" });
+      const accessToken = jwtService.create(
         { userId: result._id, type: "admin" },
         "5m"
       );
