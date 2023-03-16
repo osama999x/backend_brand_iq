@@ -1,6 +1,8 @@
 const express = require("express");
 const expressAsyncHandler = require("express-async-handler");
+const rolePermissionServices = require("../services/rolePermissionServices");
 const roleServices = require("../services/roleServices");
+const userServices = require("../services/userServices");
 const roleRouter = express.Router();
 
 roleRouter.get(
@@ -62,6 +64,15 @@ roleRouter.delete(
     const { roleId } = req.body;
     if (!roleId) {
       return res.status(400).send({ msg: "Fields Missing" });
+    }
+    let role_permission = await rolePermissionServices.getRolePermissions(
+      roleId
+    );
+    let userRole = await userServices.userRole(roleId);
+    if (role_permission.length !== 0 || userRole.length !== 0) {
+      return res.status(400).send({
+        msg: "This role cannot be deleted because it has been assigned to one or more users",
+      });
     }
     const result = await roleServices.delete(roleId);
     if (result.deletedCount == 0) {

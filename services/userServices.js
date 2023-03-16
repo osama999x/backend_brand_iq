@@ -152,6 +152,10 @@ const userServices = {
     const result = await userModel.deleteOne({ _id });
     return result;
   },
+  userRole: async (roleId) => {
+    let role = await userModel.find({ role: roleId });
+    return role;
+  },
 };
 
 module.exports = userServices;
