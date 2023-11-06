@@ -70,6 +70,7 @@ const authentication = require("./middleware/authentication");
 const decryptRequest = require("./middleware/decryptedRequestData");
 const encryptRequest = require("./middleware/encryptedResponseData");
 const rolePermissionRouter = require("./routes/rolePermissionRouter");
+const citiesRouter = require("./routes/citiesRouter");
 require("./db/index");
 const port = process.env.PORT;
 //hit routes
@@ -155,6 +156,8 @@ app.use("/api/v1/permissionAction", permissionActionRouter);
 app.use("/api/v1/module", moduleRouter);
 app.use("/api/v1/subModule", subModuleRouter);
 app.use("/api/v1/rolePermission", rolePermissionRouter);
+app.use("/api/v1/cities", citiesRouter);
+
 
 // const swaggerSpec = swaggerjsdoc(option);
 // app.use(
