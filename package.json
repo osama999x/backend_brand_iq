@@ -28,6 +28,7 @@
     "express-rate-limit": "^6.6.0",
     "fast-xml-parser": "^4.0.13",
     "fs": "^0.0.1-security",
+    "joi": "^17.11.0",
     "json-cipher-value": "^1.1.3",
     "jsonwebtoken": "^9.0.0",
     "mime-type": "^4.0.0",
