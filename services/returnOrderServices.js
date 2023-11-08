@@ -270,7 +270,7 @@ const returnOrderServices = {
       if (oldOrderStatus === "Returned") {
         try {
           //return order status log by admin
-          let cancelStatus = await orderStatusServices.orderStatus("Canceled");
+          let cancelStatus = await orderStatusServices.orderStatus("Cancelled");
           cancelStatus = cancelStatus._id;
           const returnOrderLog = new returnOrderStatusLogModel({
             orderStatus: mongoose.Types.ObjectId(cancelStatus),
