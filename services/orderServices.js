@@ -122,9 +122,9 @@ const orderServices = {
           (updateStatus &&
             status === "Rejected" &&
             oldOrderStatus != status &&
-            oldOrderStatus != "Canceled") ||
+            oldOrderStatus != "Cancelled") ||
           (updateStatus &&
-            status === "Canceled" &&
+            status === "Cancelled" &&
             oldOrderStatus != status &&
             oldOrderStatus != "Rejected")
         ) {
