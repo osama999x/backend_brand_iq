@@ -36,6 +36,7 @@ const reviewServices = {
       {
         $project: {
           isApproved: 1,
+          status: 1,
           channel: 1,
           "customer._id": "$customer._id",
           "customer.name": {
@@ -62,17 +63,20 @@ const reviewServices = {
 
     return reviews;
   },
-  checkApproved: async (reviewId) => {
-    const isApproved = await reviewModel.findOne({
+  checkApproved: async (reviewId, isApproved) => {
+    const result = await reviewModel.findOne({
       _id: reviewId,
-      isApproved: true,
+      isApproved,
     });
-    return isApproved;
+    return result;
   },
-  approvedReview: async (reviewId) => {
+  approvedReview: async (reviewId, isApproved) => {
+    let status;
+    status = isApproved === true ? "approved" : "rejected";
     const result = await reviewModel.findOneAndUpdate(
       { _id: reviewId },
-      { isApproved: true }
+      { isApproved: isApproved, status },
+      { new: true }
     );
     if (result) {
       let up = await productsModel.findOneAndUpdate(
@@ -93,7 +97,6 @@ const reviewServices = {
       {
         $match: {
           _id: new mongoose.Types.ObjectId(reviewId),
-          isApproved: true,
         },
       },
       {

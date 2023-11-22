@@ -11,10 +11,11 @@ const uploadFile = require("../utils/uploadFile");
 const { v4: uuidv4 } = require("uuid");
 const saveOtp = require("../utils/saveOtp");
 const jwtService = require("../utils/jwtService");
+const validateMobileNumber = require("../utils/validateMobileNumber");
 customerRouter.post(
   "/signup",
   expressAsyncHandler(async (req, res) => {
-    const {
+    let {
       firstName,
       lastName,
       email,
@@ -25,7 +26,12 @@ customerRouter.post(
       reEnterPassword,
       cnic,
     } = req.body;
-
+    let isValidContact = validateMobileNumber(contact);
+    if (!isValidContact) {
+      return res.status(400).send({
+        msg: "Please enter valid mobile number!",
+      });
+    }
     if (password !== reEnterPassword) {
       return res.status(400).send({ msg: "Passwords Don't Match" });
     }
@@ -36,6 +42,7 @@ customerRouter.post(
         //validator.schema.validate(password, { list: true }),
       });
     }
+    console.log(contact);
     const result = await customerServices.addNew(
       firstName,
       lastName,
@@ -68,7 +75,7 @@ customerRouter.post(
 customerRouter.post(
   "/webSignup",
   expressAsyncHandler(async (req, res) => {
-    const {
+    let {
       firstName,
       lastName,
       email,
@@ -91,6 +98,13 @@ customerRouter.post(
         msg: "Fields Missing",
       });
     }
+    let ValidContact = validateMobileNumber(contact);
+    if (!ValidContact) {
+      return res.status(400).send({
+        msg: "Please enter valid mobile number 03xxxxxxxxx!",
+      });
+    }
+
     const result = await customerServices.addNewWeb(
       firstName,
       lastName,

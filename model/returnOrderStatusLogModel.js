@@ -4,8 +4,7 @@ const uuid = require("uuid");
 const schema = new Schema(
   {
     orderStatus: {
-      type: Schema.Types.ObjectId,
-      ref: "OrderStatus",
+      type: String,
     },
     orderId: {
       type: String,

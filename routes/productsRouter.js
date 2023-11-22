@@ -123,6 +123,7 @@ productsRouter.post(
       metaDescription,
       tags,
       addons,
+      isFeatured,
     } = req.body;
     console.log(categoryId, subcategoryId);
     if (isDeal === true && (!dealExpire || !discount)) {
@@ -153,7 +154,8 @@ productsRouter.post(
       metaData,
       metaDescription,
       tags,
-      addons
+      addons,
+      isFeatured
     );
     if (result) {
       return res.status(200).send({ msg: "product added.", data: result });
@@ -193,6 +195,7 @@ productsRouter.patch(
       tags,
       addons,
       newImages,
+      isFeatured,
     } = req.body;
     let checkProduct = await productsModel.findById(
       { _id: productId },
@@ -239,7 +242,8 @@ productsRouter.patch(
       metaDescription,
       tags,
       addons,
-      newImages
+      newImages,
+      isFeatured
     );
     if (result) {
       return res.status(200).send({ msg: "product Updated", data: result });

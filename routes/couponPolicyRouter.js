@@ -37,23 +37,39 @@ couponPolicyRouter.post(
         msg: "Fields Missing",
       });
     }
-    try {
-      const result = await couponPolicyServices.getCustomerCoupan(
-        couponCode,
-        customerId
-      );
-      console.log(result);
-      if (result) {
-        res.status(200).send({
-          msg: "Your Coupon",
-          data: result,
-        });
-      } else {
-        res.status(400).send({ msg: "Coupon Not Found", isCoupon: false });
-      }
-    } catch (e) {
-      res.status(400).send({ msg: e.message, isCoupon: false });
+    const isCoupon = await couponPolicyServices.getOneCoupon(couponCode);
+    if (!isCoupon) {
+      res.status(400).send({ msg: "Coupon doesn't exist!", isCoupon: false });
+      return;
     }
+    const isUseCoupon = await couponPolicyServices.checkCustomerCoupon(
+      couponCode,
+      customerId
+    );
+    if (isUseCoupon) {
+      res
+        .status(400)
+        .send({ msg: "You have already taken this coupon", isCoupon: false });
+      return;
+    }
+    // try {
+    const result = await couponPolicyServices.getCustomerCoupon(
+      couponCode,
+      customerId
+    );
+    console.log(result);
+    if (result) {
+      res.status(200).send({
+        msg: "Your Coupon",
+        data: result,
+      });
+      return;
+    } else {
+      res.status(400).send({ msg: "Coupon expire", isCoupon: false });
+    }
+    // } catch (e) {
+    //   res.status(400).send({ msg: e, isCoupon: false });
+    // }
   })
 );
 // couponPolicyRouter.post(

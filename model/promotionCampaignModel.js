@@ -10,7 +10,7 @@ const schema = new Schema(
       unique: true,
     },
     description: {
-      Type: String,
+      type: String,
     },
     banner: {
       type: String,

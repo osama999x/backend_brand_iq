@@ -74,14 +74,16 @@ subCategoryRouter.get(
 subCategoryRouter.post(
   "/",
   expressAsyncHandler(async (req, res) => {
-    const { categoryId, name, icon, description, isFeatured } = req.body;
-    if (!categoryId || !name || !icon || !description) {
+    const { categoryId, name, icon, thumbnail, description, isFeatured } =
+      req.body;
+    if (!categoryId || !name || !icon || !description || !thumbnail) {
       return res.status(400).send({ msg: "Fields Missing" });
     }
     const result = await subCategoryServices.add(
       categoryId,
       name,
       icon,
+      thumbnail,
       description,
       isFeatured
     );

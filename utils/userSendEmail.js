@@ -15,9 +15,9 @@ const userSendEmail = async (email) => {
     },
   });
   var mailOptions = {
-    from: "M-Safa",
+    from: "MSAFA",
     to: email,
-    subject: "M-Safa OTP",
+    subject: "MSAFA OTP",
     text: "Your OTP is " + Otp,
   };
   let user = await saveOtp.adminOtpById(email, Otp);

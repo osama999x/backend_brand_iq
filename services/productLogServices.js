@@ -12,9 +12,14 @@ const productLogServices = {
       sku = product[i].sku;
       size = product[i].size;
       const filter = { _id: productId, "variant.sku": sku };
-      const update = { $inc: { "variant.$.quantity": +quantity } };
+      let update;
+      if (status === "SOLD") {
+        update = { $inc: { "variant.$.quantity": -quantity } };
+      } else {
+        update = { $inc: { "variant.$.quantity": +quantity } };
+      }
       await productsModel.findOneAndUpdate(filter, update);
-      productLog = new productLogModel({
+      let productLog = new productLogModel({
         product: mongoose.Types.ObjectId(productId),
         description: `${status} order,PRODUCTID:${productId},SKU:${sku},QUANTITY:${quantity},PRICE:${price},CUSTOMER:${customerId},Size:${size}`,
       });

@@ -9,6 +9,9 @@ var cors = require("cors");
 const var_dump = require("var_dump");
 const uc = require("upper-case-first");
 const bodyParser = require("body-parser");
+const backup = require("mongodb-backup");
+var CronJob = require("cron").CronJob;
+var Cron = require("./utils/backup.js");
 // var CryptoJS = require("crypto-js");
 //process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const app = express();
@@ -70,7 +73,11 @@ const authentication = require("./middleware/authentication");
 const decryptRequest = require("./middleware/decryptedRequestData");
 const encryptRequest = require("./middleware/encryptedResponseData");
 const rolePermissionRouter = require("./routes/rolePermissionRouter");
+const courierRouter = require("./routes/courierRouter");
 const citiesRouter = require("./routes/citiesRouter");
+const { options } = require("./utils/backup");
+const productBulkRouter = require("./routes/productBulkRouter");
+const apiLogs = require("./middleware/apiLogs");
 require("./db/index");
 const port = process.env.PORT;
 //hit routes
@@ -84,25 +91,43 @@ app.use(express.static(path.join(__dirname, "public")));
 //app.use(decryptData);//Cipher
 //app.use(limiter); //Limit IP Requests
 app.use(morgan("dev"));
+app.use(apiLogs);
 //logger
-app.use((req, res, next) => {
-  logger.info(req._parsedUrl.path);
-  logger.info(req.body);
-  let oldres = res.send;
-  res.send = function (data) {
-    logger.info(data);
-    oldres.apply(res, arguments);
-  };
-  next();
-});
+app.use(logger);
 var corOptions = {
   origin: "*",
 };
+//backup
+// new CronJob(
+//   "5 * * * *",
+//   function () {
+//     Cron.dbAutoBackUp();
+//   },
+//   null,
+//   true,
+//   "America/New_York"
+// );
+
+// Wrap the cron job code in a function
+// function startCronJob() {
+//   new CronJob(
+//     "*/1 * * * *", // Run every 2 minutes
+//     function () {
+//       Cron.dbAutoBackUp();
+//     },
+//     null,
+//     true,
+//     "America/New_York"
+//   );
+// }
+
+// Call the function after a delay
+//setTimeout(startCronJob, 2 * 60 * 1000); // 2 minutes in milliseconds
 //cors
 app.use(cors(corOptions));
+//backup(options);
 //test Router
-//authentication
-//app.use(authentication);
+app.use(authentication);
 //app.use(decryptRequest);
 //app.use(encryptRequest);
 app.use("/api/v1/test", testRouter);
@@ -156,8 +181,9 @@ app.use("/api/v1/permissionAction", permissionActionRouter);
 app.use("/api/v1/module", moduleRouter);
 app.use("/api/v1/subModule", subModuleRouter);
 app.use("/api/v1/rolePermission", rolePermissionRouter);
+app.use("/api/v1/courier", courierRouter);
 app.use("/api/v1/cities", citiesRouter);
-
+app.use("/api/v1/bulk", productBulkRouter);
 
 // const swaggerSpec = swaggerjsdoc(option);
 // app.use(
@@ -169,7 +195,7 @@ swaggerDocs(app, port);
 
 //404 Handler
 app.get("/", (req, res, next) => {
-  res.status(200).send({ msg: "Welcome To M-SAFA " });
+  res.status(200).send({ msg: "Welcome To MSAFA " });
 });
 app.use((req, res, next) => {
   res.status(404).send({ msg: "Route Not found" });
@@ -181,14 +207,14 @@ app.use((err, req, res, next) => {
   if (err && err.code === 11000) {
     let errorKey = Object.keys(err["keyPattern"]).toString();
     errorKey = uc.upperCaseFirst(errorKey);
-    res.status(400).send({ msg: errorKey + " already exists" });
+    return res.status(400).send({ msg: errorKey + " already exists" });
   }
   if (err.name === "ValidationError") {
-    res.status(400).send({
+    return res.status(400).send({
       msg: Object.values(err.errors).map((val) => val.message),
     });
   } else {
-    res.status(400).send({ msg: err.message });
+    return res.status(400).send({ msg: err.message });
   }
 });
 app.listen(port, () => {

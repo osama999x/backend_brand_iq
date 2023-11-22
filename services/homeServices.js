@@ -11,7 +11,7 @@ const homeServices = {
   get: async () => {
     try {
       const categories = await categoryModel.find(
-        { isFeatured: true },
+        { isFeatured: true, isActive: true },
         projection.homecategoryprojection
       );
       // .limit(6);
@@ -29,7 +29,10 @@ const homeServices = {
           {
             $and: [
               { isDeal: false },
-              { $or: [{ isFeatured: true }, { isDiscount: true }] },
+              { isActive: true },
+              {
+                $or: [{ isFeatured: true }, { isDiscount: true }],
+              },
             ],
           },
           projection.hometrendprojection
@@ -50,6 +53,7 @@ const homeServices = {
             isFeatured: true,
             isDiscount: false,
             isDeal: true,
+            isActive: true,
             expireDate: { $gte: currentDate },
           },
           projection.hometrendprojection
@@ -83,15 +87,15 @@ const homeServices = {
       throw new Error("Some data missing");
     }
   },
-  getLimitedPorduct: async () => {
+  getLimitedProduct: async () => {
     const categories = await categoryModel
-      .find({}, projection.homecategoryprojection)
+      .find({ isActive: true }, projection.homecategoryprojection)
       .limit(10);
     // .skip((page - 1) * limit)
     // .limit(limit)
     // .sort("name");
     const subcategories = await subcategoryModel
-      .find({}, projection.homesubcategoryprojection)
+      .find({ isActive: true }, projection.homesubcategoryprojection)
       .limit(10);
     // .skip(page * limit)
     // .limit(limit)
@@ -101,7 +105,10 @@ const homeServices = {
         {
           $and: [
             { isDeal: false },
-            { $or: [{ isFeatured: true }, { isDiscount: true }] },
+            { isActive: true },
+            {
+              $or: [{ isFeatured: true }, { isDiscount: true }],
+            },
           ],
         },
         projection.hometrendprojection
@@ -125,13 +132,43 @@ const homeServices = {
     };
     return result;
   },
-  getRecentPorduct: async () => {
+  bannerSearchProductByTags: async (type, price) => {
+    let query = {};
+
+    if (type === "newArrival") {
+      query.isFeatured = true;
+    } else if (type === "isSale") {
+      query.isSale = true;
+    } else if (type === "discount") {
+      query.isDiscount = true;
+    } else if (type === "underPrice") {
+      query["variant.actualPrice"] = { $lt: price };
+    }
+
+    let products = await productModel
+      .find(query, projection.hometrendprojection)
+      .limit(10)
+      .lean();
+    if (products.length != 0) {
+      products = products.map((item) => {
+        item.actualPrice = item.variant[0].actualPrice;
+        item.discountedPrice = item.variant[0].discountedPrice;
+        delete item.variant;
+        return item;
+      });
+    };
+    return products;
+  },
+  getRecentProduct: async () => {
     let products = await productModel
       .find(
         {
           $and: [
             { isDeal: false },
-            { $or: [{ isFeatured: true }, { isDiscount: true }] },
+            { isActive: true },
+            {
+              $or: [{ isFeatured: true }, { isDiscount: true }],
+            },
           ],
         },
         projection.hometrendprojection
@@ -153,6 +190,7 @@ const homeServices = {
     const products = await productModel.find(
       {
         tags: { $regex: new RegExp(text), $options: "si" },
+        isActive: true,
       },
       { tags: 1 }
     );
@@ -162,7 +200,7 @@ const homeServices = {
     let today = new Date(new Date());
     let products = await productModel.aggregate([
       {
-        $match: { tags: { $eq: tags } },
+        $match: { tags: { $eq: tags }, isActive: true },
         // $match: { name: { $regex: new RegExp(text), $options: "si" } },
       },
       {
@@ -279,6 +317,9 @@ const homeServices = {
   },
   getAllCategories: async () => {
     const categories = await categoryModel.aggregate([
+      {
+        $match: { isActive: true },
+      },
       {
         $lookup: {
           from: "subcategories",

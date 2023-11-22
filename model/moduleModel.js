@@ -4,6 +4,7 @@ const schema = new Schema(
   {
     label: { type: String, required: true, unique: true },
     route: { type: String, required: true, unique: true },
+    icon:{type:String},
     isSubModule: {
       type: Boolean,
       default: false,
@@ -12,9 +13,12 @@ const schema = new Schema(
       {
         type: Schema.Types.ObjectId,
         ref: "Permission",
-        unique: true,
       },
     ],
+    orderPosition: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

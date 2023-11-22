@@ -4,6 +4,7 @@ const customerServices = require("../services/customerServices");
 const otp = require("./otp");
 const saveOtp = require("./saveOtp");
 const smsServices = require("./sendSMS");
+
 const sendEmail = async (email) => {
   const Otp = otp();
   var transporter = nodemailer.createTransport({
@@ -16,9 +17,9 @@ const sendEmail = async (email) => {
     },
   });
   var mailOptions = {
-    from: `M-Safa ${process.env.MAIL}`,
+    from: `MSAFA ${process.env.MAIL}`,
     to: email,
-    subject: "M-Safa OTP",
+    subject: "MSAFA OTP",
     text: "Your OTP is " + Otp,
   };
   let user = await saveOtp.otpById(email, Otp);
