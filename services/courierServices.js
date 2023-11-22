@@ -74,17 +74,17 @@ const courierServices = {
           token: token,
         },
       }
-    );
-    const citiesCount = await operationalCityModel.findOne({
-      courier: "postEx",
-    });
-    if (data && !citiesCount) {
-      const addOperationalCities = new operationalCityModel({
-        operationalCities: data.data.dist,
-        courier: "postEx",
-      });
-      await addOperationalCities.save();
-    }
+      );
+    // const citiesCount = await operationalCityModel.findOne({
+    //   courier: "postEx",
+    // });
+    // if (data && !citiesCount) {
+    //   const addOperationalCities = new operationalCityModel({
+    //     operationalCities: data.data.dist,
+    //     courier: "postEx",
+    //   });
+    //   await addOperationalCities.save();
+    // }
     try {
       courierLogService.updateResponse(courierLog._id, data.data);
     } catch (error) {
