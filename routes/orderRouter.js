@@ -35,21 +35,21 @@ orderRouter.post(
   expressAsyncHandler(async (req, res) => {
     const {
       orderId,
-      originCityCode,
+     // originCityCode,
       orderType,
       description,
       packing,
       weight,
-      courierType,
+      //courierType,
     } = req.body;
     if (
       !orderId ||
-      !originCityCode ||
+      //!originCityCode ||
       !orderType ||
       !description ||
       !packing ||
-      !weight ||
-      !courierType
+      !weight 
+      //!courierType
     ) {
       return res.status(400).send({
         msg: "Fields Missing",
@@ -81,6 +81,8 @@ orderRouter.post(
         msg: "You can't proceed this order with given instruction",
       });
     }
+    let originCityCode='002';
+    let courierType='POSTEX'
     const result = await orderServices.orderDispatch(
       order,
       originCityCode,
