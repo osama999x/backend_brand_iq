@@ -40,6 +40,10 @@ const taxHeadServices = {
     const result = await taxHeadModel.deleteOne({ _id });
     return result;
   },
+  isExist: async (id) => {
+    const result = await taxHeadModel.findOne({ taxType: id });
+    return result;
+  },
 };
 
 module.exports = taxHeadServices;

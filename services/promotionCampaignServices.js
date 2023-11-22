@@ -13,7 +13,23 @@ const sendNotificationEmail = require("../utils/sendNotificationEmail");
 const promotionModel = require("../model/promotionModel");
 const promotionCampaignServices = {
   get: async () => {
-    const result = await promotionCampaignModel.find({}, projection.projection);
+    const now = new Date();
+    const result = await promotionCampaignModel.find(
+      {
+        activeFrom: { $lte: now },
+        activeTo: { $gte: now },
+      },
+      projection.projection
+    );
+    return result;
+  },
+  getWeb: async () => {
+    const now = new Date();
+    const result = await promotionCampaignModel.find(
+      {
+      },
+      projection.projection
+    );
     return result;
   },
   getPromotions: async () => {
@@ -128,43 +144,42 @@ const promotionCampaignServices = {
   addNew: async (campaignName, description, banner, activeFrom, activeTo) => {
     const data = new promotionCampaignModel({
       campaignName,
-      description,
       banner,
+      description,
       activeFrom,
       activeTo,
     });
     var result = await data.save();
-    console.log(result.description);
-
-    if (result) {
-      let subject = sendEmailNotificationInfo.promotion.title;
-      let text = sendEmailNotificationInfo.promotion.body;
-      let email = await SubscribeModel.find({}, { email: 1, _id: 0 });
-      var emailArr = [];
-      for (var i of email) {
-        email = i.email;
-        emailArr.push(email);
-      }
-      await sendNotificationEmail(subject, text, emailArr);
-      campaignName = result.campaignName;
-      image = result.banner;
-      const notification = new notificationModel({
-        title: notificationInfo.promotion.title,
-        body: notificationInfo.promotion.body,
-        message: `This promotion campaign  ${campaignName} has spacial discount. This offer for limited time `,
-        topic: "Spacial discount Offer",
-        notificationType: "promotion",
-        icon: image,
-      });
-      var notify = await notification.save();
-      if (notify) {
-        notify = notify._id;
-        const up = await readNotficationModel.updateMany(
-          {},
-          { $push: { readNotification: notify } }
-        );
-      }
-    }
+    console.log("description", result.description);
+    // if (result) {
+    //   let subject = sendEmailNotificationInfo.promotion.title;
+    //   let text = sendEmailNotificationInfo.promotion.body;
+    //   // let email = await SubscribeModel.find({}, { email: 1, _id: 0 });
+    //   // var emailArr = [];
+    //   // for (var i of email) {
+    //   //   email = i.email;
+    //   //   emailArr.push(email);
+    //   // }
+    //   await sendNotificationEmail(subject, text);
+    //   campaignName = result.campaignName;
+    //   image = result.banner;
+    //   const notification = new notificationModel({
+    //     title: notificationInfo.promotion.title,
+    //     body: notificationInfo.promotion.body,
+    //     message: `This promotion campaign  ${campaignName} has spacial discount. This offer for limited time `,
+    //     topic: "Spacial discount Offer",
+    //     notificationType: "promotion",
+    //     icon: image,
+    //   });
+    //   var notify = await notification.save();
+    //   if (notify) {
+    //     notify = notify._id;
+    //     const up = await readNotficationModel.updateMany(
+    //       {},
+    //       { $push: { readNotification: notify } }
+    //     );
+    //   }
+    // }
     return result;
   },
   addPromotion: async (

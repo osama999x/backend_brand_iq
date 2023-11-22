@@ -20,7 +20,7 @@ homeRouter.get(
   expressAsyncHandler(async (req, res) => {
     // const { page, limit } = req.query;
     // eq.query);
-    const result = await homeServices.getLimitedPorduct();
+    const result = await homeServices.getLimitedProduct();
     res.status(200).send({ msg: "Home Screen", data: result });
   })
 );
@@ -29,8 +29,16 @@ homeRouter.get(
   expressAsyncHandler(async (req, res) => {
     // const { page, limit } = req.query;
     // eq.query);
-    const result = await homeServices.getRecentPorduct();
+    const result = await homeServices.getRecentProduct();
     res.status(200).send({ msg: "Home Screen Recent Products", data: result });
+  })
+);
+homeRouter.get(
+  "/bannerSearchProduct",
+  expressAsyncHandler(async (req, res) => {
+    const { type,price } = req.query;
+    const result = await homeServices.bannerSearchProductByTags(type, price);
+    res.status(200).send({ msg: "Search Products", data: result });
   })
 );
 homeRouter.get(
@@ -38,7 +46,7 @@ homeRouter.get(
   expressAsyncHandler(async (req, res) => {
     const { text } = req.query;
     const result = await homeServices.searchProductByTags(text);
-    res.status(200).send({ msg: "Searh Products", data: result });
+    res.status(200).send({ msg: "Search Products", data: result });
   })
 );
 homeRouter.get(

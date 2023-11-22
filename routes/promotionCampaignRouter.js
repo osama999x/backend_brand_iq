@@ -13,6 +13,13 @@ promotionCampaignRouter.get(
   })
 );
 promotionCampaignRouter.get(
+  "/web/all",
+  expressAsyncHandler(async (req, res) => {
+    const result = await promotionCampaignServices.getWeb();
+    res.status(200).send({ msg: "campaign", data: result });
+  })
+);
+promotionCampaignRouter.get(
   "/allPromotions",
   expressAsyncHandler(async (req, res) => {
     const result = await promotionCampaignServices.getPromotions();

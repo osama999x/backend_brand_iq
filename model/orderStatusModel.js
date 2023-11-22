@@ -10,7 +10,7 @@ const schema = new Schema(
       enum: [
         "Pending",
         "Confirmed",
-        "Cancelled",
+        "Canceled",
         "Rejected",
         "Delivered",
         "Returned",

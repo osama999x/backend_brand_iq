@@ -33,7 +33,7 @@ const subCategoryServices = {
     let subcategory = await subCategoryModel
       .findById(
         { _id: subcategoryId },
-        { _id: 1, name: 1, icon: 1, description: 1 }
+        { _id: 1, name: 1, icon: 1, description: 1, thumbnail: 1 }
       )
       .lean();
     if (subcategory) {
@@ -142,15 +142,21 @@ const subCategoryServices = {
     return list;
   },
 
-  add: async (category, name, icon, description, isFeatured) => {
+  add: async (category, name, icon, thumbnail, description, isFeatured) => {
+    console.log(icon);
     icon = await uploadFile(icon);
+    thumbnail = await uploadFile(thumbnail);
     if (!icon) {
+      return null;
+    }
+    if (!thumbnail) {
       return null;
     }
     let subcategory = new subCategoryModel({
       category: mongoose.Types.ObjectId(category),
       name,
       icon,
+      thumbnail,
       description,
       isFeatured,
     });
@@ -199,9 +205,10 @@ const subCategoryServices = {
     console.log("result", result);
     return result;
   },
-  subcategory: async (categoryId) => {
+  subcategory: async (category) => {
+    console.log(category);
     const result = await subCategoryModel.find({
-      category: { $in: categoryId },
+      category:category ,
     });
     return result;
   },

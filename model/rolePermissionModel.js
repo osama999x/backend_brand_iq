@@ -5,6 +5,7 @@ const schema = new Schema(
     role: {
       type: Schema.Types.ObjectId,
       ref: "Role",
+      unique:true
     },
     history: {
       type: String,

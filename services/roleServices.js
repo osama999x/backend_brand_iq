@@ -36,7 +36,7 @@ const roleServices = {
     const result = await roleModel.deleteOne({ _id });
     return result;
   },
-  userRole: async (roleId) => {
+  getUserRole: async (roleId) => {
     let role = await userModel.find({ role: roleId });
     return role;
   },

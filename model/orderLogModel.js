@@ -4,16 +4,14 @@ const uuid = require("uuid");
 const schema = new Schema(
   {
     deliveryPartner: {
-      type: Schema.Types.ObjectId,
-      ref: "deliveryPartner",
+      type: String,
     },
     orderStatus: {
-      type: Schema.Types.ObjectId,
-      ref: "OrderStatus",
+      type: String,
     },
     orderId: {
-      type: String,
-      required: true,
+      type: Schema.Types.ObjectId,
+      ref: "Order",
     },
     time: {
       type: Date,

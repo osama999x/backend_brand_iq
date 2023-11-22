@@ -148,6 +148,20 @@ const schema = new Schema(
   },
   { timestamps: true }
 );
+schema.index({ "variant.sku": 1 }, { unique: true });
+// Pre-save hook to check uniqueness of `sku` within `variant` array
+schema.pre("save", async function (next) {
+  const existingProducts = await this.constructor.find({
+    "variant.sku": this.variant.sku,
+    _id: { $ne: this._id },
+  });
 
+  if (existingProducts.length > 0) {
+    const error = new Error("Duplicate SKU found in variants");
+    return next(error);
+  }
+
+  next();
+});
 const productsModel = new mongoose.model("Product", schema);
 module.exports = productsModel;

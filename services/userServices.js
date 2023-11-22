@@ -18,12 +18,12 @@ const userServices = {
     const result = await userModel.find({}, projection.projection).populate({
       path: "role",
       select: { _id: 1, name: 1 },
-    });
+    }).sort({createdAt:-1});
     return result;
   },
   getByUserID: async (_id) => {
     var _id = mongoose.Types.ObjectId(_id);
-    const result = await userModel.findById({ _id }, projection.projection);
+    const result = await userModel.findById({ _id }, projection.projection).lean();
     // .populate({
     //   path: "role",
     //   select: { _id: 1, name: 1 },
@@ -49,11 +49,12 @@ const userServices = {
     const result = await userModel.findOne(
       { email: email },
       { createdAt: 0, updatedAt: 0, __v: 0 }
-    );
+    ).lean();
     if (result) {
       const role_permission = await rolePermissionServices.getRolePermission(
         result.role
       );
+      console.log(role_permission)
       if (role_permission) {
         result.modules = role_permission.modules;
       } else {

@@ -22,6 +22,8 @@ const promotionModel = require("../model/promotionModel");
 const pointServices = require("./pointServices");
 const productLogServices = require("./productLogServices");
 const productsServices = require("./productsServices");
+const courierServices = require("./courierServices");
+const orderLogService = require("../utils/orderLogService");
 const orderServices = {
   orderTracking: async (orderId) => {
     let orderTrack = await orderLogModel.aggregate([
@@ -59,113 +61,214 @@ const orderServices = {
 
     return orderTrack;
   },
-  orderDispatch: async (deliveryPartner, orderStatus, orderId) => {
-    var order = await orderModel.findOne({ orderId: { $in: orderId } });
-    console.log(order);
-    if (order) {
-      var oldOrderStatus = order.status;
-      totalBill = order.totalBill;
-      var customerId = order.customer;
-      product = order.product;
-      redeemValue = order.redeemValue;
-      couponCode = order.couponCode;
-      const time = new Date(new Date().toLocaleDateString());
-      const data = new orderLogModel({
-        deliveryPartner: mongoose.Types.ObjectId(deliveryPartner),
-        orderStatus: mongoose.Types.ObjectId(orderStatus),
-        orderId,
-        time,
-      });
-      const result = await data.save();
-      if (result) {
-        let findStatus = await orderStatusModel.findOne(
-          { _id: orderStatus },
-          { orderStatusName: 1, _id: 0 }
-        );
-        var status = findStatus.orderStatusName;
-        const updateStatus = await orderModel.findOneAndUpdate(
-          { orderId },
-          {
-            status: status,
-          },
-          { new: true }
-        );
-        if (
-          updateStatus &&
-          oldOrderStatus != status &&
-          status === "Delivered"
-        ) {
-          let getPointPerOrder = await pointManageModel.find({});
-          if (getPointPerOrder.length != 0) {
-            pointOrderPrice = getPointPerOrder[0].pointOrderPrice;
-            pointPerOrder = getPointPerOrder[0].pointPerOrder;
-            var point = Math.ceil(totalBill / pointOrderPrice);
-            point = point * pointPerOrder;
-            const data = new pointModel({
-              customer: mongoose.Types.ObjectId(customerId),
-              points: point,
-              orderId: orderId,
-            });
-            await data.save();
-            var updatedPoints = await customerModel.findOneAndUpdate(
-              { _id: customerId },
-              { $inc: { points: +point } }
+  orderDispatch: async (
+    order,
+    originCityCode,
+    orderType,
+    description,
+    packing,
+    weight,
+    courierType
+    // orderStatusType,
+    // parcelId
+  ) => {
+    // var oldOrderStatus = order.status;
+    totalBill = order.totalBill;
+    var customerId = order.customer._id;
+    product = order.product;
+    redeemValue = order.redeemValue;
+    couponCode = order.couponCode;
+    let orderId = order._id;
+    let secondOrderId = order.orderId;
+    // let orderCourierType = order.courierType;
+    // if (orderStatusType === "Delivered") {
+    try {
+      const deliver =
+        courierType === "POSTEX"
+          ? await courierServices.createOrder(order, originCityCode, orderType)
+          : await courierServices.swyftCreateOrder(
+              order,
+              originCityCode,
+              packing,
+              description,
+              weight
             );
-            if (updatedPoints) {
-              point = updatedPoints.points + point;
-              await pointServices.assaignPointMembership(customerId, point);
-            }
-          }
-        }
-        //update inventory status if order reject or cancel
-        else if (
-          (updateStatus &&
-            status === "Rejected" &&
-            oldOrderStatus != status &&
-            oldOrderStatus != "Cancelled") ||
-          (updateStatus &&
-            status === "Cancelled" &&
-            oldOrderStatus != status &&
-            oldOrderStatus != "Rejected")
-        ) {
-          const user = await customerModel.findById(
-            { _id: customerId },
-            { email: 1 }
+      const trackingId =
+        courierType === "POSTEX"
+          ? deliver.dist.trackingNumber
+          : deliver.data.data[0].parcelId;
+
+      if (deliver.statusCode === "200" || deliver.status === 200) {
+        await Promise.all([
+          orderLogService(courierType, "Delivered", orderId),
+          orderServices.updateOrderStatus(
+            orderId,
+            "Delivered",
+            trackingId,
+            courierType,
+            true
+          ),
+        ]);
+
+        const getPointPerOrder = await pointManageModel.findOne();
+        if (getPointPerOrder) {
+          const { pointOrderPrice, pointPerOrder } = getPointPerOrder;
+          const point = Math.ceil(totalBill / pointOrderPrice) * pointPerOrder;
+
+          const data = new pointModel({
+            customer: customerId,
+            points: point,
+            orderId: secondOrderId,
+          });
+          await data.save();
+
+          const updatedPoints = await customerModel.findByIdAndUpdate(
+            customerId,
+            { $inc: { points: point } },
+            { new: true }
           );
-          email = user.email;
-          //send mail to user
-          let subject = sendEmailNotificationInfo.orderResponse.title;
-          let text = `your order ${orderId} has been ${status} due to some problem. Please try later!`;
-          await sendNotificationEmail(subject, text, email);
-          //update product inventory
-          await productLogServices.productLog(product, status, customerId);
-          await productsServices.updateLogDealProduct(product, customerId);
-          if (couponCode !== "00") {
-            await coupanPolicyServices.refundCoupon(customerId, couponCode);
-          }
-          //update cutomer point that was consume in cancel or rejected order
-          if (redeemValue > 0) {
-            await customerModel.findOneAndUpdate(
-              { _id: customerId },
-              { $inc: { points: +redeemValue } }
+
+          if (updatedPoints) {
+            await pointServices.assaignPointMembership(
+              customerId,
+              updatedPoints.points + point
             );
           }
         }
-        return result;
-      } else {
-        return;
       }
-    } else {
-      let result = false;
-      // "Order Doesn't Exist";
-      return result;
+      return true;
+    } catch (error) {
+      throw new Error(error);
+      // Handle errors
     }
+
+    //update inventory status if order reject or cancel
+    // else {
+    //   try {
+    //     let canceled;
+    //     canceled =
+    //       orderCourierType === "POSTEX"
+    //         ? await courierServices.cancelOrder(parcelId)
+    //         : await courierServices.swyftCancelOrder(parcelId);
+    //     if (canceled.statusCode === "200" || canceled.status === 200) {
+    //       const user = await customerModel.findById(
+    //         { _id: customerId },
+    //         { email: 1 }
+    //       );
+    //       email = user.email;
+    //       let subject = sendEmailNotificationInfo.orderResponse.title;
+    //       let text = `your order ${secondOrderId} has been Canceled due to some problem. Please try later!`;
+    //       await Promise.all([
+    //         orderServices.updateOrderStatus(orderId, "Canceled", null, null),
+    //         //order logs
+    //         orderLogService(courierType, "Canceled", orderId),
+    //         //send mail to user
+    //         sendNotificationEmail(subject, text, email),
+    //         //update product inventory
+    //         productLogServices.productLog(product, "Canceled", customerId),
+    //         productsServices.updateLogDealProduct(product, customerId),
+    //       ]);
+    //       if (couponCode !== "00") {
+    //         await coupanPolicyServices.refundCoupon(customerId, couponCode);
+    //       }
+    //       //update cutomer point that was consume in cancel or rejected order
+    //       if (redeemValue > 0) {
+    //         await customerModel.findOneAndUpdate(
+    //           { _id: customerId },
+    //           { $inc: { points: +redeemValue } }
+    //         );
+    //       }
+    //       return true;
+    //     }
+    //   } catch (error) {
+    //     console.log(error);
+    //     throw new Error(error);
+    //   }
+    // }
+  },
+  orderCancel: async (order) => {
+    console.log(order);
+    totalBill = order.totalBill;
+    var customerId = order.customer._id;
+    product = order.product;
+    redeemValue = order.redeemValue;
+    couponCode = order.couponCode;
+    let orderId = order._id;
+    let secondOrderId = order.orderId;
+    let orderCourierType = order.courierType;
+    let parcelId = order.trackingId;
+    try {
+      let canceled;
+      canceled =
+        orderCourierType === "POSTEX"
+          ? await courierServices.cancelOrder(parcelId)
+          : await courierServices.swyftCancelOrder(parcelId);
+      if (canceled.statusCode === "200" || canceled.status === 200) {
+        const user = await customerModel.findById(
+          { _id: customerId },
+          { email: 1 }
+        );
+        email = user.email;
+        let subject = sendEmailNotificationInfo.orderResponse.title;
+        let text = `your order ${secondOrderId} has been Canceled due to some problem. Please try later!`;
+        await Promise.all([
+          orderServices.updateOrderStatus(
+            orderId,
+            "Canceled",
+            null,
+            null,
+            false
+          ),
+          //order logs
+          orderLogService(orderCourierType, "Canceled", orderId),
+          //send mail to user
+          sendNotificationEmail(subject, text, email),
+          //update product inventory
+          productLogServices.productLog(product, "Canceled", customerId),
+          productsServices.updateLogDealProduct(product, customerId),
+        ]);
+        if (couponCode !== "00") {
+          await coupanPolicyServices.refundCoupon(customerId, couponCode);
+        }
+        //update cutomer point that was consume in cancel or rejected order
+        if (redeemValue > 0) {
+          await customerModel.findOneAndUpdate(
+            { _id: customerId },
+            { $inc: { points: +redeemValue } }
+          );
+        }
+        return true;
+      }
+    } catch (error) {
+      console.log(error);
+      throw new Error(error);
+    }
+  },
+  updateOrderStatus: async (
+    orderId,
+    status,
+    trackingId,
+    courierType,
+    isDeliver
+  ) => {
+    const result = await orderModel.findOneAndUpdate(
+      { _id: orderId },
+      {
+        status,
+        trackingId,
+        courierType,
+        isDeliver,
+      },
+      { new: true }
+    );
+    return result;
   },
   customerOrderHistory: async (customerId) => {
     let result = await orderModel.aggregate([
       {
         $match: {
           customer: new mongoose.Types.ObjectId(customerId),
+          isDeletedByUser: 0,
         },
       },
       {
@@ -179,7 +282,6 @@ const orderServices = {
         $project: {
           orderId: 1,
           placedOn: 1,
-          status: 1,
           firstProduct: 1,
         },
       },
@@ -201,6 +303,7 @@ const orderServices = {
           orderId: 1,
           placedOn: 1,
           status: 1,
+          isDeliver: 1,
           thumbnail: "$product_info.thumbnail",
         },
       },
@@ -255,47 +358,121 @@ const orderServices = {
       .populate({
         path: "customer",
         select: { _id: 1, firstName: 1, lastName: 1 },
-      });
+      }).sort({createdAt:-1});
     return result;
   },
   getOrderHistoryDetail: async (_id) => {
-    let result = await orderModel
-      .findById(
-        { _id },
-        {
-          placedOn: 1,
-          status: 1,
+    let result = await orderModel.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(_id),
+          isDeletedByUser: 0,
+        },
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "product.productId",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "productDetails.category",
+          foreignField: "_id",
+          as: "categories",
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          paymentMode: 1,
+          totalBill:1,
+          tax:1,
           orderId: 1,
           trackingId: 1,
-          paymentMode: 1,
-          "product.quantity": 1,
-          "product.price": 1,
-          "product.sku": 1,
-        }
-      )
-      .populate({
-        path: "product.productId",
-        select: { _id: 1, name: 1, thumbnail: 1 },
-        populate: {
-          path: "category",
-          model: "Category",
+          placedOn: 1,
+          isDeliver: 1,
+          productThumbnail: {
+            $arrayElemAt: ["$productDetails.thumbnail", 0],
+          },
+          product: {
+            $map: {
+              input: {
+                $zip: {
+                  inputs: ["$productDetails", "$product", "$categories"],
+                },
+              },
+              as: "item",
+              in: {
+                productId: {
+                  $arrayElemAt: ["$$item.productId", 0],
+                },
+                quantity: {
+                  $arrayElemAt: ["$$item.quantity", 0],
+                },
+                price: {
+                  $arrayElemAt: ["$$item.price", 0],
+                },
+                sku: {
+                  $arrayElemAt: ["$$item.sku", 0],
+                },
+                productCategory: {
+                  $arrayElemAt: ["$$item.name", 1],
+                },
+                productName: {
+                  $arrayElemAt: ["$$item.name", 0],
+                },
+                productQuantity: {
+                  $arrayElemAt: ["$$item.quantity", 0],
+                },
+                productPrice: {
+                  $arrayElemAt: ["$$item.price", 0],
+                },
+              },
+            },
+          },
         },
-      })
-      .lean();
-    if (result) {
-      result.productThumbnail = result.product[0].productId.thumbnail;
-      var list = result.product.map((item) => {
-        item.productCategory = item.productId.category.name;
-        item.productName = item.productId.name;
-        item.productId = item.productId._id;
-        item.productQuantity = item.quantity;
-        item.productPrice = item.price;
-        // delete item.productId;
-        delete item.categoryId;
-        return item;
-      });
-      result.product = list;
-    }
+      },
+    ]);
+    //   .findById(
+    //     { _id },
+    //     {
+    //       placedOn: 1,
+    //       orderId: 1,
+    //       isDeliver: 1,
+    //       trackingId: 1,
+    //       paymentMode: 1,
+    //       "product.quantity": 1,
+    //       "product.price": 1,
+    //       "product.sku": 1,
+    //     }
+    //   )
+    //   .populate({
+    //     path: "product.productId",
+    //     select: { _id: 1, name: 1, thumbnail: 1 },
+    //     populate: {
+    //       path: "category",
+    //       model: "Category",
+    //     },
+    //   })
+    //   .lean();
+    // if (result) {
+    //   result.productThumbnail = result.product[0].productId.thumbnail;
+    //   var list = result.product.map((item) => {
+    //     item.productCategory = item.productId.category.name;
+    //     item.productName = item.productId.name;
+    //     item.productId = item.productId._id;
+    //     item.productQuantity = item.quantity;
+    //     item.productPrice = item.price;
+    //     // delete item.productId;
+    //     delete item.categoryId;
+    //     return item;
+    //   });
+    //   result.product = list;
+    // }
     // aggregate([
     //   {
     //     $match: { _id: mongoose.Types.ObjectId(_id) },
@@ -437,7 +614,7 @@ const orderServices = {
     //   },
     // ]);
 
-    return result;
+    return result[0];
   },
   getOne: async (_id) => {
     const order = await orderModel
@@ -446,9 +623,15 @@ const orderServices = {
         {
           address: 1,
           contact: 1,
+          isDeliver: 1,
+          trackingId: 1,
           status: 1,
+          totalBill:1,
+          "product.sku":1,
+          "product.size":1,
           "product.quantity": 1,
           "product.price": 1,
+
         }
       )
       .populate({
@@ -470,7 +653,15 @@ const orderServices = {
           },
         ],
       });
-
+console.log(order)
+    return order;
+  },
+  customerOrder: async (_id) => {
+    const order = await orderModel
+      .findById({ _id }, projection.projection)
+      .populate({
+        path: "customer",
+      });
     return order;
   },
   checkDealProduct: async (customer, product) => {
@@ -490,7 +681,7 @@ const orderServices = {
         }
       );
       console.log(Product);
-      //check prodcut availbility
+      //check product availbility
       if (!Product || !Product.variant.length)
         throw { message: { msg: `Product doesn't exist` } };
       //check product quantity meet the requirements
@@ -697,14 +888,81 @@ const orderServices = {
     totalAmount,
     redeemValue,
     address,
+    city,
     contact,
     orderId,
-    trackingId,
     channel,
-    couponCode
+    couponCode,
+    tax
   ) => {
     try {
-      var currentDate = new Date(new Date().toLocaleDateString());
+      // //check customer already buy deal product or not
+      // var productArr = [];
+      var currentDate = new Date(new Date().toLocaleString());
+      // var productLength = product.length;
+      // for (let i = 0; i < productLength; i++) {
+      //   productId = product[i].productId;
+      //   quantity = product[i].quantity;
+      //   price = product[i].price;
+      //   sku = product[i].sku;
+      //   size = product[i].size;
+      //   if (price <= 0) {
+      //     return;
+      //   }
+      //   var Product = await productModel.findOne(
+      //     { _id: productId, isDeal: true },
+      //     {
+      //       variant: {
+      //         $elemMatch: { sku: sku },
+      //         name: 1,
+      //         discount: 1,
+      //         dealExpire: 1,
+      //       },
+      //     }
+      //   );
+      //   if (
+      //     Product != null &&
+      //     price === Product.variant[0].actualPrice - Product.discount
+      //   ) {
+      //     if (Product.dealExpire >= currentDate) {
+      //       let buy = await dealBuyerLogModel.findOne({
+      //         customer: customer,
+      //         product: productId,
+      //       });
+      //       if (buy) {
+      //         const result = {
+      //           message: {
+      //             msg: `You are already bought this product with deal price. Please remove ${Product.name} from the cart!`,
+      //           },
+      //         };
+      //         throw result;
+      //       } else {
+      //         productArr.push({
+      //           productId: mongoose.Types.ObjectId(productId),
+      //           quantity: quantity,
+      //           price: price,
+      //           sku: sku,
+      //           size: size,
+      //         });
+      //       }
+      //     } else {
+      //       const result = {
+      //         message: {
+      //           msg: `Deal expire .Please remove ${Product.name} from the cart!`,
+      //         },
+      //       };
+      //       throw result;
+      //     }
+      //   } else {
+      //     productArr.push({
+      //       productId: mongoose.Types.ObjectId(productId),
+      //       quantity: quantity,
+      //       price: price,
+      //       sku: sku,
+      //       size: size,
+      //     });
+      //   }
+      // }
       var order = new orderModel({
         customer: mongoose.Types.ObjectId(customer),
         product,
@@ -713,12 +971,13 @@ const orderServices = {
         totalAmount,
         redeemValue,
         address,
+        city,
         contact,
         orderId,
-        trackingId,
         placedOn: currentDate,
         channel,
         couponCode,
+        tax
       });
       //ORDER PLACED
       var result = await order.save();
@@ -727,7 +986,6 @@ const orderServices = {
       console.log("result", result);
       var Result = {
         _id: result._id,
-        trackingId: result.trackingId,
         orderId: result.orderId,
       };
       console.log("Result", Result);
@@ -749,6 +1007,24 @@ const orderServices = {
         }
         //UPDATE PRODUCT QUANTITY
         await productLogServices.productLog(product, "SOLD", customerId);
+
+        // var productLength = result.product.length;
+        // for (let i = 0; i < productLength; i++) {
+        //   productId = product[i].productId;
+        //   quantity = product[i].quantity;
+        //   price = product[i].price;
+        //   sku = product[i].sku;
+        //   size = product[i].size;
+        //   const filter = { _id: productId, "variant.sku": sku };
+        //   const update = { $inc: { "variant.$.quantity": -quantity } };
+        //   //Log the Sales Product
+        //   await productModel.findOneAndUpdate(filter, update);
+        //   productLog = new productLogModel({
+        //     product: mongoose.Types.ObjectId(productId),
+        //     description: `SOLD,PRODUCTID:${productId},SKU:${sku},QUANTITY:${quantity},PRICE:${price},CUSTOMER:${customer},Size:${size}`,
+        //   });
+        //   await productLog.save();
+
         //save customer logs if he buy deal product
         await productsServices.logSoldDealProduct(product, customerId);
         if (redeemValue > 0) {
@@ -766,7 +1042,6 @@ const orderServices = {
       return Result;
     } catch (e) {
       console.log(e);
-      throw e;
     }
   },
   customerClearHistory: async (customer) => {
@@ -931,6 +1206,13 @@ const orderServices = {
       { new: true }
     );
     return payment;
+  },
+  orderProduct: async (customer, product) => {
+    const result = await orderModel.findOne({
+      customer,
+      "product.productId": product,
+    });
+    return result
   },
 };
 

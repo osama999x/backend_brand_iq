@@ -6,7 +6,7 @@ const smsServices = {
     }
     console.log({ PhoneNumber, RequestedDateTime, Message });
     if (Message) {
-      Message = `Your M-Safa otp is ${Message}`;
+      Message = `Your MSAFA otp is ${Message}`;
     }
     try {
       const Request = {

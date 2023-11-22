@@ -9,10 +9,11 @@ const sendNotificationEmail = async (subject, text, email) => {
     let userEmail = await SubscribeModel.find({}, { email: 1, _id: 0 });
     for (var i of userEmail) {
       email = i.email;
+      console.log("email", email);
       emailArr.push(email);
     }
   }
-  console.log(subject, text, email);
+  console.log("emails", emailArr);
   var transporter = nodemailer.createTransport({
     host: process.env.MAILHOST,
     port: process.env.MAILPORT,
@@ -23,7 +24,7 @@ const sendNotificationEmail = async (subject, text, email) => {
     },
   });
   var mailOptions = {
-    from: `M-Safa ${process.env.MAIL}`,
+    from: `MSAFA ${process.env.MAIL}`,
     to: emailArr,
     subject: subject,
     text: text,

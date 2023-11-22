@@ -1,5 +1,5 @@
 const { Express, Request, Response } = require("express");
-const logger = require("../config/logger.js");
+const logger = require("../config/logger");
 const swaggerjsdoc = require("swagger-jsdoc");
 const swaggeruiexpress = require("swagger-ui-express");
 // const swaggerUiOption = {
@@ -20,7 +20,7 @@ const options = {
     openapi: "3.0.0",
     info: {
       version: "1.0.0",
-      title: "M-Safa APIs Document",
+      title: "MSAFA APIs Document",
     },
     servers: [
       {
@@ -71,6 +71,6 @@ function swaggerDocs(app, port) {
     res.setHeader("Content-Type", "application/json");
     res.send(swaggerSpec);
   });
-  logger.info(`Docs available at http://localhost:${port}/docs`);
+ // logger.info(`Docs available at http://localhost:${port}/docs`);
 }
 module.exports = swaggerDocs;
