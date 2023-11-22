@@ -60,6 +60,7 @@ const rolePermissionServices = {
           __v: 0,
           permissions: 0,
         },
+       // options:{sort:{orderPosition:1}}
       })
       .populate({
         path: "modules.permissions",
@@ -160,6 +161,30 @@ const rolePermissionServices = {
     const result = await rolePermissionModel.findOneAndUpdate(
       { _id },
       { role, history, modules, isSubmodule },
+      { new: true }
+    );
+    return result;
+  },
+  assignNewPermission: async (
+    _id,
+    module,
+    isSubmodule,
+    subModule,
+    permission,
+  ) => {
+    const result = await rolePermissionModel.findOneAndUpdate(
+      { _id },
+      {
+        $addToSet: {
+          "modules.module": module,
+        },
+        $push: {
+          "modules.isSubmodule": isSubmodule,
+          "modules.permissions": permission,
+          "modules.sub_modules.subModule": subModule,
+          "modules.sub_modules.permissions": permission
+        },
+      },
       { new: true }
     );
     return result;

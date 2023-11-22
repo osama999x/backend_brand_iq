@@ -2,11 +2,21 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const schema = new Schema(
   {
-    banner: [String],
-    screenRefrence: {
-      type: String,
-      require: true,
+    banner: {type:String,required:true},
+    type:{
+      type:String,
+      enum:["newArrival","underPrice" ,"discount" ,"isSale"],
+      unique:true,
+      required:true
     },
+    isPercentage:{
+      type:Boolean,
+      default:false
+    },
+    price:{
+      type:Number,
+      default :null
+    }
   },
   { timestamps: true }
 );

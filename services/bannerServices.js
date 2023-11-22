@@ -8,38 +8,32 @@ const bannerServices = {
     const list = await bannerModel.find({}, projection.projection);
     return list;
   },
-  addNew: async (banner, screenRefrence) => {
-    var bannerArr = [];
-    var bannerArrayLngth = banner.length;
-    for (var i = 0; i < bannerArrayLngth; i++) {
-      var icon = await uploadFile(banner[i]);
-      bannerArr.push(icon);
+  addNew: async (banner, isPercentage, type, price) => {
+    if (banner) {
+      banner = await uploadFile(banner);
     }
     const newBanner = new bannerModel({
-      banner: bannerArr,
-      screenRefrence,
+      banner,
+      isPercentage,
+      type,
+      price,
     });
     const result = await newBanner.save();
     return result;
   },
-  update: async (_id, banner, screenRefrence) => {
-    if (banner.length != 0) {
-      var bannerArr = [];
-      for (var i of banner) {
-        var icon = await uploadFile(i);
-        bannerArr.push(icon);
-      }
-      var _id = mongoose.Types.ObjectId(_id);
-      var result = await bannerModel.findOneAndUpdate(
+  update: async (_id, banner, type, isPercentage, price) => {
+    var result
+    if (banner) {
+      banner=uploadFile(banner)
+       result = await bannerModel.findOneAndUpdate(
         { _id },
-        { banner: bannerArr, screenRefrence },
+        {banner, type, isPercentage, price },
         { new: true }
       );
     } else {
-      var _id = mongoose.Types.ObjectId(_id);
-      var result = await bannerModel.findOneAndUpdate(
+       result = await bannerModel.findOneAndUpdate(
         { _id },
-        { banner, screenRefrence },
+        {  type, isPercentage, price },
         { new: true }
       );
     }

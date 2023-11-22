@@ -15,20 +15,21 @@ bannerRouter.get(
 bannerRouter.post(
   "/",
   expressAsyncHandler(async (req, res) => {
-    const { banner, screenRefrence } = req.body;
-    const result = await bannerServices.addNew(banner, screenRefrence);
-    if (!banner || !screenRefrence) {
-      res.status(400).send({
-        msg: "Fields Missing",
-      });
-    }
+    const { banner, type,isPercentage,price } = req.body;
+    console.log(req.body.type)
+     if (!banner || !type || (type === "underPrice" && !price)) {
+       return res.status(400).send({
+         msg: "Fields Missing",
+       });
+     }
+    const result = await bannerServices.addNew(banner,isPercentage, type, price);
     if (result) {
-      res.status(200).send({
+     return res.status(200).send({
         msg: "Banner Added",
         data: result,
       });
     } else {
-      res.status(400).send({
+    return  res.status(400).send({
         msg: "Banner Not Added",
       });
     }
@@ -37,11 +38,18 @@ bannerRouter.post(
 bannerRouter.patch(
   "/",
   expressAsyncHandler(async (req, res) => {
-    const { bannerId, banner, screenRefrence } = req.body;
+    const { bannerId, banner,type,  isPercentage, price } = req.body;
+    // if (type === "underPrice" && !price) {
+    //   return res.status(400).send({
+    //     msg: "Price is required for 'underPrice' type",
+    //   });
+    // }
     const result = await bannerServices.update(
       bannerId,
       banner,
-      screenRefrence
+      type,
+      isPercentage,
+      price
     );
     if (result) {
       res.status(200).send({

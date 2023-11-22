@@ -2,6 +2,7 @@ const express = require("express");
 const expressAsyncHandler = require("express-async-handler");
 const reviewServices = require("../services/reviewServices");
 const uploadFile = require("../utils/uploadFile");
+const orderServices = require("../services/orderServices");
 const reviewRouter = express.Router();
 reviewRouter.get(
   "/all",
@@ -16,12 +17,15 @@ reviewRouter.get(
 reviewRouter.patch(
   "/approvedReview",
   expressAsyncHandler(async (req, res) => {
-    const { reviewId } = req.body;
-    let isApproved = await reviewServices.checkApproved(reviewId);
-    if (isApproved) {
-      return res.status(400).send({ msg: "Review already Approved!" });
+    const { reviewId, isApproved } = req.body;
+    let isReviewApproved = await reviewServices.checkApproved(
+      reviewId,
+      isApproved
+    );
+    if (isReviewApproved) {
+      return res.status(400).send({ msg: "Review status already updated!" });
     }
-    const result = await reviewServices.approvedReview(reviewId);
+    const result = await reviewServices.approvedReview(reviewId, isApproved);
     if (result) {
       return res.status(200).send({
         msg: "Review Approved",
@@ -81,10 +85,34 @@ reviewRouter.get(
   })
 );
 reviewRouter.post(
+  "/isPurchase?",
+  expressAsyncHandler(async (req, res) => {
+    const { productId, customerId } = req.body;
+    const isPurchase = await orderServices.orderProduct(customerId, productId);
+    console.log(isPurchase);
+    if (isPurchase) {
+      return res.status(200).send({
+        msg: "You can review this product",
+        isPurchase: true,
+      });
+    } else {
+      return res
+        .status(400)
+        .send({ msg: "You can't reviewed this product", isPurchase: false });
+    }
+  })
+);
+reviewRouter.post(
   "/",
   expressAsyncHandler(async (req, res) => {
     const { productId, customerId, rating, comment, images, channel } =
       req.body;
+    const isPurchase = await orderServices.orderProduct(customerId, productId);
+    if (!isPurchase) {
+      return res.status(400).send({
+        msg: "You can't reviewed this product",
+      });
+    }
     if (!productId || !customerId) {
       return res.status(400).send({ msg: "Fields Missing" });
     }

@@ -1,6 +1,7 @@
 const express = require("express");
 const expressAsyncHandler = require("express-async-handler");
 const taxTypeServices = require("../services/taxTypeServices");
+const taxHeadServices = require("../services/taxHeadServices");
 const taxTypeRouter = express.Router();
 
 taxTypeRouter.get(
@@ -66,6 +67,12 @@ taxTypeRouter.delete(
   "/",
   expressAsyncHandler(async (req, res) => {
     const { taxTypeId } = req.body;
+    const isAttach = await taxHeadServices.isExist(taxTypeId);
+    if (isAttach) {
+      return res.status(400).send({
+        msg: "This tax type attach with tax head!",
+      });
+    }
     const result = await taxTypeServices.delete(taxTypeId);
     if (result.deletedCount == 0) {
       return res.status(400).send({ msg: "ID Not found" });

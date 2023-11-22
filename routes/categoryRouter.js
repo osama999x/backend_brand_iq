@@ -59,13 +59,14 @@ categoryRouter.get(
 categoryRouter.post(
   "/",
   expressAsyncHandler(async (req, res) => {
-    const { name, icon, description, isFeatured } = req.body;
-    if (!name || !icon || !description) {
+    const { name, icon, thumbnail, description, isFeatured } = req.body;
+    if (!name || !icon || !description || !thumbnail) {
       return res.status(400).send({ msg: "Fields Missing" });
     }
     const result = await categoryServices.add(
       name,
       icon,
+      thumbnail,
       description,
       isFeatured
     );
@@ -100,10 +101,8 @@ categoryRouter.delete(
   expressAsyncHandler(async (req, res) => {
     const { categoryId } = req.body;
     const category = await productsServices.productCategory(categoryId);
-    const Subcategory = await subCategoryServices.subcategory(category);
-    console.log("category", category);
-    console.log("subcategory", Subcategory);
-    if (category.length != 0 || Subcategory.length != 0) {
+    const Subcategory = await subCategoryServices.subcategory(categoryId);
+    if (category.length !== 0 || Subcategory.length !== 0) {
       return res
         .status(400)
         .send({ msg: "This category linked with subcategory or  product!" });

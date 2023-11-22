@@ -39,6 +39,10 @@ const schema = new Schema(
       type: String,
       required: true,
     },
+    city: {
+      type: String,
+      required: true,
+    },
     contact: {
       type: Number,
       required: true,
@@ -55,6 +59,10 @@ const schema = new Schema(
       type: Number,
       required: true,
     },
+    tax:{
+      type:Number,
+      default:0
+    },
     redeemValue: {
       type: Number,
       required: true,
@@ -68,6 +76,7 @@ const schema = new Schema(
     },
     trackingId: {
       type: String,
+      default: null,
     },
     placedOn: {
       type: Date,
@@ -94,6 +103,14 @@ const schema = new Schema(
       default: "00",
     },
     isAdminReturn: {
+      type: Boolean,
+      default: false,
+    },
+    courierType: {
+      type: String,
+      default: null,
+    },
+    isDeliver: {
       type: Boolean,
       default: false,
     },

@@ -13,6 +13,7 @@ const convertDate = require("../utils/convertDate");
 const paymentHistoryService = require("../services/paymentHistoryServices");
 const zindigiWalletServices = require("../services/zindigiWalletServices");
 const zindigiWalletPayment = require("../utils/zindigiWalletPayment");
+const validateMobileNumber = require("../utils/validateMobileNumber");
 
 orderRouter.get(
   "/orderTracking",
@@ -32,23 +33,98 @@ orderRouter.get(
 orderRouter.post(
   "/orderDispatch",
   expressAsyncHandler(async (req, res) => {
-    const { deliveryPartnerId, orderStatus, orderId } = req.body;
-    const result = await orderServices.orderDispatch(
-      deliveryPartnerId,
-      orderStatus,
-      orderId
-    );
-    if (result === false) {
+    const {
+      orderId,
+      originCityCode,
+      orderType,
+      description,
+      packing,
+      weight,
+      courierType,
+    } = req.body;
+    if (
+      !orderId ||
+      !originCityCode ||
+      !orderType ||
+      !description ||
+      !packing ||
+      !weight ||
+      !courierType
+    ) {
       return res.status(400).send({
-        msg: "Order Doesn't Exist",
+        msg: "Fields Missing",
       });
     }
+    // if (
+    //   orderStatusType === "Canceled" &&
+    //   (!orderId || !parcelId || !orderStatusType)
+    // ) {
+    //   return res.status(400).send({
+    //     msg: "Fields Missing",
+    //   });
+    // }
+    const order = await orderServices.customerOrder(orderId);
+    // if (
+    //   orderStatusType === "Canceled" &&
+    //   (!order || (order.status !== "Delivered" && order.status !== "Canceled"))
+    // ) {
+    //   return res.status(400).send({
+    //     msg: "You can't proceed this order with given instruction",
+    //   });
+    // }
+    if (
+      //orderStatusType === "Delivered" &&
+      !order ||
+      (order.status !== "Pending" && order.status !== "Canceled")
+    ) {
+      return res.status(400).send({
+        msg: "You can't proceed this order with given instruction",
+      });
+    }
+    const result = await orderServices.orderDispatch(
+      order,
+      originCityCode,
+      orderType,
+      description,
+      packing,
+      weight,
+      courierType
+    );
     if (result) {
       return res.status(200).send({
-        msg: "Orders Status Successfully Updated",
+        msg: "Orders delivered Successfully ",
       });
     } else {
-      return res.status(400).send({ msg: "Order Not Dispatch" });
+      return res.status(400).send({ msg: "Failed!" });
+    }
+  })
+);
+orderRouter.get(
+  "/orderCancel",
+  expressAsyncHandler(async (req, res) => {
+    const { orderId } = req.query;
+    if (!orderId) {
+      return res.status(400).send({
+        msg: "Fields Missing",
+      });
+    }
+    const order = await orderServices.customerOrder(orderId);
+    if (
+      !order ||
+      (order.status !== "Delivered" && order.status !== "Canceled") ||
+      !order.isDeliver !== false
+    ) {
+      return res.status(400).send({
+        msg: "You can't proceed this order with given instruction",
+      });
+    }
+    const result = await orderServices.orderCancel(order);
+    if (result) {
+      return res.status(200).send({
+        msg: "Orders canceled Successfully ",
+      });
+    } else {
+      return res.status(400).send({ msg: "Failed!" });
     }
   })
 );
@@ -151,12 +227,23 @@ orderRouter.post(
       totalAmount,
       redeemValue,
       address,
+      city,
       contact,
       channel,
       couponCode,
+      tax,
     } = req.body;
+    if (!city) {
+      city = "Lahore";
+    }
     if (!customer || !product || !paymentMode || !totalBill) {
       return res.status(400).send({ msg: "Fields Missing" });
+    }
+    const isValidContact = validateMobileNumber(contact);
+    if (!isValidContact) {
+      return res.status(400).send({
+        msg: "Please enter valid contact number 03xxxxxxxxx!",
+      });
     }
     try {
       let orderId = Math.floor(Math.random() * 100000 + 100000)
@@ -164,10 +251,10 @@ orderRouter.post(
         .substring(1);
       // orderId = genOrderId;
       // }
-      let trackingId = Math.floor(Math.random() * 100000 + 100000)
-        .toString()
-        .substring(1);
-      trackingId = `M-SAFA-${trackingId}`;
+      // let trackingId = Math.floor(Math.random() * 100000 + 100000)
+      //   .toString()
+      //   .substring(1);
+      // trackingId = `MSAFA-${trackingId}`;
       if (paymentMode === "zindigi") {
         const user = await customerModel.findOne({ _id: customer });
 
@@ -202,11 +289,12 @@ orderRouter.post(
             totalAmount,
             redeemValue,
             address,
+            city,
             contact,
             orderId,
-            trackingId,
             channel,
-            couponCode
+            couponCode,
+            tax
           );
           if (orderResult) {
             let customerFcm = await customerModel.findOne(
@@ -254,11 +342,12 @@ orderRouter.post(
           totalAmount,
           redeemValue,
           address,
+          city,
           contact,
           orderId,
-          trackingId,
           channel,
-          couponCode
+          couponCode,
+          tax
         );
         if (result) {
           res

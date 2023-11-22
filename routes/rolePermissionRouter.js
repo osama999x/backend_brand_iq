@@ -51,9 +51,9 @@ rolePermissionRouter.post(
     if (result) {
       return res
         .status(201)
-        .send({ msg: "Role Promotion added.", data: result });
+        .send({ msg: "Role permission added.", data: result });
     } else {
-      return res.status(400).send({ msg: "Role Promotion not added" });
+      return res.status(400).send({ msg: "Role permission not added" });
     }
   })
 );
@@ -71,9 +71,30 @@ rolePermissionRouter.patch(
     if (result) {
       return res
         .status(200)
-        .send({ msg: "Role Promotion updated.", data: result });
+        .send({ msg: "Role permission updated.", data: result });
     } else {
-      return res.status(400).send({ msg: "Role Promotion not updated" });
+      return res.status(400).send({ msg: "Role permission not updated" });
+    }
+  })
+);
+rolePermissionRouter.patch(
+  "/assignNewPermission",
+  expressAsyncHandler(async (req, res) => {
+    const { role_permissionId, module, isSubmodule, subModule,permission } =
+      req.body;
+    const result = await rolePermissionServices.assignNewPermission(
+      role_permissionId,
+      module,
+      isSubmodule,
+      subModule,
+      permission
+    );
+    if (result) {
+      return res
+        .status(200)
+        .send({ msg: "Role permission updated.", data: result });
+    } else {
+      return res.status(400).send({ msg: "Role permission not updated" });
     }
   })
 );
@@ -88,9 +109,9 @@ rolePermissionRouter.delete(
     if (result) {
       return res
         .status(200)
-        .send({ msg: "Role Promotion deleted.", data: result });
+        .send({ msg: "Role permission deleted.", data: result });
     } else {
-      return res.status(400).send({ msg: "Role Promotion not deleted" });
+      return res.status(400).send({ msg: "Role permission not deleted" });
     }
   })
 );

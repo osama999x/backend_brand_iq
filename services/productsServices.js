@@ -421,7 +421,8 @@ const productsServices = {
     metaData,
     metaDescription,
     tags,
-    addons
+    addons,
+    isFeatured
   ) => {
     // thumbnail = await uploadFile(thumbnail);
     //console.log("images", images);
@@ -578,10 +579,10 @@ const productsServices = {
       metaDescription,
       tags,
       addons,
+      isFeatured,
     });
-    const result = await products.save({
-      "variant.sku": { $ne: variant.sku },
-    });
+    const result = await products.save();
+   // {'variant.sku':{$ne:variant.sku}}
     console.log(result);
     if (result) {
       let subject = sendEmailNotificationInfo.product.title;
@@ -625,7 +626,8 @@ const productsServices = {
     metaDescription,
     tags,
     addons,
-    newImages
+    newImages,
+    isFeatured
   ) => {
     var _id = mongoose.Types.ObjectId(_id);
     var imgArr = [];
@@ -825,6 +827,7 @@ const productsServices = {
             metaDescription,
             tags,
             addons,
+            isFeatured,
           },
         },
         { new: true }

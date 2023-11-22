@@ -50,15 +50,11 @@ const returnOrderServices = {
     });
     const result = await request.save();
     if (result) {
-      let returnId = await orderStatusModel.findOne({
-        orderStatusName: "Returned",
-      });
-      returnId = returnId._id;
       const time = new Date(new Date().toLocaleDateString());
       //log order status
       const data = new orderLogModel({
-        orderStatus: mongoose.Types.ObjectId(returnId),
-        orderId,
+        orderStatus: "Returned",
+        orderId: mongoose.Types.ObjectId(orderId),
         time,
         message: exchangeReason,
       });
@@ -139,7 +135,7 @@ const returnOrderServices = {
   },
   dispatchReturnOrder: async (status, orderId, message) => {
     var time = new Date(new Date().toLocaleDateString());
-    let { _id: statusId } = await orderStatusServices.orderStatus("Delivered");
+    // let { _id: statusId } = await orderStatusServices.orderStatus("Delivered");
     var order = await orderModel.findOne({ _id: { $in: orderId } });
     if (!order) {
       throw new Error("Order Not Found");
@@ -197,7 +193,7 @@ const returnOrderServices = {
           console.log(orderId);
           await orderModel.findOneAndUpdate(
             { _id: orderId },
-            { status: "Returned", isAdminReturn: true },
+            { status: "Returned", isDeliver: false, isAdminReturn: true },
             { new: true }
           );
           return true;
@@ -249,7 +245,7 @@ const returnOrderServices = {
           await returnOrderLog.save();
           //log of changing status of order after return some product
           const data = new orderLogModel({
-            orderStatus: mongoose.Types.ObjectId(statusId),
+            orderStatus: "Delivered",
             orderId: OrderId,
             time,
             message,
@@ -270,16 +266,16 @@ const returnOrderServices = {
       if (oldOrderStatus === "Returned") {
         try {
           //return order status log by admin
-          let cancelStatus = await orderStatusServices.orderStatus("Cancelled");
-          cancelStatus = cancelStatus._id;
+          // let cancelStatus = await orderStatusServices.orderStatus("Canceled");
+          // cancelStatus = cancelStatus._id;
           const returnOrderLog = new returnOrderStatusLogModel({
-            orderStatus: mongoose.Types.ObjectId(cancelStatus),
+            orderStatus: "Cancel",
             orderId,
             time,
           });
           await returnOrderLog.save();
           const data = new orderLogModel({
-            orderStatus: mongoose.Types.ObjectId(statusId.toString()),
+            orderStatus: "Delivered",
             orderId: OrderId,
             time,
             message,
@@ -301,11 +297,13 @@ const returnOrderServices = {
           await returnOrderModel.deleteOne({ orderId: orderId });
           return true;
         } catch (e) {
-          throw new Error(e.message);
+          console.log(e.message);
+          //throw new Error(e.message);
         }
       } else {
         //if order don't returned by user
-        throw new Error("This Order not Returned");
+        return false;
+        // throw new Error("This Order not Returned");
       }
     }
   },

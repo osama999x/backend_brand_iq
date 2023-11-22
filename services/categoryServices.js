@@ -177,23 +177,28 @@ const categoryServices = {
   getSubCategoriesByCategoryId: async (categoryId) => {
     const subcategories = await subCategoryModel.find(
       { category: mongoose.Types.ObjectId(categoryId) },
-      { _id: 1, name: 1, icon: 1 }
+      { _id: 1, name: 1, icon: 1, thumbnail: 1 }
     );
     const category = await categoryModel.findOne(
       { _id: mongoose.Types.ObjectId(categoryId) },
-      { _id: 1, name: 1, icon: 1, description: 1 }
+      { _id: 1, name: 1, icon: 1, description: 1, thumbnail: 1 }
     );
     dict = { category: category, subcategories: subcategories };
     return dict;
   },
-  add: async (name, icon, description, isFeatured) => {
+  add: async (name, icon, thumbnail, description, isFeatured) => {
     icon = await uploadFile(icon);
+    thumbnail = await uploadFile(thumbnail);
     if (!icon) {
+      return null;
+    }
+    if (!thumbnail) {
       return null;
     }
     const category = new categoryModel({
       name,
       icon,
+      thumbnail,
       description,
       isFeatured,
     });

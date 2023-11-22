@@ -48,7 +48,16 @@ const zindigiWalletServices = {
     } catch (e) {
       console.log(e);
     }
-    let xml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">   <soapenv:Header/>   <soapenv:Body>      <tem:verifyAccountRequest>         <!--Optional:-->         <UserName>${body.userName}</UserName>         <!--Optional:-->         <Password>${body.password}</Password>         <!--Optional:-->         <Cnic>${body.cnic}</Cnic>         <!--Optional:-->         <DateTime>${body.dateTime}</DateTime>         <!--Optional:-->         <MobileNumber>${body.mobile}</MobileNumber>         <!--Optional:-->         <Rrn>${body.rrn}</Rrn>         <!--Optional:-->         <TransactionType>${body.transactionType}</TransactionType>         <!--Optional:-->         <ChannelId>${body.channelId}</ChannelId>         <!--Optional:-->         <Reserved1>${body.r1}</Reserved1>         <!--Optional:-->         <Reserved2>${body.r2}</Reserved2>         <!--Optional:-->         <Reserved3></Reserved3>         <!--Optional:-->         <Reserved4></Reserved4>         <!--Optional:-->         <Reserved5></Reserved5>         <!--Optional:-->         <HashData>${hash}</HashData>      </tem:verifyAccountRequest>   </soapenv:Body></soapenv:Envelope>`;
+    let xml =
+     `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/"> 
+      <soapenv:Header/>
+         <soapenv:Body> 
+              <tem:verifyAccountRequest>  
+                     <!--Optional:-->   
+                           <UserName>${body.userName}</UserName>  
+                                  <!--Optional:-->   
+                                        <Password>${body.password}</Password>  
+                                               <!--Optional:-->         <Cnic>${body.cnic}</Cnic>         <!--Optional:-->         <DateTime>${body.dateTime}</DateTime>         <!--Optional:-->         <MobileNumber>${body.mobile}</MobileNumber>         <!--Optional:-->         <Rrn>${body.rrn}</Rrn>         <!--Optional:-->         <TransactionType>${body.transactionType}</TransactionType>         <!--Optional:-->         <ChannelId>${body.channelId}</ChannelId>         <!--Optional:-->         <Reserved1>${body.r1}</Reserved1>         <!--Optional:-->         <Reserved2>${body.r2}</Reserved2>         <!--Optional:-->         <Reserved3></Reserved3>         <!--Optional:-->         <Reserved4></Reserved4>         <!--Optional:-->         <Reserved5></Reserved5>         <!--Optional:-->         <HashData>${hash}</HashData>      </tem:verifyAccountRequest>   </soapenv:Body></soapenv:Envelope>`;
     const response = await axios.post(
       `${process.env.JSZINDIGINEWURL}/js-blb-integration/JsBLBIntegration`,
       xml,

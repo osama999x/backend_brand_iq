@@ -38,52 +38,62 @@ const coupanPolicyServices = {
       {
         activeTo: { $gte: currentDate },
         couponCode: { $nin: couponArr },
+        isActive: true,
       },
       projection.projection
     );
     return result;
   },
-
-  getCustomerCoupan: async (couponCode, customerId) => {
+  checkCustomerCoupon: async (couponCode, customerId) => {
     const checkCustomer = await couponStatusModel.findOne({
       customer: customerId,
       couponCode: couponCode,
     });
-    if (checkCustomer) {
-      throw "You have already taken this coupon";
-    } else {
-      const coupan = await couponPolicyModel.findOne({
-        couponCode: couponCode,
-      });
-      if (!coupan) {
-        throw "Coupon doesn't exist";
-      } else {
-        var today = new Date().toLocaleDateString();
-        today = new Date(today);
-        let result = await couponPolicyModel
-          .findOne(
-            {
-              couponCode: couponCode,
-              activeFrom: { $lte: today },
-              activeTo: { $gte: today },
-            },
-            { couponValue: 1, _id: 0, isPercentage: 1, orderPriceLimit: 1 }
-          )
-          .lean();
-        if (result) {
-          // const data = new couponStatusModel({
-          //   couponCode: couponCode,
-          //   customer: mongoose.Types.ObjectId(customerId),
-          //   isBuy: true,
-          // });
-          // await data.save();
-          result.isCoupon = true;
-          return result;
-        } else {
-          throw "Coupon expire";
-        }
-      }
-    }
+    return checkCustomer;
+  },
+  getOneCoupon: async (couponCode) => {
+    const result = await couponPolicyModel.findOne({ couponCode });
+    return result;
+  },
+  getCustomerCoupon: async (couponCode) => {
+    // const checkCustomer = await couponStatusModel.findOne({
+    //   customer: customerId,
+    //   couponCode: couponCode,
+    // });
+    // if (checkCustomer) {
+    //   throw "You have already taken this coupon";
+    // } else {
+    //   const coupan = await couponPolicyModel.findOne({
+    //     couponCode: couponCode,
+    //   });
+    //   if (!coupan) {
+    //     throw "Coupon doesn't exist";
+    //   } else {
+    var today = new Date().toLocaleDateString();
+    today = new Date(today);
+    let result = await couponPolicyModel
+      .findOne(
+        {
+          couponCode: couponCode,
+          activeFrom: { $lte: today },
+          activeTo: { $gte: today },
+        },
+        { couponValue: 1, _id: 0, isPercentage: 1, orderPriceLimit: 1 }
+      )
+      .lean();
+    // if (result) {
+    // const data = new couponStatusModel({
+    //   couponCode: couponCode,
+    //   customer: mongoose.Types.ObjectId(customerId),
+    //   isBuy: true,
+    // });
+    // await data.save();
+    result.isCoupon = true;
+    return result;
+    // } else {
+    //   throw "Coupon expire";
+    // }
+    // }
   },
   consumeCoupon: async (customerId, couponCode) => {
     let data = new couponStatusModel({
