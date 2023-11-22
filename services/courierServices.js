@@ -170,7 +170,8 @@ const courierServices = {
       0
     );
     const body = {
-      cityName: order.city,
+     // cityName: order.city,
+     cityName:"Lahore",
       customerName: order.customer.firstName + " " + order.customer.lastName,
       customerPhone: order.contact.toString(),
       deliveryAddress: order.customer.email,
@@ -203,7 +204,8 @@ const courierServices = {
           token,
         },
       }
-    );
+      );
+      console.log("data: ", data);
     try {
       await courierLogService.updateResponse(courierLog._id, data.data);
     } catch (error) {
