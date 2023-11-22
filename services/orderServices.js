@@ -84,7 +84,6 @@ const orderServices = {
     // if (orderStatusType === "Delivered") {
     try {
       const deliver =
-      console.log("deliver: ", courierType);
       courierType === "POSTEX"
       ? await courierServices.createOrder(order, originCityCode, orderType)
       : await courierServices.swyftCreateOrder(
@@ -94,6 +93,7 @@ const orderServices = {
         description,
         weight
         );
+        console.log("deliver: ", deliver);
       const trackingId =
         courierType === "POSTEX"
           ? deliver.dist.trackingNumber
