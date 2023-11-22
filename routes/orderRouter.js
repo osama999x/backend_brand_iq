@@ -81,7 +81,7 @@ orderRouter.post(
         msg: "You can't proceed this order with given instruction",
       });
     }
-    let originCityCode = "001";
+    let originCityCode = "002";
     let courierType = "POSTEX";
     const result = await orderServices.orderDispatch(
       order,
