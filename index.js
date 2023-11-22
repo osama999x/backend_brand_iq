@@ -93,7 +93,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(morgan("dev"));
 app.use(apiLogs);
 //logger
-app.use(logger);
+//app.use(logger);
 var corOptions = {
   origin: "*",
 };
@@ -127,7 +127,7 @@ var corOptions = {
 app.use(cors(corOptions));
 //backup(options);
 //test Router
-app.use(authentication);
+//app.use(authentication);
 //app.use(decryptRequest);
 //app.use(encryptRequest);
 app.use("/api/v1/test", testRouter);
