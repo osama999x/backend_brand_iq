@@ -87,18 +87,19 @@ categoryRouter.post(
 categoryRouter.patch(
     "/",
     expressAsyncHandler(async (req, res) => {
-        const { categoryId, name, icon, description, isFeatured } = req.body;
+        const { categoryId, name, icon, description, thumbnail, isFeatured } = req.body;
         const result = await categoryServices.update(
             categoryId,
             name,
             icon,
             description,
+            thumbnail,
             isFeatured
         );
         if (result) {
-            return res.status(200).send({ msg: "category updated.", data: result });
+            return res.status(200).send({ msg: "Category Updated.", data: result });
         } else {
-            return res.status(400).send({ msg: "category not updated" });
+            return res.status(400).send({ msg: "Category not Updated" });
         }
     })
 );
@@ -118,9 +119,9 @@ categoryRouter.delete(
             return res.status(400).send({ msg: "ID Not found" });
         }
         if (result) {
-            return res.status(200).send({ msg: "category deleted.", data: result });
+            return res.status(200).send({ msg: "Category Deleted.", data: result });
         } else {
-            return res.status(400).send({ msg: "category not deleted" });
+            return res.status(400).send({ msg: "Category Not Deleted" });
         }
     })
 );

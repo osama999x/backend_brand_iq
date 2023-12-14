@@ -80,6 +80,10 @@ const userServices = {
     },
     addNew: async (role, name, email, password, contact) => {
         const salt = await bcrypt.genSalt(10);
+        const dup = await userModel.findOne({ email: email });
+        if (dup) {
+            throw new Error("Email already Exists", 409);
+        }
         password = await bcrypt.hash(password, salt);
         user = new userModel({
             role: mongoose.Types.ObjectId(role),
@@ -142,6 +146,10 @@ const userServices = {
     },
     update: async (_id, role, name, email, contact) => {
         var _id = mongoose.Types.ObjectId(_id);
+        let dup = await userModel.findOne({ email: email });
+        if (dup) {
+            throw new Error('Email Already Exist', 404);
+        }
         // const salt = await bcrypt.genSalt(10);
         // password = await bcrypt.hash(password, salt);
         const result = await userModel.findOneAndUpdate(
