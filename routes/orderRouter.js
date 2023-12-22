@@ -55,6 +55,7 @@ orderRouter.post(
                 msg: "Fields Missing",
             });
         }
+        console.log(req.body, "Request");
         // if (
         //   orderStatusType === "Canceled" &&
         //   (!orderId || !parcelId || !orderStatusType)
@@ -96,7 +97,7 @@ orderRouter.post(
             return res.status(200).send({
                 msg: "Orders delivered Successfully ",
             });
-        } else {
+        } if (!result) {
             return res.status(400).send({ msg: "Failed!" });
         }
     })
@@ -236,7 +237,7 @@ orderRouter.post(
             tax,
         } = req.body;
         if (!city) {
-            city = "Lahore";
+            city = "Islamabad";
         }
         if (!customer || !product || !paymentMode || !totalBill) {
             return res.status(400).send({ msg: "Fields Missing" });
@@ -389,7 +390,7 @@ orderRouter.get(
                 data: result,
             });
         } else {
-            return res.status(400).send({ msg: "order Not Found" });
+            return res.status(400).send({ msg: "Order Not Found" });
         }
     })
 );

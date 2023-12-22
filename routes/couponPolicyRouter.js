@@ -31,21 +31,36 @@ couponPolicyRouter.get(
 couponPolicyRouter.post(
     "/customerCoupon",
     expressAsyncHandler(async (req, res) => {
-        const { couponCode, customerId } = req.body;
-        if (!couponCode || !customerId) {
+        const { couponCode, customerId, orderPriceLimit } = req.body;
+        console.log(couponCode, "RQ BODY", customerId, orderPriceLimit)
+        if (!couponCode || !customerId || !orderPriceLimit) {
             res.status(400).send({
                 msg: "Fields Missing",
             });
         }
         const isCoupon = await couponPolicyServices.getOneCoupon(couponCode);
         if (!isCoupon) {
-            res.status(400).send({ msg: "Coupon doesn't exist!", isCoupon: false });
+            res.status(400).send({ msg: "Coupon doesn't Exist Or is InActive!", isCoupon: false });
             return;
+        }
+        const orderLimitInfo = await couponPolicyServices.getOrderLimit(couponCode, orderPriceLimit);
+        if (!orderLimitInfo.isValid) {
+            res.status(400).send({
+                msg: "Order limit is less than required.",
+                orderLimitInfo,
+            });
+            return;
+        }
+        const validCoupon = await couponPolicyServices.getValidCoupon(couponCode);
+        const isbuy = await couponPolicyServices.isbuy(couponCode, customerId);
+        if (isbuy) {
+            res.status(409).send({ msg: "You have already used this Coupon!" });
         }
         const isUseCoupon = await couponPolicyServices.checkCustomerCoupon(
             couponCode,
             customerId
         );
+        console.log(isUseCoupon);
         if (isUseCoupon) {
             res
                 .status(400)
@@ -53,15 +68,17 @@ couponPolicyRouter.post(
             return;
         }
         // try {
-        const result = await couponPolicyServices.getCustomerCoupon(
-            couponCode,
-            customerId
-        );
-        console.log(result);
+        // const result = await couponPolicyServices.getCustomerCoupon(
+        //     couponCode,
+        //     customerId
+        // );
+        // console.log(result);
+        const result = await couponPolicyServices.useCoupon(couponCode, customerId)
         if (result) {
             res.status(200).send({
-                msg: "Your Coupon",
+                msg: "Your Coupon Reedemed",
                 data: result,
+                orderLimitInfo
             });
             return;
         } else {
