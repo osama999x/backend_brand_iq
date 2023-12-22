@@ -637,7 +637,7 @@ const productsServices = {
         // convert images to base64
         if (newImages.length != 0) {
             imgArr = await Promise.all(newImages.map(uploadFile));
-            images = [...images, ...imgArr];
+
         }
         //new images
         let result = null;
@@ -816,7 +816,7 @@ const productsServices = {
                         discount,
                         variant: variants,
                         thumbnail,
-                        images,
+                        images: imgArr,
                         vendor,
                         isTaxable,
                         taxHead,
@@ -850,7 +850,7 @@ const productsServices = {
                         discount,
                         variant: variants,
                         thumbnail,
-                        images,
+                        images: imgArr,
                         vendor,
                         isTaxable,
                         taxHead,

@@ -14,7 +14,7 @@ userRouter.get(
     "/all",
     expressAsyncHandler(async (req, res) => {
         const result = await userServices.get();
-        res.status(200).send({ msg: "users", data: result });
+        res.status(200).send({ msg: "Users", data: result });
     })
 );
 userRouter.post(
@@ -23,7 +23,7 @@ userRouter.post(
         let { userID } = req.body;
         const result = await userServices.getByUserID(userID);
         if (result) {
-            return res.status(200).send({ msg: "user", data: result });
+            return res.status(200).send({ msg: "User", data: result });
         } else {
             return res.status(400).send({ msg: "User Not Found" });
         }
