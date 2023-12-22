@@ -14,6 +14,7 @@ const promotionModel = require("../model/promotionModel");
 const promotionCampaignServices = {
     get: async () => {
         const now = new Date();
+        console.log(now);
         const result = await promotionCampaignModel.find(
             {
                 activeFrom: { $lte: now },

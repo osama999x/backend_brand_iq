@@ -473,9 +473,9 @@ orderRouter.get(
                 {
                     $sort: { count: -1 },
                 },
-                // {
-                //     $limit: 5,
-                // },
+                {
+                    $limit: 5,
+                },
             ]);
 
             if (result.length !== 0) {
