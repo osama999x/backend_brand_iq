@@ -1,18 +1,19 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const schema = new Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-      unique: true,
+    {
+        name: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+        },
+        description: {
+            type: String,
+            required: true,
+        },
     },
-    description: {
-      type: String,
-      required: true,
-    },
-  },
-  { timestamps: true }
+    { timestamps: true }
 );
 
 const roleModel = new mongoose.model("Role", schema);

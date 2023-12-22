@@ -5,10 +5,10 @@ const webSignupLogServices = require("../services/webSignupLogServices");
 const webSignupLogRouter = express.Router();
 
 webSignupLogRouter.get(
-  "/all",
-  expressAsyncHandler(async (req, res) => {
-    const result = await webSignupLogServices.get();
-    res.status(200).send({ msg: "users", data: result });
-  })
+    "/all",
+    expressAsyncHandler(async (req, res) => {
+        const result = await webSignupLogServices.get();
+        res.status(200).send({ msg: "Users", data: result });
+    })
 );
 module.exports = webSignupLogRouter;

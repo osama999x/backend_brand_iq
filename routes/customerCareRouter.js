@@ -11,49 +11,49 @@ const customerCareRouter = express.Router();
 //     resolution: { type: String },
 //     status: { type: String, default: "Open" },
 customerCareRouter.post(
-  "/create-complaint",
-  expressAsyncHandler(async (req, res) => {
-    const { customerName, customerEmail, customerPhone, inquiry } = req.body;
-    if (!customerName || !customerEmail || !customerPhone || !inquiry) {
-      return res.status(400).send({ msg: "Fields Missing" });
-    }
-    const result = await customerCareServices.createComplaint(
-      customerName,
-      customerEmail,
-      customerPhone,
-      inquiry
-    );
-    if (result) {
-      return res.status(200).send({ msg: "complaint created", data: result });
-    } else {
-      return res.status(400).send({ msg: "complaint not created" });
-    }
-  })
+    "/create-complaint",
+    expressAsyncHandler(async (req, res) => {
+        const { customerName, customerEmail, customerPhone, inquiry } = req.body;
+        if (!customerName || !customerEmail || !customerPhone || !inquiry) {
+            return res.status(400).send({ msg: "Fields Missing" });
+        }
+        const result = await customerCareServices.createComplaint(
+            customerName,
+            customerEmail,
+            customerPhone,
+            inquiry
+        );
+        if (result) {
+            return res.status(200).send({ msg: "Complaint Created", data: result });
+        } else {
+            return res.status(400).send({ msg: "Complaint not Created" });
+        }
+    })
 );
 
 customerCareRouter.get(
-  "/get-all-complaints",
-  expressAsyncHandler(async (req, res) => {
-    const complaints = await customerCareServices.getAllComplaints();
-    if (complaints) {
-      return res.status(200).send({ msg: "complaints", data: complaints });
-    } else {
-      return res.status(400).send({ msg: "no complaints found" });
-    }
-  })
+    "/get-all-complaints",
+    expressAsyncHandler(async (req, res) => {
+        const complaints = await customerCareServices.getAllComplaints();
+        if (complaints) {
+            return res.status(200).send({ msg: "Complaints", data: complaints });
+        } else {
+            return res.status(400).send({ msg: "No Complaints found" });
+        }
+    })
 );
 
 customerCareRouter.get(
-  "/get-complaint",
-  expressAsyncHandler(async (req, res) => {
-    const { id } = req.query;
-    const complaint = await customerCareServices.getComplaint(id);
-    if (complaint) {
-      return res.status(200).send({ msg: "complaint", data: complaint });
-    } else {
-      return res.status(400).send({ msg: "complaint not found" });
-    }
-  })
+    "/get-complaint",
+    expressAsyncHandler(async (req, res) => {
+        const { id } = req.query;
+        const complaint = await customerCareServices.getComplaint(id);
+        if (complaint) {
+            return res.status(200).send({ msg: "Complaint", data: complaint });
+        } else {
+            return res.status(400).send({ msg: "Complaint not Found" });
+        }
+    })
 );
 
 // customerCareRouter.put(
@@ -70,23 +70,23 @@ customerCareRouter.get(
 //   })
 // );
 customerCareRouter.patch(
-  "/resolve-complaint",
-  expressAsyncHandler(async (req, res) => {
-    const { id, resolution, complaint } = req.body;
-    if (!resolution) {
-      return res.status(400).send({ msg: "Fields Missing" });
-    }
-    const result = await customerCareServices.resolveComplaint(
-      id,
-      resolution,
-      complaint
-    );
-    if (result) {
-      return res.status(200).send({ msg: "complaint resolved", data: result });
-    } else {
-      return res.status(400).send({ msg: "complaint not resolved" });
-    }
-  })
+    "/resolve-complaint",
+    expressAsyncHandler(async (req, res) => {
+        const { id, resolution, complaint } = req.body;
+        if (!resolution) {
+            return res.status(400).send({ msg: "Fields Missing" });
+        }
+        const result = await customerCareServices.resolveComplaint(
+            id,
+            resolution,
+            complaint
+        );
+        if (result) {
+            return res.status(200).send({ msg: "Complaint Resolved", data: result });
+        } else {
+            return res.status(400).send({ msg: "Complaint not Resolved" });
+        }
+    })
 );
 
 module.exports = customerCareRouter;
