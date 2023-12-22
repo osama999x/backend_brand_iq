@@ -10,7 +10,7 @@ subCategoryRouter.get(
     expressAsyncHandler(async (req, res) => {
         const result = await subCategoryServices.getsubcategories();
         if (result.length !== 0) {
-            return res.status(200).send({ msg: "subcategories", data: result });
+            return res.status(200).send({ msg: "Sub Categories", data: result });
         } else {
             return res.status(400).send({ msg: "subcategories Not Found" });
         }
@@ -24,7 +24,7 @@ subCategoryRouter.get(
             subCategoryId
         );
         if (result) {
-            res.status(200).send({ msg: "products by subcategory", data: result });
+            res.status(200).send({ msg: "Products By Subcategory", data: result });
         } else {
             res.status(400).send({ msg: "Not found" });
         }
@@ -38,7 +38,7 @@ subCategoryRouter.get(
             subCategoryId
         );
         if (result) {
-            res.status(200).send({ msg: "products by subcategory", data: result });
+            res.status(200).send({ msg: "Products by Subcategory", data: result });
         } else {
             res.status(400).send({ msg: "Not found" });
         }
@@ -114,9 +114,9 @@ subCategoryRouter.patch(
         if (result) {
             return res
                 .status(200)
-                .send({ msg: "subCategory updated.", data: result });
+                .send({ msg: "Sub Category updated.", data: result });
         } else {
-            return res.status(400).send({ msg: "subCategory not updated" });
+            return res.status(400).send({ msg: "Sub Category not updated" });
         }
     })
 );
@@ -131,7 +131,7 @@ subCategoryRouter.delete(
         if (checkSubcategory.length != 0) {
             return res
                 .status(400)
-                .send({ msg: "This subcategory linked with product!" });
+                .send({ msg: "This Sub Category linked with product!" });
         }
         console.log("subcate", subcategoryId);
         const result = await subCategoryServices.delete(subcategoryId);
@@ -141,9 +141,9 @@ subCategoryRouter.delete(
         if (result) {
             return res
                 .status(200)
-                .send({ msg: "subCategory deleted.", data: result });
+                .send({ msg: "Sub Category Deleted.", data: result });
         } else {
-            return res.status(400).send({ msg: "subCategory not deleted" });
+            return res.status(400).send({ msg: "Sub Category not Deleted" });
         }
     })
 );

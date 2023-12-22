@@ -56,13 +56,72 @@ const coupanPolicyServices = {
         const checkCustomer = await couponStatusModel.findOne({
             customer: customerId,
             couponCode: couponCode,
+            isBuy: true
         });
+        if (checkCustomer) {
+            throw "This Coupon has already been redeemed."
+        }
         return checkCustomer;
     },
     getOneCoupon: async (couponCode) => {
-        const result = await couponPolicyModel.findOne({ couponCode });
+        const result = await couponPolicyModel.findOne({ couponCode: couponCode, isActive: true });
         return result;
     },
+    getOrderLimit: async (couponCode, orderPriceLimit) => {
+
+        const couponPolicy = await couponPolicyModel.findOne({ couponCode: couponCode });
+
+        if (!couponPolicy) {
+            throw new Error('Coupon not found.');
+        }
+
+        const isValid = orderPriceLimit >= couponPolicy.orderPriceLimit;
+
+        return {
+            isValid,
+            couponDiscount: couponPolicy.couponValue,
+            isPercentage: couponPolicy.isPercentage,
+            orderPriceLimit: couponPolicy.orderPriceLimit,
+        };
+    },
+
+    getValidCoupon: async (couponCode) => {
+        const result = await couponPolicyModel.findOne({ couponCode: couponCode });
+
+        if (!result) {
+            throw new Error('Coupon not found.');
+        }
+
+        // Checking the date and time
+        let nowTime = new Date().getTime();
+
+        if (result.expireDate.getTime() < nowTime) {
+            throw new Error('The coupon has expired.');
+        }
+    },
+    isbuy: async (couponCode, customerId) => {
+        const redeemed = await couponStatusModel.findOne(
+            { couponCode: couponCode, customer: customerId, isbuy: true },
+
+        );
+        return redeemed;
+    },
+
+    useCoupon: async (couponCode, customerId) => {
+        const newCouponStatus = new couponStatusModel({
+            customer: customerId,
+            couponCode: couponCode,
+            isBuy: true,
+        });
+
+        const savedCouponStatus = await newCouponStatus.save();
+
+        const result = await savedCouponStatus.populate({ path: 'customer', model: 'Customer', select: "firstName lastName email" });
+
+        return result;
+    }
+    ,
+
     getCustomerCoupon: async (couponCode) => {
         // const checkCustomer = await couponStatusModel.findOne({
         //   customer: customerId,

@@ -11,7 +11,7 @@ categoryRouter.get(
     "/all",
     expressAsyncHandler(async (req, res) => {
         const result = await categoryServices.get();
-        res.status(200).send({ msg: "categories", data: result });
+        res.status(200).send({ msg: "Categories", data: result });
     })
 );
 
@@ -21,7 +21,7 @@ categoryRouter.get(
         const { categoryId } = req.query;
         const result = await categoryServices.getProducts(categoryId);
         if (result) {
-            res.status(200).send({ msg: "products by category", data: result });
+            res.status(200).send({ msg: "Products by Category", data: result });
         } else {
             res.status(400).send({ msg: "Not found" });
         }
@@ -37,9 +37,9 @@ categoryRouter.get(
         if (result.length !== 0) {
             res
                 .status(200)
-                .send({ msg: "subcategories by categories", data: result });
+                .send({ msg: "Subcategories by Categories", data: result });
         } else {
-            res.status(400).send({ msg: "Not found" });
+            res.status(400).send({ msg: "Not Found" });
         }
     })
 );
@@ -51,7 +51,7 @@ categoryRouter.get(
         if (result) {
             res.status(200).send({ msg: " Category", data: result });
         } else {
-            res.status(400).send({ msg: "Not found" });
+            res.status(400).send({ msg: "Not Found" });
         }
     })
 );
@@ -77,9 +77,9 @@ categoryRouter.post(
             isFeatured
         );
         if (result) {
-            return res.status(200).send({ msg: "category added.", data: result });
+            return res.status(200).send({ msg: "Category Added.", data: result });
         } else {
-            return res.status(400).send({ msg: "category not added" });
+            return res.status(400).send({ msg: "Category not Added" });
         }
     })
 );
