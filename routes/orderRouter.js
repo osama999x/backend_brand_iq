@@ -1,5 +1,6 @@
 const express = require("express");
 const expressAsyncHandler = require("express-async-handler");
+const mongoose = require("mongoose");
 const customerModel = require("../model/customerModel");
 const { findById } = require("../model/dealBuyerLogModel");
 const orderServices = require("../services/orderServices");
@@ -7,7 +8,6 @@ const systemNotificationServices = require("../services/systemNotificationServic
 const notificationInfo = require("../utils/notificationInfo");
 const dealProductModel = require("../model/dealsProductModel");
 const orderRouter = express.Router();
-const mongoose = require("mongoose");
 const orderModel = require("../model/orderModel");
 const convertDate = require("../utils/convertDate");
 const paymentHistoryService = require("../services/paymentHistoryServices");
