@@ -62,7 +62,10 @@ const productsServices = {
                 "variant.$.discountedPrice": discountedPrice,
             },
         };
-        const updateProduct = await productsModel.updateMany(filter, update);
+        // const updateProduct = await productsModel.updateOne(filter, update);
+        const options = { new: true }; // Return the modified document
+
+        const updateProduct = await productsModel.findOneAndUpdate(filter, update, options);
         if (updateProduct) {
             const data = new ProductQuantityLogModel({
                 product: productId,
@@ -637,7 +640,6 @@ const productsServices = {
         // convert images to base64
         if (newImages.length != 0) {
             imgArr = await Promise.all(newImages.map(uploadFile));
-
         }
         //new images
         let result = null;
@@ -798,6 +800,7 @@ const productsServices = {
         // }
 
         // final update
+
         if (thumbnail) {
             result = await productsModel.findOneAndUpdate(
                 { _id },
