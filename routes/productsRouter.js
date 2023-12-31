@@ -22,9 +22,9 @@ productsRouter.patch(
     "/quantityUpdate",
     expressAsyncHandler(async (req, res) => {
         const { productId, sku, actualPrice, discountedPrice, quantity } = req.body;
-        // if (!productId || !sku || !actualPrice || !discountedPrice || !quantity) {
-        //     return res.status(400).json({ msg: "Fields Missing" })
-        // }
+        if (!productId || !sku || !actualPrice || !discountedPrice || !quantity) {
+            return res.status(400).json({ msg: "Fields Missing" })
+        }
         const result = await productsServices.quantityUpdate(
             productId,
             sku,
@@ -207,18 +207,19 @@ productsRouter.patch(
         let checkProductPromotion = await promotionModel.findOne({
             product: { $in: productId },
         });
-        if (
-            (checkProduct.isDiscount === true && isDeal === true) ||
-            (checkProduct.isDeal === true && isDiscount === true) ||
-            checkProductPromotion
-        ) {
-            return res.status(400).send({ msg: "Product Already Discounted" });
-        }
-        if (isDeal === true && (!dealExpire || !discount)) {
-            return res.status(400).send({
-                msg: "Fields Missing",
-            });
-        }
+        //Commented just for now
+        // if (
+        //     (checkProduct.isDiscount === true && isDeal === true) ||
+        //     (checkProduct.isDeal === true && isDiscount === true) ||
+        //     checkProductPromotion
+        // ) {
+        //     return res.status(400).send({ msg: "Product Already Discounted" });
+        // }
+        // if (isDeal === true && (!dealExpire || !discount)) {
+        //     return res.status(400).send({
+        //         msg: "Fields Missing",
+        //     });
+        // }
         const result = await productsServices.update(
             productId,
             categoryId,
