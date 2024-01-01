@@ -22,7 +22,7 @@ productsRouter.patch(
     "/quantityUpdate",
     expressAsyncHandler(async (req, res) => {
         const { productId, sku, actualPrice, discountedPrice, quantity } = req.body;
-        if (!productId || !sku || !actualPrice || !discountedPrice || !quantity) {
+        if (!productId || !sku) {
             return res.status(400).json({ msg: "Fields Missing" })
         }
         const result = await productsServices.quantityUpdate(
