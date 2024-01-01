@@ -14,6 +14,7 @@ const paymentHistoryService = require("../services/paymentHistoryServices");
 const zindigiWalletServices = require("../services/zindigiWalletServices");
 const zindigiWalletPayment = require("../utils/zindigiWalletPayment");
 const validateMobileNumber = require("../utils/validateMobileNumber");
+const { log } = require("winston");
 
 orderRouter.get(
     "/orderTracking",
@@ -311,7 +312,7 @@ orderRouter.post(
                                 customerFcm.fcmToken
                             );
                         }
-                        console.log("orderId", orderResult._id);
+                        console.log("orderId///////////////////////////////////////////////", orderResult._id);
                         const history = await paymentHistoryService.new(
                             customer,
                             orderResult._id,
@@ -429,7 +430,7 @@ orderRouter.get(
 //ok
 orderRouter.get(
     '/hotSellingProducts',
-    expressAsyncHandler(async (req, resp) => {
+    expressAsyncHandler(async (req, res, next) => {
         try {
             const currentMonth = new Date().getMonth() + 1; // Months are zero-based, so add 1
 
@@ -454,7 +455,7 @@ orderRouter.get(
                 },
                 {
                     $lookup: {
-                        from: 'products', // Assuming your Product model is named 'Product'
+                        from: 'Product', // Assuming your Product model is named 'Product'
                         localField: '_id',
                         foreignField: '_id',
                         as: 'productDetails',
@@ -477,26 +478,25 @@ orderRouter.get(
                     $limit: 5,
                 },
             ]);
-
+            console.log(result);
             if (result.length !== 0) {
-                resp.status(200).send({
-                    msg: 'Hot Selling Products',
+                res.status(200).json({
+                    success: true,
+                    message: 'Hot Selling Products',
                     data: result,
                 });
             } else {
-                resp.status(400).send({
-                    msg: 'No Hot Selling Products Found',
+                res.status(404).json({
+                    success: false,
+                    message: 'No Hot Selling Products Found',
                 });
             }
         } catch (error) {
             console.error(error);
-            resp.status(500).send({
-                msg: 'Internal Server Error',
-            });
+            next(error);
         }
     })
 );
-
 
 //End
 

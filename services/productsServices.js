@@ -54,10 +54,9 @@ const productsServices = {
     ) => {
         const filter = { _id: productId, "variant.sku": sku };
         const update = {
-            $inc: {
-                "variant.$.quantity": +quantity,
-            },
+
             $set: {
+                "variant.$.quantity": quantity,
                 "variant.$.actualPrice": actualPrice,
                 "variant.$.discountedPrice": discountedPrice,
             },

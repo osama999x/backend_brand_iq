@@ -683,7 +683,7 @@ const orderServices = {
                     isDiscount: 1,
                 }
             );
-            console.log(Product);
+            // console.log(Product);
             //check product availbility
             if (!Product || !Product.variant.length)
                 throw { message: { msg: `Product doesn't exist` } };
@@ -693,6 +693,7 @@ const orderServices = {
             if (Product.isDeal) {
                 //check deal product all possible valdities
                 if (Product.dealExpire >= currentDate) {
+
                     if (price !== Product.variant[0].actualPrice - Product.discount)
                         throw {
                             message: {
@@ -716,7 +717,8 @@ const orderServices = {
                         },
                     };
                 }
-            } else if (Product.isDiscount) {
+            }
+            else if (Product.isDiscount) {
                 //check discounted product
                 if (price !== Product.variant[0].discountedPrice)
                     throw {
@@ -724,7 +726,8 @@ const orderServices = {
                             msg: `${Product.name} price has been changed, update the cart!`,
                         },
                     };
-            } else {
+            }
+            else {
                 const checkPromotion = await promotionModel.findOne({
                     product: { $in: productId },
                     expireDate: { $gte: currentDate },
