@@ -683,6 +683,7 @@ const orderServices = {
                     isDiscount: 1,
                 }
             );
+
             // console.log(Product);
             //check product availbility
             if (!Product || !Product.variant.length)
@@ -692,8 +693,8 @@ const orderServices = {
                 throw { message: { msg: `${Product.name} not enough quantity!` } };
             if (Product.isDeal) {
                 //check deal product all possible valdities
-                if (Product.dealExpire >= currentDate) {
 
+                if (Product.dealExpire >= currentDate) {
                     if (price !== Product.variant[0].actualPrice - Product.discount)
                         throw {
                             message: {
@@ -719,6 +720,7 @@ const orderServices = {
                 }
             }
             else if (Product.isDiscount) {
+                console.log({ price, discountedPrice: Product.variant[0].discountedPrice })
                 //check discounted product
                 if (price !== Product.variant[0].discountedPrice)
                     throw {

@@ -54,28 +54,37 @@ const productsServices = {
     ) => {
         const filter = { _id: productId, "variant.sku": sku };
         const update = {
-
             $set: {
                 "variant.$.quantity": quantity,
                 "variant.$.actualPrice": actualPrice,
-                "variant.$.discountedPrice": discountedPrice,
             },
         };
-        // const updateProduct = await productsModel.updateOne(filter, update);
-        const options = { new: true }; // Return the modified document
 
-        const updateProduct = await productsModel.findOneAndUpdate(filter, update, options);
-        if (updateProduct) {
-            const data = new ProductQuantityLogModel({
-                product: productId,
-                sku,
-                actualPrice,
-                discountedPrice,
-                quantity,
-            });
-            await data.save();
+        if (discountedPrice) {
+            update.$set["variant.$.discountedPrice"] = discountedPrice;
+            update.$set["isDiscount"] = true
         }
-        return updateProduct;
+
+        try {
+            const options = { new: true };
+            const updateProduct = await productsModel.findOneAndUpdate(filter, update, options);
+
+            if (updateProduct) {
+                const data = new ProductQuantityLogModel({
+                    product: productId,
+                    sku,
+                    actualPrice,
+                    discountedPrice,
+                    quantity,
+                });
+                await data.save();
+            }
+
+            return updateProduct;
+        } catch (error) {
+            console.error('Error updating quantity:', error);
+            throw error;
+        }
     },
     getProductsByIdWeb: async (productId) => {
         const product = await productsModel
