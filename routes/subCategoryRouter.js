@@ -98,7 +98,7 @@ subCategoryRouter.post(
 subCategoryRouter.patch(
     "/",
     expressAsyncHandler(async (req, res) => {
-        const { subcategoryId, categoryId, name, icon, description, isFeatured } =
+        const { subcategoryId, categoryId, name, icon, thumbnail, description, isFeatured } =
             req.body;
         // if (!subcategoryId || !name || !icon || !description || !categoryId) {
         //   return res.status(400).send({ msg: "Fields Missing" });
@@ -108,6 +108,7 @@ subCategoryRouter.patch(
             categoryId,
             name,
             icon,
+            thumbnail,
             description,
             isFeatured
         );

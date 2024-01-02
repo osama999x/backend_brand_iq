@@ -209,6 +209,7 @@ orderRouter.post(
     "/checkProductAvailbilty",
     expressAsyncHandler(async (req, res) => {
         const { customer, product } = req.body;
+        console.log(product)
         if (!customer || product.length === 0) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
@@ -216,6 +217,7 @@ orderRouter.post(
             const result = await orderServices.checkDealProduct(customer, product);
             return res.status(200).send({ validate: true });
         } catch (e) {
+            console.log(e.message)
             return res.status(400).send(e.message);
         }
     })
