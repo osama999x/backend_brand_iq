@@ -5,9 +5,10 @@ const pointRouter = express.Router();
 
 pointRouter.post(
     "/customerOrderPoints",
+
     expressAsyncHandler(async (req, res) => {
         const { customerId, date } = req.body;
-
+        console.log(req.body);
         if (!customerId) {
             res.status(400).send({
                 msg: "Failed Missing",
@@ -27,6 +28,8 @@ pointRouter.post(
         }
     })
 );
+
+
 
 pointRouter.get(
     "/orderPoints",
