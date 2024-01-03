@@ -96,7 +96,7 @@ orderRouter.post(
         );
         if (result) {
             return res.status(200).send({
-                msg: "Orders delivered Successfully ",
+                msg: "Orders Delivered Successfully ",
             });
         } if (!result) {
             return res.status(400).send({ msg: "Failed!" });

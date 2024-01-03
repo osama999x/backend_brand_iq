@@ -16,6 +16,7 @@ const pointServices = {
                     placedOn: 1,
                     orderId: 1,
                     channel: 1,
+                    totalAmount: 1,
                 }
             )
             .populate({
@@ -29,6 +30,7 @@ const pointServices = {
             orderDetails = orderDetails.map((item) => {
                 item.productThumbnail = item.product[0].productId?.thumbnail;
                 item.name = item.product[0].productId?.name;
+                // item.price = item.product[0].productId?.price;
                 delete item.product;
                 return item;
             });
