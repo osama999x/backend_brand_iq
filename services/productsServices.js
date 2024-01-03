@@ -307,6 +307,7 @@ const productsServices = {
                                 image: "$$variant.image",
                                 sku: "$$variant.sku",
                                 _id: "$$variant._id",
+                                isOnPromotion: { $cond: { if: "$promotion", then: true, else: false } },
                                 discountedPrice: {
                                     $ifNull: [
                                         {
