@@ -448,24 +448,28 @@ const productsServices = {
         console.log("thumbnail", thumbnail);
         let variants = [];
         switch (variant.length !== 0) {
+            //case 1 no color no size
             case variant[0].colorName === "" && variant[0].size.length === 0:
                 variants = await productVariantServices.handleNoColorNoSize(
                     variant,
                     isDiscount
                 );
                 break;
+            //Case 2 have color but not size
             case variant[0].colorName !== "" && variant[0].size.length === 0:
                 variants = await productVariantServices.handleColorNoSize(
                     variant,
                     isDiscount
                 );
                 break;
+            //case 3 no color but size exist
             case variant[0].colorName === "" && variant[0].size.length !== 0:
                 variants = await productVariantServices.handleNoColorSize(
                     variant,
                     isDiscount
                 );
                 break;
+            //Case 4 Multi Colors mutli size
             case variant[0].colorName !== "" && variant[0].size.length !== 0:
                 variants = await productVariantServices.handleColorSize(
                     variant,

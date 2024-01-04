@@ -9,9 +9,9 @@ cipherRouter.post(
     expressAsyncHandler(async (req, res) => {
         const result = await cipherServices.encrypt(req.body);
         if (result) {
-            return res.status(200).send({ msg: "Encrypted Cipher", data: result });
+            return res.status(200).send({ msg: "Encrypted Cipher.", data: result });
         } else {
-            return res.status(400).send({ msg: "Could Not Encrypt Cipher" });
+            return res.status(400).send({ msg: "Could Not Encrypt Cipher." });
         }
     })
 );
@@ -21,9 +21,9 @@ cipherRouter.post(
         let { cipher } = req.body;
         const result = await cipherServices.decrypt(cipher);
         if (result) {
-            return res.status(200).send({ msg: "Decrypted Cipher", data: result });
+            return res.status(200).send({ msg: "Decrypted Cipher.", data: result });
         } else {
-            return res.status(400).send({ msg: "Could Not Decrypt Cipher" });
+            return res.status(400).send({ msg: "Could Not Decrypt Cipher." });
         }
     })
 );

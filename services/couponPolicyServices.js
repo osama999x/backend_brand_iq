@@ -63,7 +63,11 @@ const coupanPolicyServices = {
         }
         return checkCustomer;
     },
-    getOneCoupon: async (couponCode) => {
+    checkCoupon: async (couponCode) => {
+        const result = await couponPolicyModel.findOne({ couponCode: couponCode });
+        return result;
+    },
+    inActive: async (couponCode) => {
         const result = await couponPolicyModel.findOne({ couponCode: couponCode, isActive: true });
         return result;
     },
