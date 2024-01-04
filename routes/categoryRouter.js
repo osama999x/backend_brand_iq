@@ -11,7 +11,7 @@ categoryRouter.get(
     "/all",
     expressAsyncHandler(async (req, res) => {
         const result = await categoryServices.get();
-        res.status(200).send({ msg: "Categories", data: result });
+        res.status(200).send({ msg: "Categories.", data: result });
     })
 );
 
@@ -21,9 +21,9 @@ categoryRouter.get(
         const { categoryId } = req.query;
         const result = await categoryServices.getProducts(categoryId);
         if (result) {
-            res.status(200).send({ msg: "Products by Category", data: result });
+            res.status(200).send({ msg: "Products by Category.", data: result });
         } else {
-            res.status(400).send({ msg: "Not found" });
+            res.status(400).send({ msg: "Not Found." });
         }
     })
 );
@@ -37,9 +37,9 @@ categoryRouter.get(
         if (result.length !== 0) {
             res
                 .status(200)
-                .send({ msg: "Subcategories by Categories", data: result });
+                .send({ msg: "Subcategories by Categories.", data: result });
         } else {
-            res.status(400).send({ msg: "Not Found" });
+            res.status(400).send({ msg: "Not Found." });
         }
     })
 );
@@ -49,9 +49,9 @@ categoryRouter.get(
         const { categoryId } = req.query;
         const result = await categoryServices.getOne(categoryId);
         if (result) {
-            res.status(200).send({ msg: " Category", data: result });
+            res.status(200).send({ msg: " Category.", data: result });
         } else {
-            res.status(400).send({ msg: "Not Found" });
+            res.status(400).send({ msg: "Not Found." });
         }
     })
 );
@@ -67,7 +67,7 @@ categoryRouter.post(
         //     return res.status(400).json({ msg: "Thumnail image is required!" })
         // }
         if (!name || !icon || !description || !thumbnail) {
-            return res.status(400).send({ msg: "Fields Missing" });
+            return res.status(400).send({ msg: "Fields Missing." });
         }
         const result = await categoryServices.add(
             name,
@@ -79,7 +79,7 @@ categoryRouter.post(
         if (result) {
             return res.status(200).send({ msg: "Category Added.", data: result });
         } else {
-            return res.status(400).send({ msg: "Category not Added" });
+            return res.status(400).send({ msg: "Category Not Added." });
         }
     })
 );
@@ -99,7 +99,7 @@ categoryRouter.patch(
         if (result) {
             return res.status(200).send({ msg: "Category Updated.", data: result });
         } else {
-            return res.status(400).send({ msg: "Category not Updated" });
+            return res.status(400).send({ msg: "Category not Updated." });
         }
     })
 );
@@ -112,16 +112,16 @@ categoryRouter.delete(
         if (category.length !== 0 || Subcategory.length !== 0) {
             return res
                 .status(400)
-                .send({ msg: "This category linked with subcategory or  product!" });
+                .send({ msg: "This category linked with Subcategory or Product!" });
         }
         const result = await categoryServices.delete(categoryId);
         if (result.deletedCount == 0) {
-            return res.status(400).send({ msg: "ID Not found" });
+            return res.status(400).send({ msg: "ID Not Found." });
         }
         if (result) {
             return res.status(200).send({ msg: "Category Deleted.", data: result });
         } else {
-            return res.status(400).send({ msg: "Category Not Deleted" });
+            return res.status(400).send({ msg: "Category Not Deleted." });
         }
     })
 );
