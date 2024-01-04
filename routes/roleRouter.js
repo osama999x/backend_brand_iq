@@ -9,7 +9,7 @@ roleRouter.get(
     "/all",
     expressAsyncHandler(async (req, res) => {
         const result = await roleServices.get();
-        res.status(200).send({ msg: "roles", data: result });
+        res.status(200).send({ msg: "Roles", data: result });
     })
 );
 
@@ -24,7 +24,7 @@ roleRouter.post(
         if (result) {
             return res.status(200).send({ msg: "Roles", data: result });
         } else {
-            return res.status(400).send({ msg: "Role not found" });
+            return res.status(400).send({ msg: "Role not Found" });
         }
     })
 );
@@ -37,9 +37,9 @@ roleRouter.post(
         }
         const result = await roleServices.addNew(name, description);
         if (result) {
-            return res.status(200).send({ msg: "Role added.", data: result });
+            return res.status(200).send({ msg: "Role Added.", data: result });
         } else {
-            return res.status(400).send({ msg: "Role not added" });
+            return res.status(400).send({ msg: "Role not Added" });
         }
     })
 );
@@ -52,9 +52,9 @@ roleRouter.patch(
         }
         const result = await roleServices.update(roleId, name, description);
         if (result) {
-            return res.status(200).send({ msg: "Role updated.", data: result });
+            return res.status(200).send({ msg: "Role Updated.", data: result });
         } else {
-            return res.status(400).send({ msg: "Role not updated" });
+            return res.status(400).send({ msg: "Role not Updated" });
         }
     })
 );
@@ -63,24 +63,22 @@ roleRouter.delete(
     expressAsyncHandler(async (req, res) => {
         const { roleId } = req.body;
         const user_role = await roleServices.getUserRole(roleId);
-        const role_permission = await rolePermissionServices.getRolePermissions(
-            roleId
-        );
-        console.log("user_role", user_role);
-        console.log("role_permission", role_permission);
-        if (role_permission.length !== 0 || user_role.length !== 0) {
+        if (user_role.length !== 0) {
             return res.status(400).send({
-                msg: "This role cannot be deleted because it has been assigned to one or more users",
+                msg: "Role is Assigned to a User.",
             });
         }
+        const role_permissionDelete = await rolePermissionServices.getRolePermissions(
+            roleId
+        );
         const result = await roleServices.delete(roleId);
         if (result.deletedCount === 0) {
-            return res.status(400).send({ msg: "ID Not found" });
+            return res.status(400).send({ msg: "ID Not Found." });
         }
         if (result) {
-            return res.status(200).send({ msg: "Role deleted.", data: result });
+            return res.status(200).send({ msg: "Role Deleted.", data: result });
         } else {
-            return res.status(400).send({ msg: "Role not deleted" });
+            return res.status(400).send({ msg: "Role not Deleted" });
         }
     })
 );
