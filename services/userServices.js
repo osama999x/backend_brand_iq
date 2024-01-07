@@ -48,7 +48,7 @@ const userServices = {
     login: async (email) => {
         const result = await userModel.findOne(
             { email: email },
-            { createdAt: 0, updatedAt: 0, __v: 0 }
+            { createdAt: 0, updatedAt: 0, __v: 0, isLogin: 0 }
         ).lean();
         if (result) {
             const role_permission = await rolePermissionServices.getRolePermission(
