@@ -37,26 +37,26 @@ rolePermissionRouter.get(
 rolePermissionRouter.post(
     "/",
     expressAsyncHandler(async (req, res) => {
-        const { role, history, modules, isSubmodule } = req.body;
-        console.log("this is body pf permission", req.body);
-        if (!role || modules.length == 0) {
-            return res.status(400).send({ msg: "Fields Missing" });
-        }
-        const result = await rolePermissionServices.addNew(
-            role,
-            history,
-            modules,
-            isSubmodule
-        );
-        if (result) {
-            return res
-                .status(201)
-                .send({ msg: "Role permission added.", data: result });
-        } else {
-            return res.status(400).send({ msg: "Role permission not added" });
+        try {
+            const { role, history, modules } = req.body;
+            if (!role || modules.length === 0) {
+                return res.status(400).send({ msg: "Fields Missing" });
+            }
+
+            const result = await rolePermissionServices.addNew(role, history, modules);
+
+            if (result) {
+                return res.status(201).send({ msg: "Role permission Added.", data: result });
+            } else {
+                return res.status(400).send({ msg: "Role permission not Added" });
+            }
+        } catch (error) {
+            console.error("Error in adding role permission:", error);
+            return res.status(500).send({ msg: "Internal Server Error" });
         }
     })
 );
+
 rolePermissionRouter.patch(
     "/",
     expressAsyncHandler(async (req, res) => {
@@ -71,7 +71,7 @@ rolePermissionRouter.patch(
         if (result) {
             return res
                 .status(200)
-                .send({ msg: "Role permission updated.", data: result });
+                .send({ msg: "Role permission Updated.", data: result });
         } else {
             return res.status(400).send({ msg: "Role permission not updated" });
         }

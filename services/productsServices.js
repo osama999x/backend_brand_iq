@@ -438,45 +438,47 @@ const productsServices = {
     ) => {
         // thumbnail = await uploadFile(thumbnail);
         //console.log("images", images);
-        var imgArr = [];
+
+        var image = {};
         //Product have images
+
         if (images.length != 0) {
-            imgArr = await Promise.all(images.map(uploadFile));
+            imgArr = await Promise.all(images?.map(uploadFile));
             console.log(imgArr);
-            var thumbnail = imgArr[0];
+            image = { image: imgArr }
+            // var thumbnail = imgArr[0];
         }
-        console.log("thumbnail", thumbnail);
-        let variants = [];
-        switch (variant.length !== 0) {
-            //case 1 no color no size
-            case variant[0].colorName === "" && variant[0].size.length === 0:
-                variants = await productVariantServices.handleNoColorNoSize(
-                    variant,
-                    isDiscount
-                );
-                break;
-            //Case 2 have color but not size
-            case variant[0].colorName !== "" && variant[0].size.length === 0:
-                variants = await productVariantServices.handleColorNoSize(
-                    variant,
-                    isDiscount
-                );
-                break;
-            //case 3 no color but size exist
-            case variant[0].colorName === "" && variant[0].size.length !== 0:
-                variants = await productVariantServices.handleNoColorSize(
-                    variant,
-                    isDiscount
-                );
-                break;
-            //Case 4 Multi Colors mutli size
-            case variant[0].colorName !== "" && variant[0].size.length !== 0:
-                variants = await productVariantServices.handleColorSize(
-                    variant,
-                    isDiscount
-                );
-                break;
-        }
+        // let variants = [];
+        // switch (variant.length !== 0) {
+        //     //case 1 no color no size
+        //     case variant[0].colorName === "" && variant[0].size.length === 0:
+        //         variants = await productVariantServices.handleNoColorNoSize(
+        //             variant,
+        //             isDiscount
+        //         );
+        //         break;
+        //     //Case 2 have color but not size
+        //     case variant[0].colorName !== "" && variant[0].size.length === 0:
+        //         variants = await productVariantServices.handleColorNoSize(
+        //             variant,
+        //             isDiscount
+        //         );
+        //         break;
+        //     //case 3 no color but size exist
+        //     case variant[0].colorName === "" && variant[0].size.length !== 0:
+        //         variants = await productVariantServices.handleNoColorSize(
+        //             variant,
+        //             isDiscount
+        //         );
+        //         break;
+        //     //Case 4 Multi Colors mutli size
+        //     case variant[0].colorName !== "" && variant[0].size.length !== 0:
+        //         variants = await productVariantServices.handleColorSize(
+        //             variant,
+        //             isDiscount
+        //         );
+        //         break;
+        // }
         //case 1 no color no size
         // if (variant[0].colorName === "" && variant[0].size.length === 0) {
         //   let variants = [];
@@ -582,9 +584,8 @@ const productsServices = {
             dealExpire,
             oneTimeDeal,
             discount,
-            variant: variants,
-            thumbnail,
-            images: imgArr,
+            variant,
+            images: image,
             vendor,
             isTaxable,
             taxHead,
@@ -638,250 +639,55 @@ const productsServices = {
         taxType,
         isPercentage,
         taxAmount,
-        metaData,
+        metaData = "",
         metaDescription,
         tags,
         addons,
         newImages,
         isFeatured
     ) => {
-        var _id = mongoose.Types.ObjectId(_id);
-        var imgArr = [];
-        if (thumbnail) {
-            thumbnail = await uploadFile(thumbnail);
-        }
-        // convert images to base64
-        if (newImages.length != 0) {
-            imgArr = await Promise.all(newImages.map(uploadFile));
-        }
-        //new images
-        let result = null;
-        let variants = [];
-        switch (variant.length !== 0) {
-            case variant[0].colorName === "" && variant[0].size.length === 0:
-                variants = await productVariantServices.handleNoColorNoSize(
-                    variant,
-                    isDiscount
-                );
-                break;
-            case variant[0].colorName !== "" && variant[0].size.length === 0:
-                variants = await productVariantServices.handleColorNoSize(
-                    variant,
-                    isDiscount
-                );
-                break;
-            case variant[0].colorName === "" && variant[0].size.length !== 0:
-                variants = await productVariantServices.handleNoColorSize(
-                    variant,
-                    isDiscount
-                );
-                break;
-            case variant[0].colorName !== "" && variant[0].size.length !== 0:
-                variants = await productVariantServices.handleColorSize(
-                    variant,
-                    isDiscount
-                );
-                break;
-        }
-        // case 1 if color and image are empty
-        // if (variant[0].colorName === "" && variant[0].size.length === 0) {
-        //   let variants = [];
-        //   for (let i of variant) {
-        //     if (i.image) {
-        //       var image = await uploadFile(i.image);
-        //       variants.push({
-        //         colorName: "",
-        //         colorHex: "",
-        //         actualPrice: i.actualPrice,
-        //         discountedPrice: i.discountedPrice,
-        //         quantity: i.quantity,
-        //         sku: `${i.sku}`,
-        //         size: "",
-        //         image: image,
-        //       });
-        //     } else {
-        //       variants.push({
-        //         colorName: "",
-        //         colorHex: "",
-        //         actualPrice: i.actualPrice,
-        //         discountedPrice: i.discountedPrice,
-        //         quantity: i.quantity,
-        //         sku: `${i.sku}`,
-        //         size: "",
-        //       });
-        //     }
-        //   }
-        //   variant = variants;
-        // }
-        // case 2 if there is color but no size
-        // else if (variant[0].colorName != "" && variant[0].size.length === 0) {
-        //   let variants = [];
-        //   for (let i of variant) {
-        //     if (i.image) {
-        //       var image = await uploadFile(i.image);
-        //       variants.push({
-        //         colorName: i.colorName,
-        //         colorHex: i.colorHex,
-        //         actualPrice: i.actualPrice,
-        //         discountedPrice: i.discountedPrice,
-        //         quantity: i.quantity,
-        //         sku: `${i.sku}`,
-        //         size: "",
-        //         image: image,
-        //       });
-        //     } else {
-        //       variants.push({
-        //         colorName: i.colorName,
-        //         colorHex: i.colorHex,
-        //         actualPrice: i.actualPrice,
-        //         discountedPrice: i.discountedPrice,
-        //         quantity: i.quantity,
-        //         sku: `${i.sku}`,
-        //         size: "",
-        //       });
-        //     }
-        //   }
-        //   variant = variants;
-        // }
-        // case if there is size but no color
-        // else if (variant[0].colorName === "" && variant[0].size.length != 0) {
-        //   let variants = [];
-        //   for (var item of variant) {
-        //     if (item.image) {
-        //       var image = await uploadFile(item.image);
-        //       for (var i of item.size) {
-        //         variants.push({
-        //           colorName: "",
-        //           colorHex: "",
-        //           actualPrice: i.actualPrice,
-        //           discountedPrice: i.discountedPrice,
-        //           quantity: item.quantity,
-        //           sku: `${item.sku}${i.name}`,
-        //           size: i.name,
-        //           image: image,
-        //         });
-        //       }
-        //     } else {
-        //       for (var i of item.size) {
-        //         variants.push({
-        //           colorName: "",
-        //           colorHex: "",
-        //           actualPrice: i.actualPrice,
-        //           discountedPrice: i.discountedPrice,
-        //           quantity: item.quantity,
-        //           sku: `${item.sku}${i.name}`,
-        //           size: i.name,
-        //         });
-        //       }
-        //     }
-        //   }
-        //   variant = variants;
-        // }
-        // if we have size and color both
-        // else if (variant[0].colorName != "" && variant[0].size.length != 0) {
-        //   let variants = [];
-        //   for (var item of variant) {
-        //     if (item.image) {
-        //       var image = await uploadFile(item.image);
-        //       for (var i of item.size) {
-        //         variants.push({
-        //           colorName: item.colorName,
-        //           colorHex: item.colorHex,
-        //           actualPrice: i.actualPrice,
-        //           discountedPrice: i.discountedPrice,
-        //           quantity: i.quantity,
-        //           sku: `${item.sku}${i.name}`,
-        //           size: i.name,
-        //           image: image,
-        //         });
-        //       }
-        //     } else {
-        //       for (var i of item.size) {
-        //         variants.push({
-        //           colorName: item.colorName,
-        //           colorHex: item.colorHex,
-        //           actualPrice: i.actualPrice,
-        //           discountedPrice: i.discountedPrice,
-        //           quantity: i.quantity,
-        //           sku: `${item.sku}${i.name}`,
-        //           size: i.name,
-        //         });
-        //       }
-        //     }
-        //   }
-        //   variant = variants;
-        // }
 
-        // final update
 
-        if (thumbnail) {
-            result = await productsModel.findOneAndUpdate(
-                { _id },
-                {
-                    $set: {
-                        category: mongoose.Types.ObjectId(category),
-                        subcategory: mongoose.Types.ObjectId(subcategory),
-                        name,
-                        title,
-                        description,
-                        longDescription,
-                        isDiscount,
-                        isDeal,
-                        dealExpire,
-                        oneTimeDeal,
-                        discount,
-                        variant: variants,
-                        thumbnail,
-                        images: imgArr,
-                        vendor,
-                        isTaxable,
-                        taxHead,
-                        taxType,
-                        isPercentage,
-                        taxAmount,
-                        metaData,
-                        metaDescription,
-                        tags,
-                        addons,
-                        isFeatured,
-                    },
-                },
-                { new: true }
-            );
-        } else {
-            result = await productsModel.findOneAndUpdate(
-                { _id },
-                {
-                    $set: {
-                        category: mongoose.Types.ObjectId(category),
-                        subcategory: mongoose.Types.ObjectId(subcategory),
-                        name,
-                        title,
-                        description,
-                        longDescription,
-                        isDiscount,
-                        isDeal,
-                        dealExpire,
-                        oneTimeDeal,
-                        discount,
-                        variant: variants,
-                        thumbnail,
-                        images: imgArr,
-                        vendor,
-                        isTaxable,
-                        taxHead,
-                        taxType,
-                        isPercentage,
-                        taxAmount,
-                        metaData,
-                        metaDescription,
-                        tags,
-                        addons,
-                    },
-                },
-                { new: true }
-            );
+
+        let updatedData = {
+            category: mongoose.Types.ObjectId(category),
+            subcategory: mongoose.Types.ObjectId(subcategory),
+            name,
+            title,
+            description,
+            longDescription,
+            isDiscount,
+            isDeal,
+            dealExpire,
+            oneTimeDeal,
+            discount,
+            variant,
+            thumbnail,
+            vendor,
+            isTaxable,
+            taxHead,
+            taxType,
+            isPercentage,
+            taxAmount,
+            metaData,
+            metaDescription,
+            tags,
+            addons,
+            isFeatured,
+
         }
+
+        if (images.length) {
+            images = await Promise.all(images?.map(uploadFile));
+            updatedData.images = images
+        }
+        result = await productsModel.findOneAndUpdate(
+            { _id },
+            updatedData,
+            { upsert: true }
+        );
+
+
         if (result) {
             await productMetaModel.findOneAndUpdate(
                 { product: result._id },
