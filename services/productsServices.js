@@ -446,7 +446,7 @@ const productsServices = {
             imgArr = await Promise.all(images?.map(uploadFile));
             console.log(imgArr);
             image = [...imgArr]
-            // var thumbnail = imgArr[0];
+            var thumbnail = imgArr[0];
         }
         // let variants = [];
         // switch (variant.length !== 0) {
@@ -585,6 +585,7 @@ const productsServices = {
             oneTimeDeal,
             discount,
             variant,
+            thumbnail,
             images: image,
             vendor,
             isTaxable,
@@ -648,7 +649,6 @@ const productsServices = {
     ) => {
 
 
-
         let updatedData = {
             category: mongoose.Types.ObjectId(category),
             subcategory: mongoose.Types.ObjectId(subcategory),
@@ -680,7 +680,9 @@ const productsServices = {
         if (images.length) {
             images = await Promise.all(images?.map(uploadFile));
             updatedData.images = images
+            updatedData.thumbnail = images[0]
         }
+
         result = await productsModel.findOneAndUpdate(
             { _id },
             updatedData,
