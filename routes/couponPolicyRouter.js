@@ -32,7 +32,7 @@ couponPolicyRouter.post(
     "/customerCoupon",
     expressAsyncHandler(async (req, res) => {
         const { couponCode, customerId, orderPriceLimit } = req.body;
-        // console.log(couponCode, "RQ BODY", customerId, orderPriceLimit)
+
         if (!couponCode || !customerId || !orderPriceLimit) {
             res.status(400).send({
                 msg: "Fields Missing.",
@@ -64,7 +64,6 @@ couponPolicyRouter.post(
             couponCode,
             customerId
         );
-        console.log(isUseCoupon);
         if (isUseCoupon) {
             res
                 .status(400)

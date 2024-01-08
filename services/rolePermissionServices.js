@@ -2,24 +2,99 @@ const rolePermissionModel = require("../model/rolePermissionModel");
 const mongoose = require("mongoose");
 const projection = require("../config/mongoProjection");
 
+
 const rolePermissionServices = {
     get: async () => {
-        const result = await rolePermissionModel.find({}, projection.projection);
+        const result = await rolePermissionModel
+            .find()
+            .populate({
+                path: 'role',
+                model: 'Role',
+                select: 'name ',
+            })
+            .populate({
+                path: 'modules.module',
+                model: 'Module',
+                select: 'label route  ',
+            })
+            .populate({
+                path: 'modules.subModules.subModule',
+                model: 'SubModule',
+                select: 'label route'
+            })
+            .populate({
+                path: 'modules.subModules.permissions',
+                model: 'Permission',
+                select: '_id name'
+            })
+            .populate({
+                path: 'modules.permissions',
+                model: 'Permission',
+                select: 'name',
+            });
+
         return result;
+
     },
+
     getById: async (_id) => {
-        const role_permission = await rolePermissionModel.findById({ _id });
+        const role_permission = await rolePermissionModel.findById({ _id }).populate({
+            path: 'role',
+            model: 'Role',
+            select: 'name ',
+        })
+            .populate({
+                path: 'modules.module',
+                model: 'Module',
+                select: 'label route  ',
+            })
+            .populate({
+                path: 'modules.subModules.subModule',
+                model: 'SubModule',
+                select: '-_id label route'
+            }).populate({
+                path: 'modules.subModules.permissions',
+                model: 'Permission',
+                select: '_id name'
+            })
+            .populate({
+                path: 'modules.permissions',
+                model: 'Permission',
+                select: 'name',
+            });
         return role_permission;
     },
-    addNew: async (role, history, modules, isSubmodule) => {
-        const updatedPermission = await rolePermissionModel.findOneAndUpdate(
-            { role: role },
-            { $set: { history: history, modules: modules, "modules.$.isSubmodule": isSubmodule } },
-            { upsert: true, new: true }
-        );
+    addNew: async (role, history, modules) => {
+        try {
+            // Convert modules array to an array of ObjectId
+            const updatedModules = modules.map(module => ({
+                module: mongoose.Types.ObjectId(module.module),
+                isSubmodule: module.isSubmodule,
+                permissions: module.permissions.map(permission => mongoose.Types.ObjectId(permission)),
+                subModules: (module.subModules || []).map(subModule => ({
+                    subModule: mongoose.Types.ObjectId(subModule.subModule),
+                    permissions: (subModule.permissions || []).map(subPermission => mongoose.Types.ObjectId(subPermission)),
+                })),
+            }));
 
-        return updatedPermission;
+            const updatedPermission = await rolePermissionModel.findOneAndUpdate(
+                { role: mongoose.Types.ObjectId(role) },
+                { $set: { history: history, modules: updatedModules } },
+                { upsert: true, new: true }
+            );
+
+            return updatedPermission;
+        } catch (error) {
+            console.error("Error in addNew:", error);
+            throw error;
+        }
     }
+
+
+
+
+
+
     ,
     getRolePermissions: async (roleId) => {
         const rolePermission = await rolePermissionModel.findOneAndDelete({ role: roleId });
@@ -38,9 +113,9 @@ const rolePermissionServices = {
                     "modules._id": 0,
                     "modules.module._id": 0,
                     "modules.permission._id": 0,
-                    "modules.sub_Modules._id": 0,
-                    "modules.sub_Modules.subModule._id": 0,
-                    "modules.sub_Modules.permission._id": 0,
+                    "modules.subModules._id": 0,
+                    "modules.subModules.subModule._id": 0,
+                    "modules.subModules.permission._id": 0,
                 }
             )
             .populate({
@@ -73,7 +148,7 @@ const rolePermissionServices = {
                 },
             })
             .populate({
-                path: "modules.sub_Modules.subModule",
+                path: "modules.subModules.subModule",
                 select: {
                     _id: 0,
                     createdAt: 0,
@@ -85,7 +160,7 @@ const rolePermissionServices = {
                 },
             })
             .populate({
-                path: "modules.sub_Modules.permissions",
+                path: "modules.subModules.permissions",
                 select: {
                     _id: 0,
                     createdAt: 0,
@@ -111,8 +186,8 @@ const rolePermissionServices = {
                     "modules.module._id": 0,
                     "modules.permission._id": 0,
                     "modules.sub_Modules._id": 0,
-                    "modules.sub_Modules.subModule._id": 0,
-                    "modules.sub_Modules.permission._id": 0,
+                    "modules.subModules.subModule._id": 0,
+                    "modules.subModules.permission._id": 0,
                 }
             )
             .populate({
@@ -135,7 +210,7 @@ const rolePermissionServices = {
                 },
             })
             .populate({
-                path: "modules.sub_Modules.subModule",
+                path: "modules.subModules.subModule",
                 select: {
                     _id: 0,
                     createdAt: 0,
@@ -147,7 +222,7 @@ const rolePermissionServices = {
                 },
             })
             .populate({
-                path: "modules.sub_Modules.permissions",
+                path: "modules.subModules.permissions",
                 select: {
                     _id: 0,
                     createdAt: 0,

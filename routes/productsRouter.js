@@ -128,7 +128,7 @@ productsRouter.post(
             addons,
             isFeatured,
         } = req.body;
-        console.log(categoryId, subcategoryId);
+
         if (isDeal === true && (!dealExpire || !discount)) {
             return res.status(400).send({
                 msg: "Fields Missing",
