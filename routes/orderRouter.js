@@ -15,6 +15,7 @@ const zindigiWalletServices = require("../services/zindigiWalletServices");
 const zindigiWalletPayment = require("../utils/zindigiWalletPayment");
 const validateMobileNumber = require("../utils/validateMobileNumber");
 const { log } = require("winston");
+const couponPolicyServices = require("../services/couponPolicyServices");
 
 orderRouter.get(
     "/orderTracking",
@@ -355,6 +356,8 @@ orderRouter.post(
                     couponCode,
                     tax
                 );
+
+                const UseCoupon = await couponPolicyServices.useCoupon(couponCode, customer)
                 if (result) {
                     res
                         .status(200)
