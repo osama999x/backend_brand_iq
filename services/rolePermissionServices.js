@@ -113,9 +113,9 @@ const rolePermissionServices = {
                     "modules._id": 0,
                     "modules.module._id": 0,
                     "modules.permission._id": 0,
-                    "modules.sub_Modules._id": 0,
-                    "modules.sub_Modules.subModule._id": 0,
-                    "modules.sub_Modules.permission._id": 0,
+                    "modules.subModules._id": 0,
+                    "modules.subModules.subModule._id": 0,
+                    "modules.subModules.permission._id": 0,
                 }
             )
             .populate({
@@ -148,7 +148,7 @@ const rolePermissionServices = {
                 },
             })
             .populate({
-                path: "modules.sub_Modules.subModule",
+                path: "modules.subModules.subModule",
                 select: {
                     _id: 0,
                     createdAt: 0,
@@ -160,7 +160,7 @@ const rolePermissionServices = {
                 },
             })
             .populate({
-                path: "modules.sub_Modules.permissions",
+                path: "modules.subModules.permissions",
                 select: {
                     _id: 0,
                     createdAt: 0,
