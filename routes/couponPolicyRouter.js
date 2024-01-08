@@ -76,8 +76,8 @@ couponPolicyRouter.post(
         //     customerId
         // );
         // console.log(result);
-        const result = await couponPolicyServices.useCoupon(couponCode, customerId)
-        if (result) {
+        // const result = await couponPolicyServices.useCoupon(couponCode, customerId)
+        if (!isUseCoupon) {
             res.status(200).send({
                 msg: "Your Coupon Reedemed.",
                 data: result,

@@ -439,13 +439,13 @@ const productsServices = {
         // thumbnail = await uploadFile(thumbnail);
         //console.log("images", images);
 
-        var image = {};
+        var image = [];
         //Product have images
 
         if (images.length != 0) {
             imgArr = await Promise.all(images?.map(uploadFile));
             console.log(imgArr);
-            image = { image: imgArr }
+            image = [...imgArr]
             // var thumbnail = imgArr[0];
         }
         // let variants = [];
