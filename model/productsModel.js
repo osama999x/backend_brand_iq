@@ -45,7 +45,7 @@ const schema = new Schema(
         thumbnail: {
             type: String,
         },
-        images: [{ String }],
+        images: [String],
         vendor: {
             type: String,
             required: true,
