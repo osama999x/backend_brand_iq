@@ -68,7 +68,7 @@ const coupanPolicyServices = {
         return result;
     },
     inActive: async (couponCode) => {
-        const result = await couponPolicyModel.findOne({ couponCode: couponCode, isActive: true });
+        const result = await couponPolicyModel.findOne({ couponCode: couponCode, isActive: false });
         return result;
     },
     getOrderLimit: async (couponCode, orderPriceLimit) => {
@@ -112,12 +112,14 @@ const coupanPolicyServices = {
     },
 
     useCoupon: async (couponCode, customerId) => {
-        const newCouponStatus = new couponStatusModel({
-            customer: customerId,
+        const usingCoupon = await couponPolicyModel.findOneAndUpdate({ couponCode: couponCode }, { isActive: true }, { upsert: true })
+        let newCouponStatus = await couponStatusModel.findOneAndUpdate({
             couponCode: couponCode,
+            customer: mongoose.Types.ObjectId(customerId)
+        }, {
             isBuy: true,
-        });
-
+        }, { upsert: true });
+        await newCouponStatus.save();
         const savedCouponStatus = await newCouponStatus.save();
 
         const result = await savedCouponStatus.populate({ path: 'customer', model: 'Customer', select: "firstName lastName email" });
@@ -166,12 +168,23 @@ const coupanPolicyServices = {
         // }
         // }
     },
-    consumeCoupon: async (customerId, couponCode) => {
+    ValidCoupon: async (customerId, couponCode) => {
         let data = new couponStatusModel({
             couponCode: couponCode,
             customer: mongoose.Types.ObjectId(customerId),
-            isBuy: true,
         });
+        await data.save();
+        return data;
+        // const consumeCoupon = await data.save();
+        // return consumeCoupon;
+    },
+    consumeCoupon: async (customerId, couponCode) => {
+        let data = await couponStatusModel.findOneAndUpdate({
+            couponCode: couponCode,
+            customer: mongoose.Types.ObjectId(customerId)
+        }, {
+            isBuy: true,
+        }, { upsert: true });
         await data.save();
         // const consumeCoupon = await data.save();
         // return consumeCoupon;
