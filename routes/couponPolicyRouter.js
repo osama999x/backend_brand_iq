@@ -38,6 +38,7 @@ couponPolicyRouter.post(
                 msg: "Fields Missing.",
             });
         }
+
         const isCoupon = await couponPolicyServices.checkCoupon(couponCode);
         if (!isCoupon) {
             res.status(400).send({ msg: "Coupon doesn't Exist.", isCoupon: false });
@@ -76,8 +77,8 @@ couponPolicyRouter.post(
         //     customerId
         // );
         // console.log(result);
-        // const result = await couponPolicyServices.useCoupon(couponCode, customerId)
-        if (!isUseCoupon) {
+        const result = await couponPolicyServices.ValidCoupon(customerId, couponCode)
+        if (result) {
             res.status(200).send({
                 msg: "Your Coupon Reedemed.",
                 data: result,

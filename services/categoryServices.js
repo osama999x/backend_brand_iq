@@ -10,7 +10,7 @@ const categoryServices = {
     get: async () => {
         const list = await categoryModel
             .find({}, projection.projection)
-            .sort({ createdAt: -1 });
+            .sort({ name: 1 });
         return list;
     },
     getOne: async (_id) => {
