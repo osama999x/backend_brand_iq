@@ -437,7 +437,8 @@ orderRouter.get(
     '/hotSellingProducts',
     expressAsyncHandler(async (req, res, next) => {
         try {
-            const currentMonth = new Date().getMonth() + 1; // Months are zero-based, so add 1
+            const currentMonth = new Date().getMonth() + 1;
+            console.log("currentMonth", currentMonth);
 
             const result = await orderModel.aggregate([
                 {
@@ -449,40 +450,54 @@ orderRouter.get(
                         },
                     },
                 },
+
                 {
-                    $unwind: '$product',
+                    $unwind: {
+                        path: "$product",
+                        preserveNullAndEmptyArrays: true,
+                    },
                 },
                 {
                     $group: {
-                        _id: '$product.productId',
-                        count: { $sum: '$product.quantity' },
+                        _id: "$product.productId",
+                        count: {
+                            $sum: "$product.quantity",
+                        },
                     },
                 },
                 {
                     $lookup: {
-                        from: 'Product', // Assuming your Product model is named 'Product'
-                        localField: '_id',
-                        foreignField: '_id',
-                        as: 'productDetails',
+                        from: "products",
+                        localField: "_id",
+                        foreignField: "_id",
+                        as: "productDetails",
                     },
                 },
                 {
-                    $unwind: '$productDetails',
+                    $unwind: {
+                        path: "$productDetails",
+                        preserveNullAndEmptyArrays: true,
+                    },
                 },
                 {
                     $project: {
                         _id: 1,
-                        productName: '$productDetails.name',
+                        productName: "$productDetails.name",
                         count: 1,
                     },
                 },
                 {
-                    $sort: { count: -1 },
+                    $sort: {
+                        count: -1,
+                    },
                 },
                 {
                     $limit: 5,
                 },
             ]);
+            console.log("Start Date:", new Date(new Date().getFullYear(), currentMonth - 1, 1));
+            console.log("End Date:", new Date(new Date().getFullYear(), currentMonth, 1));
+
             console.log(result);
             if (result.length !== 0) {
                 res.status(200).json({

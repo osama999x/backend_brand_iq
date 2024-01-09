@@ -1089,7 +1089,7 @@ const orderServices = {
         } else {
             result = result.map(({ _id, order }) => ({
                 year: _id.year,
-                month: _id.month,
+                month: _id.month - 1,
                 status: _id.status,
                 totalDelivered: order,
             }));
