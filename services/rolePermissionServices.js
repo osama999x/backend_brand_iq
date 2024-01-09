@@ -31,7 +31,7 @@ const rolePermissionServices = {
                 path: 'modules.permissions',
                 model: 'Permission',
                 select: 'name',
-            });
+            }).sort({ role: 1 });
 
         return result;
 
