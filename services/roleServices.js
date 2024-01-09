@@ -5,7 +5,7 @@ const userModel = require("../model/userModel");
 
 const roleServices = {
     get: async () => {
-        const result = await roleModel.find({}, projection.projection).sort({ createdAt: -1 });
+        const result = await roleModel.find({}, projection.projection).sort({ name: 1 });
         return result;
     },
     getRoleByID: async (_id) => {

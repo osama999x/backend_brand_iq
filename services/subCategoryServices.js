@@ -14,7 +14,7 @@ const subCategoryServices = {
                 path: "category",
                 select: { _id: 1, name: 1 },
             })
-            .sort({ createdAt: -1 });
+            .sort({ name: 1 });
 
         return result;
     },
