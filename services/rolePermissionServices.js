@@ -62,6 +62,7 @@ const rolePermissionServices = {
                 model: 'Permission',
                 select: 'name',
             });
+
         return role_permission;
     },
     addNew: async (role, history, modules) => {
@@ -168,6 +169,9 @@ const rolePermissionServices = {
                     __v: 0,
                 },
             });
+        roleDetails.modules = roleDetails.modules.filter((item) => {
+            return item.permissions.length || item.subModules.length
+        })
         return roleDetails;
     },
     getRolePermission: async (roleId) => {

@@ -1149,7 +1149,7 @@ const orderServices = {
                     },
                 },
             ])
-            .sort({ _id: 1 });
+            .sort({ createdAt: 1 });
 
         var totalOrder = 0;
 
@@ -1167,7 +1167,7 @@ const orderServices = {
             });
         }
 
-        const statusList = ["Delivered", "Pending", "Returned"];
+        const statusList = ["Pending", "Delivered", "Returned"];
 
         // Add missing status with count 0
         for (const status of statusList) {
