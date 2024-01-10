@@ -263,7 +263,7 @@ const coupanPolicyServices = {
                     isPercentage,
                 },
                 {
-                    new: true,
+                    upsert: true,
                 }
             );
         } else {
@@ -271,7 +271,6 @@ const coupanPolicyServices = {
                 { _id },
                 {
                     couponCode,
-                    image,
                     expireDate,
                     orderPriceLimit,
                     couponValue,
@@ -279,7 +278,7 @@ const coupanPolicyServices = {
                     isPercentage,
                 },
                 {
-                    new: true,
+                    upsert: true,
                 }
             );
         }
