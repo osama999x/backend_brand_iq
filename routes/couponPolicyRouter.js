@@ -65,12 +65,12 @@ couponPolicyRouter.post(
             couponCode,
             customerId
         );
-        if (isUseCoupon) {
-            res
-                .status(400)
-                .send({ msg: "You have already Availed this Coupon.", isCoupon: false });
-            return;
-        }
+        // if (isUseCoupon) {
+        //     res
+        //         .status(400)
+        //         .send({ msg: "You have already Availed this Coupon.", isCoupon: false });
+        //     return;
+        // }
         // try {
         // const result = await couponPolicyServices.getCustomerCoupon(
         //     couponCode,

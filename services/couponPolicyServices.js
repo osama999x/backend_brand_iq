@@ -105,9 +105,10 @@ const coupanPolicyServices = {
     },
     isbuy: async (couponCode, customerId) => {
         const redeemed = await couponStatusModel.findOne(
-            { couponCode: couponCode, customer: customerId, isbuy: true },
+            { couponCode: couponCode, customer: customerId, isBuy: true }
 
         );
+        console.log("redeemed", redeemed);
         return redeemed;
     },
 
@@ -169,7 +170,7 @@ const coupanPolicyServices = {
         // }
     },
     ValidCoupon: async (customerId, couponCode) => {
-        let data = new couponStatusModel({
+        let data = couponStatusModel({
             couponCode: couponCode,
             customer: mongoose.Types.ObjectId(customerId),
         });
