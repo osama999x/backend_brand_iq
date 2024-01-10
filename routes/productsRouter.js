@@ -116,6 +116,7 @@ productsRouter.post(
             discount,
             variant,
             images,
+            isActive,
             vendor,
             isTaxable,
             taxHead,
@@ -148,6 +149,7 @@ productsRouter.post(
             discount,
             variant,
             images,
+            isActive,
             vendor,
             isTaxable,
             taxHead,
@@ -186,7 +188,9 @@ productsRouter.patch(
             discount,
             variant,
             thumbnail,
+            oldImages,
             images,
+            isActive,
             vendor,
             isTaxable,
             taxHead,
@@ -200,6 +204,9 @@ productsRouter.patch(
             newImages,
             isFeatured,
         } = req.body;
+
+
+
         let checkProduct = await productsModel.findById(
             { _id: productId },
             { isDeal: 1, isDiscount: 1 }
@@ -235,7 +242,9 @@ productsRouter.patch(
             discount,
             variant,
             thumbnail,
+            oldImages,
             images,
+            isActive,
             vendor,
             isTaxable,
             taxHead,

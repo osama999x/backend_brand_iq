@@ -424,6 +424,7 @@ const productsServices = {
         discount,
         variant,
         images,
+        isActive,
         vendor,
         isTaxable,
         taxHead,
@@ -587,6 +588,7 @@ const productsServices = {
             variant,
             thumbnail,
             images: image,
+            isActive,
             vendor,
             isTaxable,
             taxHead,
@@ -633,7 +635,9 @@ const productsServices = {
         discount,
         variant,
         thumbnail,
+        oldImages,
         images,
+        isActive,
         vendor,
         isTaxable,
         taxHead,
@@ -665,6 +669,8 @@ const productsServices = {
             thumbnail,
             vendor,
             isTaxable,
+            images: oldImages,
+            isActive,
             taxHead,
             taxType,
             isPercentage,
@@ -679,7 +685,7 @@ const productsServices = {
 
         if (images.length) {
             images = await Promise.all(images?.map(uploadFile));
-            updatedData.images = images
+            updatedData.images = [...images, ...updatedData.images]
             updatedData.thumbnail = images[0]
         }
 
