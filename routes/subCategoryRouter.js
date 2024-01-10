@@ -124,7 +124,8 @@ subCategoryRouter.patch(
 subCategoryRouter.delete(
     "/",
     expressAsyncHandler(async (req, res) => {
-        const { subcategoryId } = req.body;
+        const { subcategoryId } = req.query;
+
         const checkSubcategory = await productsServices.productsubCategory(
             subcategoryId
         );
