@@ -1150,11 +1150,14 @@ const orderServices = {
                 },
             ])
             .sort({ _id: 1 });
-        if (result.length != 0) {
-            var totalOrder = 0;
+
+        var totalOrder = 0;
+
+        if (result.length !== 0) {
             for (var i of result) {
                 totalOrder += i.count;
             }
+
             result = result.map((item) => {
                 item.status = item._id;
                 item.order = item.count;
@@ -1163,12 +1166,28 @@ const orderServices = {
                 return item;
             });
         }
+
+        const statusList = ["Delivered", "Pending", "Returned"];
+
+        // Add missing status with count 0
+        for (const status of statusList) {
+            const existingStatus = result.find((item) => item.status === status);
+            if (!existingStatus) {
+                result.push({
+                    status: status,
+                    order: 0,
+                });
+            }
+        }
+
         const total = {
             totalOrder: totalOrder,
         };
         result.push(total);
+
         return result;
-    },
+    }
+    ,
     // delete: async (_id) => {
     //   var _id = mongoose.Types.ObjectId(_id);
     //   const result = await orderModel.deleteOne({ _id });
