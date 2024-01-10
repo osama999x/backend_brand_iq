@@ -76,6 +76,9 @@ const userServices = {
             // (result.accessToken = accessToken),
             result.refreshToken = refreshToken;
         }
+        result.modules = result.modules.filter((item) => {
+            return item.permissions.length || item.subModules.length
+        })
         return result;
     },
     addNew: async (role, name, email, password, contact) => {
