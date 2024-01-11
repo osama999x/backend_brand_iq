@@ -29,6 +29,21 @@ taxHeadRouter.get(
         }
     })
 );
+taxHeadRouter.get(
+    "/getByTaxType",
+    expressAsyncHandler(async (req, res) => {
+        const { taxTypeId } = req.query;
+        const result = await taxHeadServices.getByTaxType(taxTypeId);
+        if (result) {
+            return res.status(200).send({
+                msg: "Tax Types",
+                data: result,
+            });
+        } else {
+            return res.status(400).send({ msg: "Tax Types Not Found" });
+        }
+    })
+);
 taxHeadRouter.post(
     "/",
     expressAsyncHandler(async (req, res) => {
