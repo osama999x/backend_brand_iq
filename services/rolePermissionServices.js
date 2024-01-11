@@ -170,7 +170,7 @@ const rolePermissionServices = {
                 },
             });
         if (roleDetails)
-            roleDetails.modules = result?.modules?.filter((item) => {
+            roleDetails.modules = roleDetails?.modules?.filter((item) => {
                 return item.permissions.length || item.subModules.length
             })
         return roleDetails;

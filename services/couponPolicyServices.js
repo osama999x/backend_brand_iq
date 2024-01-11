@@ -15,6 +15,7 @@ const sendEmailNotificationInfo = require("../utils/sendEmailNotficationInfo");
 const notificationServices = require("./notificationServices");
 const customerModel = require("../model/customerModel");
 const { test } = require("./productsServices");
+const moment = require('moment');
 const { text } = require("body-parser");
 // const productsImagesModel = require("../model/productsImagesModel");
 
@@ -90,19 +91,19 @@ const coupanPolicyServices = {
     },
 
     getValidCoupon: async (couponCode) => {
+        let nowTime = moment().format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+        console.log("nowTime", nowTime);
+
         const result = await couponPolicyModel.findOne({ couponCode: couponCode });
+        console.log("result.expireDate", moment(result.expireDate).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]'));
 
-        if (!result) {
-            throw new Error('Coupon not found.');
-        }
-
-        // Checking the date and time
-        let nowTime = new Date().getTime();
-
-        if (result.expireDate.getTime() < nowTime) {
+        if (moment(nowTime).isBefore(moment(result.expireDate))) {
+            return result;
+        } else {
             throw new Error('The coupon has expired.');
         }
-    },
+    }
+    ,
     isbuy: async (couponCode, customerId) => {
         const redeemed = await couponStatusModel.findOne(
             { couponCode: couponCode, customer: customerId, isBuy: true }
