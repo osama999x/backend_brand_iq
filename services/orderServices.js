@@ -309,7 +309,13 @@ const orderServices = {
                     thumbnail: "$product_info.thumbnail",
                 },
             },
+            {
+                $sort: {
+                    placedOn: -1 // Sort in descending order based on the placedOn field
+                },
+            }
         ]);
+
         //   .find(
         //     {
         //       customer: { $in: customerId },
