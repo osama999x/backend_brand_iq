@@ -78,6 +78,7 @@ const promotionCampaignServices = {
             },
             // { $unwind: "$product" },
             {
+
                 $project: {
                     _id: 1,
                     discount: 1,

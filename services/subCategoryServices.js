@@ -39,7 +39,10 @@ const subCategoryServices = {
         if (subcategory) {
             let products = await productModel.aggregate([
                 {
-                    $match: { subcategory: new mongoose.Types.ObjectId(subcategoryId) },
+                    $match: {
+                        subcategory: new mongoose.Types.ObjectId(subcategoryId),
+                        isActive: true
+                    }
                 },
                 {
                     $lookup: {
@@ -128,7 +131,7 @@ const subCategoryServices = {
     },
     ProductsBySubCategory: async (subcategoryId) => {
         const subcateogry = await productModel.find(
-            { subcategory: { $in: subcategoryId } },
+            { isActive: true, subcategory: { $in: subcategoryId } },
             { _id: 1, name: 1 }
         );
         return subcateogry;
