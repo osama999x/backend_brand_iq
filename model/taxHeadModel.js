@@ -11,7 +11,7 @@ const schema = new Schema(
         taxHead: {
             type: String,
             required: true,
-            unique: true,
+
         },
         description: {
             type: String,

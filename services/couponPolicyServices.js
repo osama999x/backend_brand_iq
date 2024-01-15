@@ -109,7 +109,7 @@ const coupanPolicyServices = {
             { couponCode: couponCode, customer: customerId, isBuy: true }
 
         );
-        console.log("redeemed", redeemed);
+        // console.log("redeemed", redeemed);
         return redeemed;
     },
 
@@ -181,16 +181,24 @@ const coupanPolicyServices = {
         // return consumeCoupon;
     },
     consumeCoupon: async (customerId, couponCode) => {
-        let data = await couponStatusModel.findOneAndUpdate({
-            couponCode: couponCode,
-            customer: mongoose.Types.ObjectId(customerId)
-        }, {
-            isBuy: true,
-        }, { upsert: true });
-        await data.save();
-        // const consumeCoupon = await data.save();
-        // return consumeCoupon;
-    },
+        let data = await couponStatusModel.findOneAndUpdate(
+            {
+                couponCode: couponCode,
+                customer: mongoose.Types.ObjectId(customerId)
+            },
+            {
+                isBuy: true,
+            },
+            { upsert: true }
+        );
+
+        if (data) {
+            await data.save();
+        } else {
+            console.error('Coupon not found or upsert failed');
+        }
+    }
+    ,
     getOne: async (_id) => {
         var _id = mongoose.Types.ObjectId(_id);
         const result = await couponPolicyModel.findById({ _id });

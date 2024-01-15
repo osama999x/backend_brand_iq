@@ -48,6 +48,7 @@ taxHeadRouter.post(
     "/",
     expressAsyncHandler(async (req, res) => {
         const { taxTypeId, taxHead, description } = req.body;
+        console.log("req.body", req.body)
         if (!taxTypeId || !taxHead || !description) {
             return res.status(400).send({ msg: "Missing Fields" });
         }

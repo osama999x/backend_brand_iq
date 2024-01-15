@@ -48,7 +48,6 @@ const schema = new Schema(
         images: [String],
         vendor: {
             type: String,
-            required: true,
             default: "",
         },
         isActive: {
