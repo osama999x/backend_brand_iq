@@ -29,13 +29,13 @@ const taxHeadServices = {
         //hello
         return resutl;
     },
-    add: async (taxType, taxHead, description) => {
-        // const dup = await taxHeadModel.findOne({ taxType: taxType });
-        //     if (dup) {
-        //         throw new Error(`Tax Type ${taxType} already exists`);
-        //     }
-        taxHead = new taxHeadModel({ taxType, taxHead, description });
-        const result = await taxHead.save();
+    add: async (taxTypeId, taxHead, description) => {
+        const dup = await taxHeadModel.findOne({ taxType: taxTypeId });
+        if (dup) {
+            throw new Error(`A Tax Amount Against Provided TaxType already exists`);
+        }
+        const NewtaxHead = new taxHeadModel({ taxType: taxTypeId, taxHead: taxHead, description: description });
+        const result = await NewtaxHead.save();
         return result;
     },
 
