@@ -249,7 +249,7 @@ orderRouter.post(
         const isValidContact = validateMobileNumber(contact);
         if (!isValidContact) {
             return res.status(400).send({
-                msg: "Please enter valid contact number 03xxxxxxxxx!",
+                msg: "Please enter valid contact number ",
             });
         }
         try {
@@ -388,9 +388,10 @@ orderRouter.post(
 orderRouter.get(
     "/orderReport",
     expressAsyncHandler(async (req, res) => {
-        //const { month } = req.body;
-        const result = await orderServices.orderReport();
-        if (result.length != 0) {
+        const { startDate, endDate } = req.query;
+        const result = await orderServices.orderReport(startDate, endDate);
+
+        if (result.length !== 0) {
             return res.status(200).send({
                 msg: "Orders Details",
                 data: result,
@@ -400,6 +401,7 @@ orderRouter.get(
         }
     })
 );
+
 orderRouter.get(
     "/orderReportByChannel",
     expressAsyncHandler(async (req, res) => {

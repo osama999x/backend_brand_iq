@@ -35,7 +35,7 @@ const moduleServices = {
                     from: "permissions",
                     localField: "sub_modules.permissions",
                     foreignField: "_id",
-                    as: "result",
+                    as: "submodule_permissions",
                 },
             },
             {
@@ -44,7 +44,26 @@ const moduleServices = {
                     label: 1,
                     route: 1,
                     isSubModule: 1,
-                    permissions: 1,
+                    permissions: {
+                        $cond: {
+                            if: "$isSubModule",
+                            then: "$submodule_permissions",
+                            else: {
+                                $map: {
+                                    input: ["view", "create", "manage"], // Define the order of permissions
+                                    as: "perm",
+                                    in: {
+                                        $arrayElemAt: [
+                                            "$permissions",
+                                            {
+                                                $indexOfArray: ["$permissions.name", "$$perm"],
+                                            },
+                                        ],
+                                    },
+                                },
+                            },
+                        },
+                    },
                     sub_modules: {
                         $map: {
                             input: "$sub_modules",
@@ -54,16 +73,16 @@ const moduleServices = {
                                 label: "$$submodule.label",
                                 route: "$$submodule.route",
                                 isSubModule: "$$submodule.isSubModule",
-                                permissions: "$result",
-                                result: "$$submodule.result",
+                                permissions: "$submodule_permissions",
                             },
                         },
                     },
                 },
             },
-        ]).sort({ label: -1 });
+        ]);
         return modules;
-    },
+    }
+    ,
     getById: async (moduleId) => {
         const module = await moduleModel.aggregate([
             {
