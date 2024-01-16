@@ -171,7 +171,7 @@ const coupanPolicyServices = {
         // }
     },
     ValidCoupon: async (customerId, couponCode) => {
-        let data = couponStatusModel({
+        let data = new couponStatusModel({
             couponCode: couponCode,
             customer: mongoose.Types.ObjectId(customerId),
         });
