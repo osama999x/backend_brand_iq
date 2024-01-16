@@ -1066,10 +1066,22 @@ const orderServices = {
         );
         return result;
     },
-    orderReport: async () => {
+    orderReport: async (startDate, endDate) => {
+        let matchQuery = {
+            status: { $in: ["Delivered", "Returned"] }, // Include both "Delivered" and "Returned" statuses
+        };
+
+        // If start and end dates are provided, add them to the match query
+        if (startDate && endDate) {
+            matchQuery.placedOn = {
+                $gte: new Date(startDate),
+                $lt: new Date(endDate),
+            };
+        }
+
         let result = await orderModel.aggregate([
             {
-                $match: { status: "Delivered" },
+                $match: matchQuery,
             },
             {
                 $group: {
@@ -1090,6 +1102,11 @@ const orderServices = {
                     month: new Date().getMonth(),
                     status: "Delivered",
                     totalDelivered: 0,
+                }, {
+                    year: new Date().getFullYear(),
+                    month: new Date().getMonth(),
+                    status: "Returned",
+                    totalReturned: 0,
                 },
             ];
         } else {
@@ -1097,7 +1114,7 @@ const orderServices = {
                 year: _id.year,
                 month: _id.month - 1,
                 status: _id.status,
-                totalDelivered: order,
+                total: order,
             }));
         }
 
@@ -1106,7 +1123,8 @@ const orderServices = {
         });
 
         return result;
-    },
+    }
+    ,
     orderReportByChannel: async () => {
         let result = await orderModel.aggregate([
             {
