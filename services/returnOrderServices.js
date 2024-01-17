@@ -136,7 +136,8 @@ const returnOrderServices = {
     dispatchReturnOrder: async (status, orderId, message) => {
         var time = new Date(new Date().toLocaleDateString());
         // let { _id: statusId } = await orderStatusServices.orderStatus("Delivered");
-        var order = await orderModel.findOne({ _id: { $in: orderId } });
+        var order = await orderModel.findOne({ _id: orderId });
+        console.log(order)
         if (!order) {
             throw new Error("Order Not Found");
         }
@@ -147,31 +148,40 @@ const returnOrderServices = {
             product,
             orderId: OrderId,
         } = order;
+
+        console.log('this is order somethig', order)
+        console.log("Product Log", product)
         if (status === "Returned" && oldOrderStatus === "Returned") {
+
             let returnOrder = await returnOrderModel.findOne(
                 { orderId: orderId },
                 { isOrderReturn: 1, returnProduct: 1 }
             );
             isOrderReturn = returnOrder.isOrderReturn;
             returnProduct = returnOrder.returnProduct;
+
             let orderPoint = await pointModel.findOne(
                 { orderId: OrderId },
                 { points: 1 }
             );
             if (orderPoint) {
-                orderPoint = orderPoint.points;
+                orderPoint = orderPoint?.points;
             }
+
+
+
             //if return order reject or canceled then update inventory status
             if (isOrderReturn === true) {
                 try {
                     //update customer points
+                    // const customerIds = order.map(product => product.productID);
                     let user = await customerModel.findOneAndUpdate(
-                        { _id: customerId },
+                        { _id: order.customer },
                         { $inc: { points: -orderPoint } }
                     );
                     let points = user.points - orderPoint;
                     //update customer membership in case of rturned order order
-                    await pointServices.assaignPointMembership(customerId, points);
+                    await pointServices.assaignPointMembership(order.customer, points);
                     email = user.email;
                     let subject = sendEmailNotificationInfo.orderResponse.title;
                     let text = `your order ${OrderId} has been returned successfully`;
@@ -187,8 +197,8 @@ const returnOrderServices = {
                     //send mail to user
                     await sendNotificationEmail(subject, text, email);
                     //update product inventory
-                    await productLogServices.productLog(product, "Returned", customerId);
-                    await productsServices.updateLogDealProduct(product, customerId);
+                    await productLogServices.productLog(product, "Returned", order.customer);
+                    await productsServices.updateLogDealProduct(order.customer, product);
                     await returnOrderModel.deleteOne({ orderId: orderId });
                     console.log(orderId);
                     await orderModel.findOneAndUpdate(
@@ -222,23 +232,23 @@ const returnOrderServices = {
                         );
                     }
                     let user = await customerModel.findOneAndUpdate(
-                        { _id: customerId },
+                        { _id: order.customer },
                         { $inc: { points: -orderPoint } }
                     );
                     let newPoint = await customerModel.findOneAndUpdate(
-                        { _id: customerId },
+                        { _id: order.customer },
                         { $inc: { points: +point } }
                     );
                     let points = newPoint.points + point;
                     //update customer membership in case of rturned order order
-                    await pointServices.assaignPointMembership(customerId, points);
+                    await pointServices.assaignPointMembership(order.customer, points);
                     email = user.email;
                     let subject = sendEmailNotificationInfo.orderResponse.title;
                     let text = `your order ${OrderId} return product approved successfully`;
                     await sendNotificationEmail(subject, text, email);
                     //return order log status by admin
                     const returnOrderLog = new returnOrderStatusLogModel({
-                        orderStatus: mongoose.Types.ObjectId(statusId),
+                        orderStatus: mongoose.Types.ObjectId(status),
                         orderId,
                         time,
                     });
@@ -253,7 +263,7 @@ const returnOrderServices = {
                     await data.save();
                     await productsServices.updateLogDealProduct(
                         returnProduct,
-                        customerId
+                        order.customer
                     );
                     await returnOrderModel.deleteOne({ orderId: orderId });
                     return true;

@@ -53,16 +53,20 @@ const productsServices = {
         quantity
     ) => {
         const filter = { _id: productId, "variant.sku": sku };
+
         const update = {
             $set: {
-                "variant.$.quantity": quantity,
                 "variant.$.actualPrice": actualPrice,
             },
         };
 
+
         if (discountedPrice) {
             update.$set["variant.$.discountedPrice"] = discountedPrice;
             update.$set["isDiscount"] = true
+        }
+        if (quantity) {
+            update.$set["variant.$.quantity"] = quantity
         }
 
         try {
@@ -747,17 +751,26 @@ const productsServices = {
             }
         }
     },
-    updateLogDealProduct: async (product, customerId) => {
-        let productIdArr = [];
-        for (var i of product) {
-            productIdArr.push(i.productId);
+    updateLogDealProduct: async (customerId, product) => {
+        const updatedDeals = [];
+
+        for (const productItem of product) {
+            const productId = productItem.productId;
+
+            // Use updateOne to update a single document
+            const deal = await dealBuyerLogModel.updateOne(
+                { customer: customerId, product: productId },
+                // Your update operation goes here
+            );
+
+            updatedDeals.push(deal);
         }
-        const deal = await dealBuyerLogModel.updateMany({
-            customer: customerId,
-            product: productIdArr,
-        });
-        return deal;
-    },
+
+        return updatedDeals;
+    }
+
+
+    ,
     test: async () => {
         let data = await productsModel.find({});
         return data;
