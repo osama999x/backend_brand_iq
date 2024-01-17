@@ -3,7 +3,9 @@ const expressAsyncHandler = require("express-async-handler");
 const exchangeOrderModel = require("../model/returnOrderModel");
 const returnOrderServices = require("../services/returnOrderServices");
 const orderModel = require("../model/orderModel");
+const { Stats } = require("fs");
 const returnOrderRouter = express.Router();
+
 returnOrderRouter.post(
     "/",
     expressAsyncHandler(async (req, res) => {
@@ -92,7 +94,7 @@ returnOrderRouter.post(
     "/dispatchReturnOrder",
     expressAsyncHandler(async (req, res) => {
         const { status, orderId, message } = req.body;
-        console.log("Order ID", orderId);
+        console.log("Order ID", orderId, "Status", status);
         const result = await returnOrderServices.dispatchReturnOrder(
             status,
             orderId,
