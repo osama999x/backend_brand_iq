@@ -26,7 +26,6 @@ const subCategoryServices = {
         return list;
     },
     //sub
-
     getProductsBySubCategory: async (subcategoryId) => {
         let today = new Date(new Date().toLocaleDateString());
         console.log(today);
@@ -128,7 +127,8 @@ const subCategoryServices = {
             subcategory.products = products;
         }
         return subcategory;
-    },
+    }
+    ,
     ProductsBySubCategory: async (subcategoryId) => {
         const subcateogry = await productModel.find(
             { isActive: true, subcategory: { $in: subcategoryId } },

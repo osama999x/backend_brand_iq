@@ -124,7 +124,7 @@ promotionCampaignRouter.post(
                 ],
             });
             if (checkProduct) {
-                return res.status(400).send({ msg: "Product already discounted" });
+                return res.status(400).send({ msg: "Product Already Discounted" });
             }
         }
         const result = await promotionCampaignServices.addPromotion(
