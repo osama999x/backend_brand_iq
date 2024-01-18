@@ -24,7 +24,7 @@ subCategoryRouter.get(
             subCategoryId
         );
         if (result) {
-            res.status(200).send({ msg: "Products By Subcategory", data: result });
+            res.status(200).send({ msg: "Products By Subcategory", result });
         } else {
             res.status(400).send({ msg: "Not found" });
         }

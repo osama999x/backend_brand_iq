@@ -73,7 +73,7 @@ const productsServices = {
             const options = { new: true };
             const updateProduct = await productsModel.findOneAndUpdate(filter, update, options);
 
-            if (updateProduct) {
+            if (updateProduct && discountedPrice !== null) {
                 const data = new ProductQuantityLogModel({
                     product: productId,
                     sku,
@@ -83,6 +83,7 @@ const productsServices = {
                 });
                 await data.save();
             }
+
 
             return updateProduct;
         } catch (error) {

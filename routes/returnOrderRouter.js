@@ -61,7 +61,7 @@ returnOrderRouter.post(
             }
         } else {
             return res.status(400).send({
-                msg: "Order return request applicable after delivered!",
+                msg: "Order return request is Not Applicable",
             });
         }
     })
