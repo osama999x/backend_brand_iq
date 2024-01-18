@@ -1,5 +1,6 @@
 const express = require("express");
 const expressAsyncHandler = require("express-async-handler");
+const mongoose = require("mongoose");
 const customerModel = require("../model/customerModel");
 const { findById } = require("../model/dealBuyerLogModel");
 const orderServices = require("../services/orderServices");
@@ -7,13 +8,14 @@ const systemNotificationServices = require("../services/systemNotificationServic
 const notificationInfo = require("../utils/notificationInfo");
 const dealProductModel = require("../model/dealsProductModel");
 const orderRouter = express.Router();
-const mongoose = require("mongoose");
 const orderModel = require("../model/orderModel");
 const convertDate = require("../utils/convertDate");
 const paymentHistoryService = require("../services/paymentHistoryServices");
 const zindigiWalletServices = require("../services/zindigiWalletServices");
 const zindigiWalletPayment = require("../utils/zindigiWalletPayment");
 const validateMobileNumber = require("../utils/validateMobileNumber");
+const { log } = require("winston");
+const couponPolicyServices = require("../services/couponPolicyServices");
 
 orderRouter.get(
     "/orderTracking",
@@ -95,7 +97,7 @@ orderRouter.post(
         );
         if (result) {
             return res.status(200).send({
-                msg: "Orders delivered Successfully ",
+                msg: "Orders Delivered Successfully ",
             });
         } if (!result) {
             return res.status(400).send({ msg: "Failed!" });
@@ -208,6 +210,7 @@ orderRouter.post(
     "/checkProductAvailbilty",
     expressAsyncHandler(async (req, res) => {
         const { customer, product } = req.body;
+        console.log(product)
         if (!customer || product.length === 0) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
@@ -215,6 +218,7 @@ orderRouter.post(
             const result = await orderServices.checkDealProduct(customer, product);
             return res.status(200).send({ validate: true });
         } catch (e) {
+            console.log(e.message)
             return res.status(400).send(e.message);
         }
     })
@@ -245,7 +249,7 @@ orderRouter.post(
         const isValidContact = validateMobileNumber(contact);
         if (!isValidContact) {
             return res.status(400).send({
-                msg: "Please enter valid contact number 03xxxxxxxxx!",
+                msg: "Please enter valid contact number ",
             });
         }
         try {
@@ -311,7 +315,7 @@ orderRouter.post(
                                 customerFcm.fcmToken
                             );
                         }
-                        console.log("orderId", orderResult._id);
+                        console.log("orderId///////////////////////////////////////////////", orderResult._id);
                         const history = await paymentHistoryService.new(
                             customer,
                             orderResult._id,
@@ -352,6 +356,8 @@ orderRouter.post(
                     couponCode,
                     tax
                 );
+
+                const UseCoupon = await couponPolicyServices.useCoupon(couponCode, customer)
                 if (result) {
                     res
                         .status(200)
@@ -382,9 +388,10 @@ orderRouter.post(
 orderRouter.get(
     "/orderReport",
     expressAsyncHandler(async (req, res) => {
-        //const { month } = req.body;
-        const result = await orderServices.orderReport();
-        if (result.length != 0) {
+        const { startDate, endDate } = req.query;
+        const result = await orderServices.orderReport(startDate, endDate);
+
+        if (result.length !== 0) {
             return res.status(200).send({
                 msg: "Orders Details",
                 data: result,
@@ -394,6 +401,7 @@ orderRouter.get(
         }
     })
 );
+
 orderRouter.get(
     "/orderReportByChannel",
     expressAsyncHandler(async (req, res) => {
@@ -429,9 +437,10 @@ orderRouter.get(
 //ok
 orderRouter.get(
     '/hotSellingProducts',
-    expressAsyncHandler(async (req, resp) => {
+    expressAsyncHandler(async (req, res, next) => {
         try {
-            const currentMonth = new Date().getMonth() + 1; // Months are zero-based, so add 1
+            const currentMonth = new Date().getMonth() + 1;
+            console.log("currentMonth", currentMonth);
 
             const result = await orderModel.aggregate([
                 {
@@ -443,60 +452,73 @@ orderRouter.get(
                         },
                     },
                 },
+
                 {
-                    $unwind: '$product',
+                    $unwind: {
+                        path: "$product",
+                        preserveNullAndEmptyArrays: true,
+                    },
                 },
                 {
                     $group: {
-                        _id: '$product.productId',
-                        count: { $sum: '$product.quantity' },
+                        _id: "$product.productId",
+                        count: {
+                            $sum: "$product.quantity",
+                        },
                     },
                 },
                 {
                     $lookup: {
-                        from: 'products', // Assuming your Product model is named 'Product'
-                        localField: '_id',
-                        foreignField: '_id',
-                        as: 'productDetails',
+                        from: "products",
+                        localField: "_id",
+                        foreignField: "_id",
+                        as: "productDetails",
                     },
                 },
                 {
-                    $unwind: '$productDetails',
+                    $unwind: {
+                        path: "$productDetails",
+                        preserveNullAndEmptyArrays: true,
+                    },
                 },
                 {
                     $project: {
                         _id: 1,
-                        productName: '$productDetails.name',
+                        productName: "$productDetails.name",
                         count: 1,
                     },
                 },
                 {
-                    $sort: { count: -1 },
+                    $sort: {
+                        count: -1,
+                    },
                 },
-                // {
-                //     $limit: 5,
-                // },
+                {
+                    $limit: 5,
+                },
             ]);
+            console.log("Start Date:", new Date(new Date().getFullYear(), currentMonth - 1, 1));
+            console.log("End Date:", new Date(new Date().getFullYear(), currentMonth, 1));
 
+            console.log(result);
             if (result.length !== 0) {
-                resp.status(200).send({
-                    msg: 'Hot Selling Products',
+                res.status(200).json({
+                    success: true,
+                    message: 'Hot Selling Products',
                     data: result,
                 });
             } else {
-                resp.status(400).send({
-                    msg: 'No Hot Selling Products Found',
+                res.status(404).json({
+                    success: false,
+                    message: 'No Hot Selling Products Found',
                 });
             }
         } catch (error) {
             console.error(error);
-            resp.status(500).send({
-                msg: 'Internal Server Error',
-            });
+            next(error);
         }
     })
 );
-
 
 //End
 

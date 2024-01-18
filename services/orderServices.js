@@ -309,7 +309,13 @@ const orderServices = {
                     thumbnail: "$product_info.thumbnail",
                 },
             },
+            {
+                $sort: {
+                    placedOn: -1 // Sort in descending order based on the placedOn field
+                },
+            }
         ]);
+
         //   .find(
         //     {
         //       customer: { $in: customerId },
@@ -683,7 +689,8 @@ const orderServices = {
                     isDiscount: 1,
                 }
             );
-            console.log(Product);
+
+            // console.log(Product);
             //check product availbility
             if (!Product || !Product.variant.length)
                 throw { message: { msg: `Product doesn't exist` } };
@@ -692,6 +699,7 @@ const orderServices = {
                 throw { message: { msg: `${Product.name} not enough quantity!` } };
             if (Product.isDeal) {
                 //check deal product all possible valdities
+
                 if (Product.dealExpire >= currentDate) {
                     if (price !== Product.variant[0].actualPrice - Product.discount)
                         throw {
@@ -716,7 +724,9 @@ const orderServices = {
                         },
                     };
                 }
-            } else if (Product.isDiscount) {
+            }
+            else if (Product.isDiscount) {
+                console.log({ price, discountedPrice: Product.variant[0].discountedPrice })
                 //check discounted product
                 if (price !== Product.variant[0].discountedPrice)
                     throw {
@@ -724,7 +734,8 @@ const orderServices = {
                             msg: `${Product.name} price has been changed, update the cart!`,
                         },
                     };
-            } else {
+            }
+            else {
                 const checkPromotion = await promotionModel.findOne({
                     product: { $in: productId },
                     expireDate: { $gte: currentDate },
@@ -1055,10 +1066,22 @@ const orderServices = {
         );
         return result;
     },
-    orderReport: async () => {
+    orderReport: async (startDate, endDate) => {
+        let matchQuery = {
+            status: { $in: ["Delivered", "Returned"] },
+        };
+
+        // If start and end dates are provided, add them to the match query
+        if (startDate && endDate) {
+            matchQuery.placedOn = {
+                $gte: new Date(startDate),
+                $lt: new Date(endDate),
+            };
+        }
+
         let result = await orderModel.aggregate([
             {
-                $match: { status: "Delivered" },
+                $match: matchQuery,
             },
             {
                 $group: {
@@ -1068,6 +1091,14 @@ const orderServices = {
                         status: "$status",
                     },
                     order: { $sum: 1 },
+                },
+            },
+            {
+                $project: {
+                    year: "$_id.year",
+                    month: "$_id.month",
+                    status: "$_id.status",
+                    order: 1,
                 },
             },
         ]);
@@ -1080,22 +1111,30 @@ const orderServices = {
                     status: "Delivered",
                     totalDelivered: 0,
                 },
+                {
+                    year: new Date().getFullYear(),
+                    month: new Date().getMonth(),
+                    status: "Returned",
+                    totalReturned: 0,
+                },
             ];
         } else {
-            result = result.map(({ _id, order }) => ({
-                year: _id.year,
-                month: _id.month,
-                status: _id.status,
-                totalDelivered: order,
+            result = result.map(({ year, month, status, order }) => ({
+                year,
+                month: month - 1,
+                status,
+                total: order,
             }));
         }
 
         result.push({
-            totalOrder: await orderModel.countDocuments(),
+            totalOrder: await orderModel.countDocuments(matchQuery),
         });
 
         return result;
-    },
+    }
+
+    ,
     orderReportByChannel: async () => {
         let result = await orderModel.aggregate([
             {
@@ -1144,12 +1183,15 @@ const orderServices = {
                     },
                 },
             ])
-            .sort({ _id: 1 });
-        if (result.length != 0) {
-            var totalOrder = 0;
+            .sort({ createdAt: 1 });
+
+        var totalOrder = 0;
+
+        if (result.length !== 0) {
             for (var i of result) {
                 totalOrder += i.count;
             }
+
             result = result.map((item) => {
                 item.status = item._id;
                 item.order = item.count;
@@ -1158,12 +1200,28 @@ const orderServices = {
                 return item;
             });
         }
+
+        const statusList = ["Pending", "Delivered", "Returned"];
+
+        // Add missing status with count 0
+        for (const status of statusList) {
+            const existingStatus = result.find((item) => item.status === status);
+            if (!existingStatus) {
+                result.push({
+                    status: status,
+                    order: 0,
+                });
+            }
+        }
+
         const total = {
             totalOrder: totalOrder,
         };
         result.push(total);
+
         return result;
-    },
+    }
+    ,
     // delete: async (_id) => {
     //   var _id = mongoose.Types.ObjectId(_id);
     //   const result = await orderModel.deleteOne({ _id });

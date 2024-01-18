@@ -86,6 +86,7 @@ userRouter.post(
             if (validatePassword) {
                 res.status(200).send({
                     msg: "Logged in Successfully",
+                    isLogin: true,
                     data: user,
                 });
             } else {

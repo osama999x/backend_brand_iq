@@ -48,7 +48,7 @@ const userServices = {
     login: async (email) => {
         const result = await userModel.findOne(
             { email: email },
-            { createdAt: 0, updatedAt: 0, __v: 0 }
+            { createdAt: 0, updatedAt: 0, __v: 0, isLogin: 0 }
         ).lean();
         if (result) {
             const role_permission = await rolePermissionServices.getRolePermission(
@@ -76,6 +76,10 @@ const userServices = {
             // (result.accessToken = accessToken),
             result.refreshToken = refreshToken;
         }
+        if (result)
+            result.modules = result?.modules?.filter((item) => {
+                return item.permissions.length || item.subModules.length
+            })
         return result;
     },
     addNew: async (role, name, email, password, contact) => {

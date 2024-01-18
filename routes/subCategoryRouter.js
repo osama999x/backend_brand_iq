@@ -24,7 +24,7 @@ subCategoryRouter.get(
             subCategoryId
         );
         if (result) {
-            res.status(200).send({ msg: "Products By Subcategory", data: result });
+            res.status(200).send({ msg: "Products By Subcategory", result });
         } else {
             res.status(400).send({ msg: "Not found" });
         }
@@ -98,7 +98,7 @@ subCategoryRouter.post(
 subCategoryRouter.patch(
     "/",
     expressAsyncHandler(async (req, res) => {
-        const { subcategoryId, categoryId, name, icon, description, isFeatured } =
+        const { subcategoryId, categoryId, name, icon, thumbnail, description, isFeatured } =
             req.body;
         // if (!subcategoryId || !name || !icon || !description || !categoryId) {
         //   return res.status(400).send({ msg: "Fields Missing" });
@@ -108,6 +108,7 @@ subCategoryRouter.patch(
             categoryId,
             name,
             icon,
+            thumbnail,
             description,
             isFeatured
         );
@@ -123,7 +124,8 @@ subCategoryRouter.patch(
 subCategoryRouter.delete(
     "/",
     expressAsyncHandler(async (req, res) => {
-        const { subcategoryId } = req.body;
+        const { subcategoryId } = req.query;
+
         const checkSubcategory = await productsServices.productsubCategory(
             subcategoryId
         );

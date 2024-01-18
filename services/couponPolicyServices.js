@@ -15,6 +15,7 @@ const sendEmailNotificationInfo = require("../utils/sendEmailNotficationInfo");
 const notificationServices = require("./notificationServices");
 const customerModel = require("../model/customerModel");
 const { test } = require("./productsServices");
+const moment = require('moment');
 const { text } = require("body-parser");
 // const productsImagesModel = require("../model/productsImagesModel");
 
@@ -63,8 +64,12 @@ const coupanPolicyServices = {
         }
         return checkCustomer;
     },
-    getOneCoupon: async (couponCode) => {
-        const result = await couponPolicyModel.findOne({ couponCode: couponCode, isActive: true });
+    checkCoupon: async (couponCode) => {
+        const result = await couponPolicyModel.findOne({ couponCode: couponCode });
+        return result;
+    },
+    inActive: async (couponCode) => {
+        const result = await couponPolicyModel.findOne({ couponCode: couponCode, isActive: false });
         return result;
     },
     getOrderLimit: async (couponCode, orderPriceLimit) => {
@@ -86,34 +91,37 @@ const coupanPolicyServices = {
     },
 
     getValidCoupon: async (couponCode) => {
+        let nowTime = moment().format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+        console.log("nowTime", nowTime);
+
         const result = await couponPolicyModel.findOne({ couponCode: couponCode });
+        console.log("result.expireDate", moment(result.expireDate).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]'));
 
-        if (!result) {
-            throw new Error('Coupon not found.');
-        }
-
-        // Checking the date and time
-        let nowTime = new Date().getTime();
-
-        if (result.expireDate.getTime() < nowTime) {
+        if (moment(nowTime).isBefore(moment(result.expireDate))) {
+            return result;
+        } else {
             throw new Error('The coupon has expired.');
         }
-    },
+    }
+    ,
     isbuy: async (couponCode, customerId) => {
         const redeemed = await couponStatusModel.findOne(
-            { couponCode: couponCode, customer: customerId, isbuy: true },
+            { couponCode: couponCode, customer: customerId, isBuy: true }
 
         );
+        // console.log("redeemed", redeemed);
         return redeemed;
     },
 
     useCoupon: async (couponCode, customerId) => {
-        const newCouponStatus = new couponStatusModel({
-            customer: customerId,
+        const usingCoupon = await couponPolicyModel.findOneAndUpdate({ couponCode: couponCode }, { isActive: true }, { upsert: true })
+        let newCouponStatus = await couponStatusModel.findOneAndUpdate({
             couponCode: couponCode,
+            customer: mongoose.Types.ObjectId(customerId)
+        }, {
             isBuy: true,
-        });
-
+        }, { upsert: true });
+        await newCouponStatus.save();
         const savedCouponStatus = await newCouponStatus.save();
 
         const result = await savedCouponStatus.populate({ path: 'customer', model: 'Customer', select: "firstName lastName email" });
@@ -162,16 +170,35 @@ const coupanPolicyServices = {
         // }
         // }
     },
-    consumeCoupon: async (customerId, couponCode) => {
+    ValidCoupon: async (customerId, couponCode) => {
         let data = new couponStatusModel({
             couponCode: couponCode,
             customer: mongoose.Types.ObjectId(customerId),
-            isBuy: true,
         });
         await data.save();
+        return data;
         // const consumeCoupon = await data.save();
         // return consumeCoupon;
     },
+    consumeCoupon: async (customerId, couponCode) => {
+        let data = await couponStatusModel.findOneAndUpdate(
+            {
+                couponCode: couponCode,
+                customer: mongoose.Types.ObjectId(customerId)
+            },
+            {
+                isBuy: true,
+            },
+            { upsert: true }
+        );
+
+        if (data) {
+            await data.save();
+        } else {
+            console.error('Coupon not found or upsert failed');
+        }
+    }
+    ,
     getOne: async (_id) => {
         var _id = mongoose.Types.ObjectId(_id);
         const result = await couponPolicyModel.findById({ _id });
@@ -246,7 +273,7 @@ const coupanPolicyServices = {
                     isPercentage,
                 },
                 {
-                    new: true,
+                    upsert: true,
                 }
             );
         } else {
@@ -254,7 +281,6 @@ const coupanPolicyServices = {
                 { _id },
                 {
                     couponCode,
-                    image,
                     expireDate,
                     orderPriceLimit,
                     couponValue,
@@ -262,7 +288,7 @@ const coupanPolicyServices = {
                     isPercentage,
                 },
                 {
-                    new: true,
+                    upsert: true,
                 }
             );
         }

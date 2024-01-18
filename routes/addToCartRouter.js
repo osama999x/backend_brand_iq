@@ -10,9 +10,9 @@ addToCartRouter.get(
         const { customerId } = req.query;
         const result = await addToCartServices.get(customerId);
         if (result.length != 0) {
-            res.status(200).send({ msg: "List", data: result });
+            res.status(200).send({ msg: "List.", data: result });
         } else {
-            res.status(400).send({ msg: "Not Found" });
+            res.status(400).send({ msg: "Not Found." });
         }
     })
 );
@@ -21,13 +21,13 @@ addToCartRouter.post(
     expressAsyncHandler(async (req, res) => {
         const { customerId, products } = req.body;
         if (!customerId || !products) {
-            return res.status(400).send({ msg: "Fields Missing" });
+            return res.status(400).send({ msg: "Fields Missing." });
         }
         const result = await addToCartServices.addNewToCart(customerId, products);
         if (result) {
             return res.status(200).send({ msg: " Added.", data: result });
         } else {
-            return res.status(400).send({ msg: " Not Added" });
+            return res.status(400).send({ msg: " Not Added." });
         }
     })
 );
@@ -38,9 +38,9 @@ addToCartRouter.delete(
         const { cartId } = req.body;
         const result = await addToCartServices.delete(cartId);
         if (result) {
-            return res.status(200).send({ msg: " deleted.", data: result });
+            return res.status(200).send({ msg: " Deleted.", data: result });
         } else {
-            return res.status(400).send({ msg: " Not deleted" });
+            return res.status(400).send({ msg: " Not Deleted." });
         }
     })
 );

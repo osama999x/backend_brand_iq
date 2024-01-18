@@ -33,7 +33,7 @@ customerRouter.post(
             });
         }
         if (password !== reEnterPassword) {
-            return res.status(400).send({ msg: "Passwords Don't Match" });
+            return res.status(400).send({ msg: "Password & Confirm Password Don't Match" });
         }
         if (!validator.schema.validate(password)) {
             return res.status(400).send({
@@ -101,7 +101,7 @@ customerRouter.post(
         let ValidContact = validateMobileNumber(contact);
         if (!ValidContact) {
             return res.status(400).send({
-                msg: "Please enter valid mobile number 03xxxxxxxxx!",
+                msg: "Please enter valid mobile number ",
             });
         }
 

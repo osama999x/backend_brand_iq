@@ -7,6 +7,8 @@ const readNotficationModel = require("../model/readNotificationModel");
 const pointServices = {
     customerOrderPoints: async (customerId, date) => {
         var pointDate = new Date(new Date().getTime() - date * 24 * 60 * 60 * 1000).toISOString();
+
+        // console.log('sdsd', pointDate);
         let orderDetails = await orderModel
             .find(
                 { customer: { $in: customerId }, createdAt: { $gte: pointDate } },
@@ -14,18 +16,21 @@ const pointServices = {
                     placedOn: 1,
                     orderId: 1,
                     channel: 1,
+                    totalAmount: 1,
                 }
             )
             .populate({
                 path: "product.productId",
                 select: { thumbnail: 1, name: 1 },
+                match: { 'product.productId': { $exists: true } }
             })
             .lean();
         console.log(orderDetails);
         if (orderDetails.length != 0) {
             orderDetails = orderDetails.map((item) => {
-                item.productThumbnail = item.product[0].productId.thumbnail;
-                item.name = item.product[0].productId.name;
+                item.productThumbnail = item.product[0].productId?.thumbnail;
+                item.name = item.product[0].productId?.name;
+                // item.price = item.product[0].productId?.price;
                 delete item.product;
                 return item;
             });

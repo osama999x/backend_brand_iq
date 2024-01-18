@@ -8,7 +8,7 @@ couponPolicyRouter.get(
     expressAsyncHandler(async (req, res) => {
         const result = await couponPolicyServices.get();
         res.status(200).send({
-            msg: "Coupon",
+            msg: "Coupon.",
             data: result,
         });
     })
@@ -20,11 +20,11 @@ couponPolicyRouter.get(
         const result = await couponPolicyServices.getValidCoupon(customerId);
         if (result) {
             return res.status(200).send({
-                msg: "Coupon",
+                msg: "Coupon.",
                 data: result,
             });
         } else {
-            return res.status(400).send({ msg: "Coupon Not Found" });
+            return res.status(400).send({ msg: "Coupon Not Found." });
         }
     })
 );
@@ -32,21 +32,26 @@ couponPolicyRouter.post(
     "/customerCoupon",
     expressAsyncHandler(async (req, res) => {
         const { couponCode, customerId, orderPriceLimit } = req.body;
-        console.log(couponCode, "RQ BODY", customerId, orderPriceLimit)
+
         if (!couponCode || !customerId || !orderPriceLimit) {
             res.status(400).send({
-                msg: "Fields Missing",
+                msg: "Fields Missing.",
             });
         }
-        const isCoupon = await couponPolicyServices.getOneCoupon(couponCode);
+
+        const isCoupon = await couponPolicyServices.checkCoupon(couponCode);
         if (!isCoupon) {
-            res.status(400).send({ msg: "Coupon doesn't Exist Or is InActive!", isCoupon: false });
+            res.status(400).send({ msg: "Coupon doesn't Exist.", isCoupon: false });
             return;
+        }
+        const inActive = await couponPolicyServices.inActive(couponCode);
+        if (inActive) {
+            res.status(409).send({ msg: "Coupon is InActive!" })
         }
         const orderLimitInfo = await couponPolicyServices.getOrderLimit(couponCode, orderPriceLimit);
         if (!orderLimitInfo.isValid) {
             res.status(400).send({
-                msg: "Order limit is less than required.",
+                msg: "Order limit is less than Required.",
                 orderLimitInfo,
             });
             return;
@@ -60,29 +65,28 @@ couponPolicyRouter.post(
             couponCode,
             customerId
         );
-        console.log(isUseCoupon);
-        if (isUseCoupon) {
-            res
-                .status(400)
-                .send({ msg: "You have already taken this coupon", isCoupon: false });
-            return;
-        }
+        // if (isUseCoupon) {
+        //     res
+        //         .status(400)
+        //         .send({ msg: "You have already Availed this Coupon.", isCoupon: false });
+        //     return;
+        // }
         // try {
         // const result = await couponPolicyServices.getCustomerCoupon(
         //     couponCode,
         //     customerId
         // );
         // console.log(result);
-        const result = await couponPolicyServices.useCoupon(couponCode, customerId)
+        const result = await couponPolicyServices.ValidCoupon(customerId, couponCode)
         if (result) {
             res.status(200).send({
-                msg: "Your Coupon Reedemed",
+                msg: "Your Coupon Reedemed.",
                 data: result,
                 orderLimitInfo
             });
             return;
         } else {
-            res.status(400).send({ msg: "Coupon expire", isCoupon: false });
+            res.status(400).send({ msg: "Coupon Expire.", isCoupon: false });
         }
         // } catch (e) {
         //   res.status(400).send({ msg: e, isCoupon: false });
@@ -120,11 +124,11 @@ couponPolicyRouter.get(
         const result = await couponPolicyServices.getOne(couponId);
         if (result) {
             return res.status(200).send({
-                msg: "Coupon",
+                msg: "Coupon.",
                 data: result,
             });
         } else {
-            return res.status(400).send({ msg: "Coupon Not Found" });
+            return res.status(400).send({ msg: "Coupon Not Found." });
         }
     })
 );
@@ -153,9 +157,9 @@ couponPolicyRouter.post(
             isPercentage
         );
         if (result) {
-            return res.status(200).send({ msg: "Coupon added.", data: result });
+            return res.status(200).send({ msg: "Coupon Added.", data: result });
         } else {
-            return res.status(400).send({ msg: "Coupon not added" });
+            return res.status(400).send({ msg: "Coupon not Added" });
         }
     })
 );
@@ -184,9 +188,9 @@ couponPolicyRouter.patch(
             isPercentage
         );
         if (result) {
-            return res.status(200).send({ msg: "Coupon updated.", data: result });
+            return res.status(200).send({ msg: "Coupon Updated.", data: result });
         } else {
-            return res.status(400).send({ msg: "Coupon not updated" });
+            return res.status(400).send({ msg: "Coupon not Updated." });
         }
     })
 );
