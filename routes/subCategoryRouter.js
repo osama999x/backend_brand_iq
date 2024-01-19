@@ -20,11 +20,12 @@ subCategoryRouter.get(
     "/products",
     expressAsyncHandler(async (req, res) => {
         const { subCategoryId } = req.query;
+        console.log("subCategoryId", subCategoryId)
         const result = await subCategoryServices.getProductsBySubCategory(
             subCategoryId
         );
         if (result) {
-            res.status(200).send({ msg: "Products By Subcategory", result });
+            res.status(200).send({ msg: "Products By Subcategory", data: result });
         } else {
             res.status(400).send({ msg: "Not found" });
         }
