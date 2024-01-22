@@ -69,7 +69,7 @@ const returnOrderServices = {
     },
     returnOrderList: async () => {
         //return order list
-        const list = await returnOrderModel.find({}, { returnDate: 1 }).populate({
+        const list = await returnOrderModel.find({}, { returnDate: 1, createdAt: 1 }).populate({
             path: "orderId",
             select: { _id: 1, status: 1, orderId: 1 },
             populate: {
