@@ -3,7 +3,7 @@ util = require("util");
 writeFile = util.promisify(fs.writeFile);
 const uploadFile = async (file) => {
     try {
-        const [fileType, fileData] = file.match(/^data:(.+);base64,(.+)$/);
+        const [, fileType, fileData] = file.match(/^data:(.+);base64,(.+)$/);
         const [fileMainType, fileSubType] = fileType.split("/");
         const fileBuffer = new Buffer.from(fileData, "base64");
         const fileName = Date.now() + "." + fileSubType;
