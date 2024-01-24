@@ -37,6 +37,7 @@ const schema = new Schema(
         contact: {
             type: String,
             required: true,
+            unique: true
         },
         token: {
             type: String,
