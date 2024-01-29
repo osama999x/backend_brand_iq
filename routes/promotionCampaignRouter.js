@@ -66,7 +66,7 @@ promotionCampaignRouter.get(
     "/promotionProductDetail",
     expressAsyncHandler(async (req, res) => {
         const { promotionId } = req.query;
-        const result = await promotionCampaignServices.getPromtionProductDetail(
+        const result = await promotionCampaignServices.getPromotionProductDetail(
             promotionId
         );
         if (result) {
@@ -116,17 +116,17 @@ promotionCampaignRouter.post(
         ) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
-        if (product.length != 0) {
-            let checkProduct = await productModel.findOne({
-                $and: [
-                    { _id: product },
-                    { $or: [{ isDeal: true }, { isDiscount: true }] },
-                ],
-            });
-            if (checkProduct) {
-                return res.status(400).send({ msg: "Product Already Discounted" });
-            }
-        }
+        // if (product.length != 0) {
+        //     let checkProduct = await productModel.findOne({
+        //         $and: [
+        //             { _id: product },
+        //             { $or: [{ isDeal: true }, { isDiscount: true }] },
+        //         ],
+        //     });
+        //     if (checkProduct) {
+        //         return res.status(400).send({ msg: "Product Already Discounted" });
+        //     }
+        // }
         const result = await promotionCampaignServices.addPromotion(
             campaignId,
             product,
@@ -156,7 +156,9 @@ promotionCampaignRouter.patch(
         // if (!promotionId || !campaignName || !promotion) {
         //   return res.status(400).send({ msg: "Fields Missing" });
         // }
-        banner = await uploadFile(banner);
+        if (banner) {
+            banner = await uploadFile(banner);
+        }
         const result = await promotionCampaignServices.update(
             campaignId,
             campaignName,

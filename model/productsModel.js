@@ -131,6 +131,10 @@ const schema = new Schema(
         tags: {
             type: String,
         },
+        promotionDiscount:
+        {
+            type: String
+        },
         addons: [
             {
                 product: {
