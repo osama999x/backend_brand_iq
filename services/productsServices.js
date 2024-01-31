@@ -577,6 +577,7 @@ const productsServices = {
         //   }
         //   variant = variants;
         // }
+        //        {'variant.sku':{$ne:variant.sku}}
 
         products = new productsModel({
             category: mongoose.Types.ObjectId(categoryId),
@@ -607,7 +608,6 @@ const productsServices = {
             isFeatured,
         });
         const result = await products.save();
-        // {'variant.sku':{$ne:variant.sku}}
         console.log(result);
         if (result) {
             let subject = sendEmailNotificationInfo.product.title;
@@ -649,7 +649,7 @@ const productsServices = {
         taxType,
         isPercentage,
         taxAmount,
-        metaData = "",
+        metaData,
         metaDescription,
         tags,
         addons,
