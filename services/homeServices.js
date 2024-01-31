@@ -19,6 +19,19 @@ const homeServices = {
             },
             {
                 $lookup: {
+                    from: "products",
+                    localField: "_id",
+                    foreignField: "category",
+                    as: "products",
+                }
+            },
+            {
+                $addFields: {
+                    productCount: { $size: "$products" },
+                }
+            },
+            {
+                $lookup: {
                     from: "subcategories",
                     localField: "_id",
                     foreignField: "category",
@@ -31,35 +44,19 @@ const homeServices = {
                     icon: 1,
                     thumbnail: 1,
                     description: 1,
+                    productCount: 1,
                     "subCategory._id": 1,
                     "subCategory.name": 1,
                     "subCategory.icon": 1,
                     "subCategory.thumbnail": 1,
                     "subCategory.description": 1,
+                    // "products._id": 1,
+                    // "products.name": 1,
+                    // "products.title": 1,
+                    // "products.description": 1,
                 },
             },
-        ])
-        // find(
-        // //     { isFeatured: true, isActive: true },
-        //     projection.homecategoryprojection
-        // );
-        // // .limit(6);
-        // // .skip((page - 1) * limit)
-        // // .limit(limit)
-        // // .sort("name");
-        // const categoryIds = categories.map(category => category._id);
-        // const subcategories = await subcategoryModel
-        //     .find({ category: { $in: categoryIds }, isFeatured: true }, projection.homesubcategoryprojection)
-        //     .limit(6);
-        // // .skip(page * limit)
-        // // .limit(limit)
-        // // .sort("name");
-
-
-        // const categoriesWithSubcategories = categories.map(category => {
-        //     const categorySubcategories = subcategories.filter(subcategory => subcategory.category.equals(category._id));
-        //     return { ...category.toObject(), subcategories: categorySubcategories };
-        // });
+        ]);
 
         let products = await productModel
             .find(
@@ -84,29 +81,29 @@ const homeServices = {
             });
         }
         let currentDate = new Date(new Date().toLocaleDateString());
-        let deals = await productModel
-            .find(
-                {
-                    isFeatured: true,
-                    isDiscount: false,
-                    isDeal: true,
-                    isActive: true,
-                    expireDate: { $gte: currentDate },
-                },
-                projection.hometrendprojection
-            )
-            .limit(6)
-            .lean();
-        if (deals.length != 0) {
-            deals = deals.map((item) => {
-                discount = item.discount;
-                actualPrice = item.variant[0].actualPrice;
-                item.actualPrice = actualPrice;
-                item.dealPrice = actualPrice - discount;
-                delete item.variant;
-                return item;
-            });
-        }
+        // let deals = await productModel
+        //     .find(
+        //         {
+        //             isFeatured: true,
+        //             isDiscount: false,
+        //             isDeal: true,
+        //             isActive: true,
+        //             expireDate: { $gte: currentDate },
+        //         },
+        //         projection.hometrendprojection
+        //     )
+        //     .limit(6)
+        //     .lean();
+        // if (deals.length != 0) {
+        //     deals = deals.map((item) => {
+        //         discount = item.discount;
+        //         actualPrice = item.variant[0].actualPrice;
+        //         item.actualPrice = actualPrice;
+        //         item.dealPrice = actualPrice - discount;
+        //         delete item.variant;
+        //         return item;
+        //     });
+        // }
 
         const campaign = await promotionCampaignModel.find(
             { activeFrom: { $lte: currentDate }, activeTo: { $gte: currentDate } },
@@ -117,7 +114,7 @@ const homeServices = {
             // subcategories: subcategories,
             allProducts: products,
             campaign: campaign,
-            deals: deals,
+            //  deals: deals,
         };
         return result;
 
