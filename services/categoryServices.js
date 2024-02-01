@@ -241,9 +241,18 @@ const categoryServices = {
                 $limit: pageSize,
             },
         ]);
-        return subcategories;
 
+        // Check if products array is not empty
+        if (subcategories.length > 0 && subcategories[0].products.length > 0) {
+            subcategories[0].products = subcategories[0].products.map((item) => {
+                item.actualPrice = item.variant[0].actualPrice;
+                item.discountedPrice = item.variant[0].discountedPrice;
+                delete item.variant;
+                return item;
+            });
+            return subcategories;
 
+        }
         // const subcategories = await subCategoryModel.find(
         //     { category: mongoose.Types.ObjectId(categoryId) },
         //     { _id: 1, name: 1, icon: 1, thumbnail: 1 }
