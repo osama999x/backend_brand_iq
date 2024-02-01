@@ -675,7 +675,7 @@ const orderServices = {
     },
     checkDealProduct: async (customer, product) => {
         const currentDate = new Date(new Date().toLocaleDateString());
-        //check product all possible validity
+
         for (let i = 0; i < product.length; i++) {
             const { productId, quantity, price, sku, size } = product[i];
             const Product = await productModel.findOne(
@@ -686,37 +686,39 @@ const orderServices = {
                     discount: 1,
                     dealExpire: 1,
                     isDeal: 1,
-                    isDiscount: 1,
                 }
             );
 
-            // console.log(Product);
-            //check product availbility
-            if (!Product || !Product.variant.length)
+            if (!Product || !Product.variant.length) {
                 throw { message: { msg: `Product doesn't exist` } };
-            //check product quantity meet the requirements
-            if (quantity > Product.variant[0].quantity)
-                throw { message: { msg: `${Product.name} not enough quantity!` } };
-            if (Product.isDeal) {
-                //check deal product all possible valdities
+            }
 
+            if (quantity > Product.variant[0].quantity) {
+                throw { message: { msg: `${Product.name} not enough quantity!` } };
+            }
+
+            if (Product.isDeal) {
                 if (Product.dealExpire >= currentDate) {
-                    if (price !== Product.variant[0].actualPrice - Product.discount)
+                    if (price !== Product.variant[0].actualPrice - Product.discount) {
                         throw {
                             message: {
                                 msg: `${Product.name} price has been changed, update the cart!`,
                             },
                         };
+                    }
+
                     const buy = await dealBuyerLogModel.findOne({
                         customer,
                         product: productId,
                     });
-                    if (buy)
+
+                    if (buy) {
                         throw {
                             message: {
                                 msg: `You already bought this deal product, remove ${Product.name} from the cart!`,
                             },
                         };
+                    }
                 } else {
                     throw {
                         message: {
@@ -724,44 +726,67 @@ const orderServices = {
                         },
                     };
                 }
-            }
-            else if (Product.isDiscount) {
-                console.log({ price, discountedPrice: Product.variant[0].discountedPrice })
-                //check discounted product
-                if (price !== Product.variant[0].discountedPrice)
-                    throw {
-                        message: {
-                            msg: `${Product.name} price has been changed, update the cart!`,
-                        },
-                    };
-            }
-            else {
-                const checkPromotion = await promotionModel.findOne({
-                    product: { $in: productId },
-                    expireDate: { $gte: currentDate },
-                });
-                if (checkPromotion) {
-                    //check promotion
-                    if (
-                        price !==
-                        Product.variant[0].actualPrice -
-                        (Product.variant[0].actualPrice * checkPromotion.discount) / 100
-                    )
-                        throw {
-                            message: {
-                                msg: `Promotion expired, update the cart or remove ${Product.name} from it!`,
-                            },
-                        };
-                } else if (price !== Product.variant[0].actualPrice) {
-                    //check actual price
+            } else if (Product.variant[0].isDiscount) {
+                console.log({ price, discountedPrice: Product.variant[0].discountedPrice });
+
+                if (price !== Product.variant[0].discountedPrice) {
                     throw {
                         message: {
                             msg: `${Product.name} price has been changed, update the cart!`,
                         },
                     };
                 }
+            } else if (price !== Product.variant[0].actualPrice) {
+                throw {
+                    message: {
+                        msg: `${Product.name} price has been changed, update the cart!`,
+                    },
+                };
+            } else {
+                const checkPromotion = await promotionModel.findOne({
+                    product: { $in: productId },
+                    expireDate: { $gte: currentDate },
+                });
+
+                if (checkPromotion) {
+                    if (
+                        price !==
+                        Product.variant[0].actualPrice -
+                        (Product.variant[0].actualPrice * checkPromotion.discount) / 100
+                    ) {
+                        throw {
+                            message: {
+                                msg: `Promotion expired, update the cart or remove ${Product.name} from it!`,
+                            },
+                        };
+                    }
+                } else {
+                    // Product is not in promotion
+                    if (Product.variant[0].isDiscount) {
+                        // Product variant has a discount
+                        if (price !== Product.variant[0].discountedPrice) {
+                            throw {
+                                message: {
+                                    msg: `${Product.name} price has been changed, update the cart!`,
+                                },
+                            };
+                        }
+                    } else {
+                        // Product variant has no discount, check against actual price
+                        if (price !== Product.variant[0].actualPrice) {
+                            throw {
+                                message: {
+                                    msg: `${Product.name} price has been changed, update the cart!`,
+                                },
+                            };
+                        }
+                    }
+                }
             }
         }
+
+
+
 
         // var currentDate = new Date(new Date().toLocaleDateString());
         // var productLength = product.length;
@@ -1071,11 +1096,15 @@ const orderServices = {
             status: { $in: ["Delivered", "Returned"] },
         };
 
-        // If start and end dates are provided, add them to the match query
         if (startDate && endDate) {
             matchQuery.placedOn = {
                 $gte: new Date(startDate),
                 $lt: new Date(endDate),
+            };
+        } else if (startDate) {
+            matchQuery.placedOn = {
+                $gte: new Date(startDate),
+                $lte: endDate ? new Date(endDate) : new Date(),
             };
         }
 
@@ -1107,13 +1136,13 @@ const orderServices = {
             result = [
                 {
                     year: new Date().getFullYear(),
-                    month: new Date().getMonth(),
+                    month: new Date().getMonth() + 1, // Add 1 to represent the actual month
                     status: "Delivered",
                     totalDelivered: 0,
                 },
                 {
                     year: new Date().getFullYear(),
-                    month: new Date().getMonth(),
+                    month: new Date().getMonth() + 1, // Add 1 to represent the actual month
                     status: "Returned",
                     totalReturned: 0,
                 },
@@ -1121,7 +1150,7 @@ const orderServices = {
         } else {
             result = result.map(({ year, month, status, order }) => ({
                 year,
-                month: month - 1,
+                month,
                 status,
                 total: order,
             }));
@@ -1133,6 +1162,7 @@ const orderServices = {
 
         return result;
     }
+
 
     ,
     orderReportByChannel: async () => {
