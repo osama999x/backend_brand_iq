@@ -40,6 +40,7 @@ const schema = new Schema(
                 sku: { type: String, required: true, unique: true },
                 size: { type: String, default: "" },
                 image: { type: String },
+                isDiscount: { type: Boolean, default: false, required: true, }
             },
         ],
         thumbnail: {
@@ -79,11 +80,7 @@ const schema = new Schema(
             type: Boolean,
             default: true,
         },
-        isDiscount: {
-            type: Boolean,
-            default: false,
-            required: true,
-        },
+
         inStock: {
             type: Boolean,
             default: true,

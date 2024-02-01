@@ -5,6 +5,9 @@ const projection = require("../config/mongoProjection");
 const uploadFile = require("../utils/uploadFile");
 const mongoose = require("mongoose");
 const subcategoryModel = require("../model/subCategoryModel");
+const { ObjectId } = require('mongoose').Types;
+const page = 1;
+const pageSize = 1;
 
 const categoryServices = {
     get: async () => {
@@ -175,16 +178,82 @@ const categoryServices = {
     },
 
     getSubCategoriesByCategoryId: async (categoryId) => {
-        const subcategories = await subCategoryModel.find(
-            { category: mongoose.Types.ObjectId(categoryId) },
-            { _id: 1, name: 1, icon: 1, thumbnail: 1 }
-        );
-        const category = await categoryModel.findOne(
-            { _id: mongoose.Types.ObjectId(categoryId) },
-            { _id: 1, name: 1, icon: 1, description: 1, thumbnail: 1 }
-        );
-        dict = { category: category, subcategories: subcategories };
-        return dict;
+        const subcategories = await categoryModel.aggregate([
+            {
+                $match: {
+                    _id: ObjectId(categoryId),
+                },
+            },
+            {
+                $lookup: {
+                    from: "subcategories",
+                    localField: "_id",
+                    foreignField: "category",
+                    as: "subcategories",
+                },
+            },
+            {
+                $addFields: {
+                    subCategoryCount: { $size: "$subcategories" },
+                },
+            },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "_id",
+                    foreignField: "category",
+                    as: "products",
+                },
+            },
+            {
+                $addFields: {
+                    productCount: { $size: "$products" },
+                },
+            },
+            {
+                $project: {
+                    name: 1,
+                    icon: 1,
+                    thumbnail: 1,
+                    description: 1,
+                    isActive: 1,
+                    subCategoryCount: 1,
+                    "subcategories._id": 1,
+                    "subcategories.name": 1,
+                    "subcategories.icon": 1,
+                    "subcategories.thumbnail": 1,
+                    "subcategories.description": 1,
+                    productCount: 1,
+                    "products._id": 1,
+                    "products.name": 1,
+                    "products.title": 1,
+                    "products.description": 1,
+                    "products.longDescription": 1,
+                    "products.variant": 1,
+                    "products.thumbnail": 1,
+                    "products.images": 1,
+                },
+            },
+            {
+                $skip: (page - 1) * pageSize,
+            },
+            {
+                $limit: pageSize,
+            },
+        ]);
+        return subcategories;
+
+
+        // const subcategories = await subCategoryModel.find(
+        //     { category: mongoose.Types.ObjectId(categoryId) },
+        //     { _id: 1, name: 1, icon: 1, thumbnail: 1 }
+        // );
+        // const category = await categoryModel.findOne(
+        //     { _id: mongoose.Types.ObjectId(categoryId) },
+        //     { _id: 1, name: 1, icon: 1, description: 1, thumbnail: 1 }
+        // );
+        // dict = { category: category, subcategories: subcategories };
+        // return dict;
     },
     add: async (name, icon, thumbnail, description, isFeatured) => {
         icon = await uploadFile(icon);

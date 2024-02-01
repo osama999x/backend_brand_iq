@@ -5,7 +5,7 @@ const uuid = require("uuid");
 
 const schema = new Schema(
     {
-        Reigon: {
+        Region: {
             type: String,
             required: true,
             unique: true,
