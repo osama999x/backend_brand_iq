@@ -76,6 +76,10 @@ const userServices = {
             // (result.accessToken = accessToken),
             result.refreshToken = refreshToken;
         }
+        const roleeName = await userModel.findOne({ role: result.role }).populate({ path: 'role', model: 'Role', select: 'name' });
+        if (roleeName) {
+            result.roleName = roleeName.role.name;
+        }
         if (result)
             result.modules = result?.modules?.filter((item) => {
                 return item.permissions.length || item.subModules.length

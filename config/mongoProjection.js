@@ -13,7 +13,6 @@ var orderprojection = {
 var hometrendprojection = {
     name: 1,
     title: 1,
-    discount: 1,
     variant: 1,
     thumbnail: true,
     _id: true,
