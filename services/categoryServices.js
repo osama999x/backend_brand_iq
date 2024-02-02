@@ -6,8 +6,8 @@ const uploadFile = require("../utils/uploadFile");
 const mongoose = require("mongoose");
 const subcategoryModel = require("../model/subCategoryModel");
 const { ObjectId } = require('mongoose').Types;
-const page = 1;
-const pageSize = 1;
+const promotionModel = require("../model/promotionModel")
+
 
 const categoryServices = {
     get: async () => {
@@ -177,11 +177,162 @@ const categoryServices = {
         return list;
     },
 
-    getSubCategoriesByCategoryId: async (categoryId) => {
+    // getSubcategoriesAndProductsByCategoryId: async (categoryId, page, pageSize) => {
+    //     const subcategories = await categoryModel.aggregate([
+    //         {
+    //             $match: {
+    //                 _id: mongoose.Types.ObjectId(categoryId),
+    //             },
+    //         },
+    //         {
+    //             $lookup: {
+    //                 from: "subcategories",
+    //                 localField: "_id",
+    //                 foreignField: "category",
+    //                 as: "subcategories",
+    //             },
+    //         },
+    //         {
+    //             $project: {
+    //                 _id: 1,
+    //                 name: 1,
+    //                 icon: 1,
+    //                 description: 1,
+    //                 subcategories: {
+    //                     $map: {
+    //                         input: "$subcategories",
+    //                         as: "subcategory",
+    //                         in: {
+    //                             _id: "$$subcategory._id",
+    //                             name: "$$subcategory.name",
+    //                             thumbnail: "$$subcategory.thumbnail",
+    //                             description: "$$subcategory.description",
+    //                             icon: "$$subcategory.icon",
+    //                         },
+    //                     },
+    //                 },
+    //             },
+    //         },
+    //         {
+    //             $lookup: {
+    //                 from: "products",
+    //                 localField: "subcategories._id",
+    //                 foreignField: "subcategory",
+    //                 as: "products",
+    //             },
+    //         },
+    //         {
+    //             $project: {
+    //                 _id: 1,
+    //                 name: 1,
+    //                 icon: 1,
+    //                 description: 1,
+    //                 subcategories: {
+    //                     _id: 1,
+    //                     name: 1,
+    //                     thumbnail: 1,
+    //                     description: 1,
+    //                     icon: 1,
+    //                 },
+    //                 products: {
+    //                     $map: {
+    //                         input: "$products",
+    //                         as: "product",
+    //                         in: {
+    //                             name: "$$product.name",
+    //                             title: "$$product.title",
+    //                             description: "$$product.description",
+    //                             images: "$$product.images",
+    //                             thumbnail: "$$product.thumbnail",
+    //                             variant: "$$product.variant",
+    //                         },
+    //                     },
+    //                 },
+
+    //             },
+    //         },
+    //     ]);
+
+    //     if (subcategories.length > 0 && subcategories[0].products.length > 0) {
+
+    //         const currentDate = new Date();
+    //         const promotions = await promotionModel
+    //             .find({
+    //                 expireDate: { $gt: currentDate },
+    //                 status: "active",
+    //             })
+    //             .populate("product");
+
+    //         if (promotions.length !== 0) {
+    //             products = products.map((item) => {
+    //                 const matchedPromotion = promotions.find((promotion) =>
+    //                     promotion.product.some((productId) =>
+    //                         productId.equals(item._id)
+    //                     )
+    //                 );
+
+    //                 if (matchedPromotion) {
+    //                     const discount = matchedPromotion.discount;
+    //                     const firstVariant = item.variant[0];
+    //                     item.promotionPrice =
+    //                         firstVariant.actualPrice -
+    //                         (firstVariant.actualPrice / 100) * discount;
+    //                     item.promotiondiscount = discount;
+    //                 }
+
+    //                 const firstVariant = item.variant[0];
+    //                 item.actualPrice = firstVariant.actualPrice;
+    //                 item.discountedPrice = firstVariant.discountedPrice || null,
+
+    //                     delete item.variant;
+
+    //                 return item;
+    //             });
+    //         }
+    //     }
+    //     return subcategories;
+    // },
+    // if (products.length !== 0) {
+    //     const currentDate = new Date();
+    //     const promotions = await promotionModel
+    //         .find({
+    //             expireDate: { $gt: currentDate },
+    //             status: "active",
+    //         })
+    //         .populate("product");
+
+    //     if (promotions.length !== 0) {
+    //         products = products.map((item) => {
+    //             const matchedPromotion = promotions.find((promotion) =>
+    //                 promotion.product.some((productId) =>
+    //                     productId.equals(item._id)
+    //                 )
+    //             );
+
+    //             if (matchedPromotion) {
+    //                 const discount = matchedPromotion.discount;
+    //                 const firstVariant = item.variant[0];
+    //                 item.promotionPrice =
+    //                     firstVariant.actualPrice -
+    //                     (firstVariant.actualPrice / 100) * discount;
+    //                 item.promotiondiscount = discount;
+    //             }
+
+    //             const firstVariant = item.variant[0];
+    //             item.actualPrice = firstVariant.actualPrice;
+    //             item.discountedPrice = firstVariant.discountedPrice || null,
+
+    //                 delete item.variant;
+
+    //             return item;
+    //         });
+    //     }
+    // }
+    getSubcategoriesAndProductsByCategoryId: async (categoryId, page, pageSize) => {
         const subcategories = await categoryModel.aggregate([
             {
                 $match: {
-                    _id: ObjectId(categoryId),
+                    _id: mongoose.Types.ObjectId(categoryId),
                 },
             },
             {
@@ -193,8 +344,24 @@ const categoryServices = {
                 },
             },
             {
-                $addFields: {
-                    subCategoryCount: { $size: "$subcategories" },
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    icon: 1,
+                    description: 1,
+                    subcategories: {
+                        $map: {
+                            input: "$subcategories",
+                            as: "subcategory",
+                            in: {
+                                _id: "$$subcategory._id",
+                                name: "$$subcategory.name",
+                                thumbnail: "$$subcategory.thumbnail",
+                                description: "$$subcategory.description",
+                                icon: "$$subcategory.icon",
+                            },
+                        },
+                    },
                 },
             },
             {
@@ -206,63 +373,95 @@ const categoryServices = {
                 },
             },
             {
-                $addFields: {
-                    productCount: { $size: "$products" },
-                },
-            },
-            {
                 $project: {
+                    _id: 1,
                     name: 1,
                     icon: 1,
-                    thumbnail: 1,
                     description: 1,
-                    isActive: 1,
-                    subCategoryCount: 1,
-                    "subcategories._id": 1,
-                    "subcategories.name": 1,
-                    "subcategories.icon": 1,
-                    "subcategories.thumbnail": 1,
-                    "subcategories.description": 1,
-                    productCount: 1,
-                    "products._id": 1,
-                    "products.name": 1,
-                    "products.title": 1,
-                    "products.description": 1,
-                    "products.longDescription": 1,
-                    "products.variant": 1,
-                    "products.thumbnail": 1,
-                    "products.images": 1,
+                    subcategories: {
+                        _id: 1,
+                        name: 1,
+                        thumbnail: 1,
+                        description: 1,
+                        icon: 1,
+                    },
+                    products: {
+                        $map: {
+                            input: "$products",
+                            as: "product",
+                            in: {
+                                name: "$$product.name",
+                                title: "$$product.title",
+                                description: "$$product.description",
+                                images: "$$product.images",
+                                thumbnail: "$$product.thumbnail",
+                                variant: "$$product.variant",
+                            },
+                        },
+                    },
                 },
-            },
-            {
-                $skip: (page - 1) * pageSize,
-            },
-            {
-                $limit: pageSize,
             },
         ]);
 
-        // Check if products array is not empty
         if (subcategories.length > 0 && subcategories[0].products.length > 0) {
-            subcategories[0].products = subcategories[0].products.map((item) => {
-                item.actualPrice = item.variant[0].actualPrice;
-                item.discountedPrice = item.variant[0].discountedPrice;
-                delete item.variant;
-                return item;
-            });
-            return subcategories;
+            const currentDate = new Date();
+            const promotions = await promotionModel
+                .find({
+                    expireDate: { $gte: currentDate },
+                    status: "active",
+                })
+                .populate("product");
+            console.log("promotions", promotions);
+            if (Array.isArray(promotions)) {
+                subcategories.forEach((category) => {
+                    category.products.forEach((product) => {
+                        const matchedPromotion = promotions.find((promotion) =>
+                            promotion.product.some((productObj) =>
+                                productObj.equals(product._id)
+                            )
+                        );
+                        console.log("Matched Promotions", matchedPromotion)
+                        if (matchedPromotion) {
+                            const discount = matchedPromotion.discount;
+                            const firstVariant = product.variant[0];
+                            product.promotionPrice =
+                                firstVariant.actualPrice -
+                                (firstVariant.actualPrice / 100) * discount;
+                            product.promotiondiscount = discount;
 
+                            product.actualPrice = product.promotionPrice;
+                            product.discountedPrice = null;
+                        } else {
+                            const firstVariant = product.variant[0];
+                            product.actualPrice = firstVariant.actualPrice;
+                            product.discountedPrice = firstVariant.discountedPrice || null;
+                        }
+
+                        delete product.variant;
+                    });
+                });
+            } else {
+                console.error("Promotions is not an array:", promotions);
+            }
         }
-        // const subcategories = await subCategoryModel.find(
-        //     { category: mongoose.Types.ObjectId(categoryId) },
-        //     { _id: 1, name: 1, icon: 1, thumbnail: 1 }
-        // );
-        // const category = await categoryModel.findOne(
-        //     { _id: mongoose.Types.ObjectId(categoryId) },
-        //     { _id: 1, name: 1, icon: 1, description: 1, thumbnail: 1 }
-        // );
-        // dict = { category: category, subcategories: subcategories };
-        // return dict;
+
+        return subcategories;
+
+
+    },
+
+
+    getSubcategories: async (categoryId) => {
+        const subcategories = await subCategoryModel.find(
+            { category: mongoose.Types.ObjectId(categoryId) },
+            { _id: 1, name: 1, icon: 1, thumbnail: 1 }
+        );
+        const category = await categoryModel.findOne(
+            { _id: mongoose.Types.ObjectId(categoryId) },
+            { _id: 1, name: 1, icon: 1, description: 1, thumbnail: 1 }
+        );
+        dict = { category: category, subcategories: subcategories };
+        return dict;
     },
     add: async (name, icon, thumbnail, description, isFeatured) => {
         icon = await uploadFile(icon);

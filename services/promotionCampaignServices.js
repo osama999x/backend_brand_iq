@@ -100,25 +100,24 @@ const promotionCampaignServices = {
                             j.promotionDiscount = price - (price / 100) * discount;
                         }
                     }
-                    // console.log(item)
+
                     return item;
                 })
-
             });
-            // result.products = result.products.map((item) => {
-            //     let discount = result.discount;
-            //     console.log("Discount", discount)
-            //     for (var j of item.variant) {
-            //         var price = j.actualPrice;
-
-            //         if (j.promotionDiscount === undefined) {
-            //             j.promotionDiscount = price - (price / 100) * discount;
-            //         }
-            //     }
-            //     console.log(item)
-            //     return item;
-            // });
         }
+        // result.products = result.products.map((item) => {
+        //     let discount = result.discount;
+        //     console.log("Discount", discount)
+        //     for (var j of item.variant) {
+        //         var price = j.actualPrice;
+
+        //         if (j.promotionDiscount === undefined) {
+        //             j.promotionDiscount = price - (price / 100) * discount;
+        //         }
+        //     }
+        //     console.log(item)
+        //     return item;
+        // });
 
         //aggregate([
         //   {

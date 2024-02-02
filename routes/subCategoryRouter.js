@@ -20,7 +20,6 @@ subCategoryRouter.get(
     "/products",
     expressAsyncHandler(async (req, res) => {
         const { subCategoryId } = req.query;
-        console.log("subCategoryId", subCategoryId)
         const result = await subCategoryServices.getProductsBySubCategory(
             subCategoryId
         );
