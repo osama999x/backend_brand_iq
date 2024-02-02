@@ -373,23 +373,38 @@ const categoryServices = {
                 },
             },
             {
-                $project: {
-                    _id: 1,
-                    name: 1,
-                    icon: 1,
-                    description: 1,
+                $addFields: {
+                    totalProducts: { $size: "$products" }, // Add the total number of products for the main category
                     subcategories: {
-                        _id: 1,
-                        name: 1,
-                        thumbnail: 1,
-                        description: 1,
-                        icon: 1,
+                        $map: {
+                            input: "$subcategories",
+                            as: "subcategory",
+                            in: {
+                                $mergeObjects: [
+                                    "$$subcategory",
+                                    {
+                                        totalProducts: {
+                                            $size: {
+                                                $filter: {
+                                                    input: "$products",
+                                                    as: "product",
+                                                    cond: {
+                                                        $eq: ["$$product.subcategory", "$$subcategory._id"],
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        },
                     },
                     products: {
                         $map: {
                             input: "$products",
                             as: "product",
                             in: {
+                                _id: "$$product._id",
                                 name: "$$product.name",
                                 title: "$$product.title",
                                 description: "$$product.description",
@@ -401,7 +416,25 @@ const categoryServices = {
                     },
                 },
             },
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    icon: 1,
+                    description: 1,
+                    subcategories: {
+                        _id: 1,
+                        name: 1,
+                        thumbnail: 1,
+                        description: 1,
+                        icon: 1,
+                        totalProducts: 1,
+                    },
+                    products: 1,
+                },
+            },
         ]);
+
 
         if (subcategories.length > 0 && subcategories[0].products.length > 0) {
             const currentDate = new Date();
@@ -411,16 +444,16 @@ const categoryServices = {
                     status: "active",
                 })
                 .populate("product");
-            console.log("promotions", promotions);
+
             if (Array.isArray(promotions)) {
                 subcategories.forEach((category) => {
                     category.products.forEach((product) => {
                         const matchedPromotion = promotions.find((promotion) =>
-                            promotion.product.some((productObj) =>
-                                productObj.equals(product._id)
-                            )
+                            promotion.product.some((productObj) => productObj._id.equals(product._id))
                         );
-                        console.log("Matched Promotions", matchedPromotion)
+
+                        console.log("Matched Promotions", matchedPromotion);
+
                         if (matchedPromotion) {
                             const discount = matchedPromotion.discount;
                             const firstVariant = product.variant[0];
@@ -429,7 +462,7 @@ const categoryServices = {
                                 (firstVariant.actualPrice / 100) * discount;
                             product.promotiondiscount = discount;
 
-                            product.actualPrice = product.promotionPrice;
+                            product.actualPrice = firstVariant.actualPrice;
                             product.discountedPrice = null;
                         } else {
                             const firstVariant = product.variant[0];
@@ -444,6 +477,7 @@ const categoryServices = {
                 console.error("Promotions is not an array:", promotions);
             }
         }
+
 
         return subcategories;
 
