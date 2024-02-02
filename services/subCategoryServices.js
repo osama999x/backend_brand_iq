@@ -28,7 +28,6 @@ const subCategoryServices = {
     //sub
     getProductsBySubCategory: async (subcategoryId) => {
         let today = new Date(new Date().toLocaleDateString());
-        console.log(today);
         let subcategory = await subCategoryModel
             .findById(
                 { _id: subcategoryId },
@@ -67,7 +66,6 @@ const subCategoryServices = {
                         thumbnail: 1,
                         isDeal: 1,
                         discount: 1,
-                        isDiscount: 1,
                         variant: {
                             $map: {
                                 input: "$variant",
@@ -78,6 +76,7 @@ const subCategoryServices = {
                                     actualPrice: "$$variant.actualPrice",
                                     quantity: "$$variant.quantity",
                                     size: "$$variant.size",
+                                    isDiscount: 1,
                                     image: "$$variant.image",
                                     sku: "$$variant.sku",
                                     _id: "$$variant._id",

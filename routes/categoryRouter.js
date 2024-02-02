@@ -27,12 +27,13 @@ categoryRouter.get(
         }
     })
 );
+//web
 categoryRouter.get(
     "/subcategories",
     expressAsyncHandler(async (req, res) => {
-        const { categoryId } = req.query;
-        const result = await categoryServices.getSubCategoriesByCategoryId(
-            categoryId
+        const { categoryId, page, pageSize } = req.query;
+        const result = await categoryServices.getSubcategoriesAndProductsByCategoryId(
+            categoryId, page, pageSize
         );
         if (result.length !== 0) {
             res
@@ -43,6 +44,21 @@ categoryRouter.get(
         }
     })
 );
+//portal
+categoryRouter.get(
+    "/subcatgeoriesportal",
+    expressAsyncHandler(async (req, res) => {
+        const { categoryId } = req.query;
+        const categories = await categoryServices.getSubcategories(categoryId);
+        if (categories.length !== 0) {
+            res
+                .status(200)
+                .send({ msg: "Subcategories by Categories.", data: categories });
+        } else {
+            res.status(400).send({ msg: "Not Found." });
+        }
+    })
+)
 categoryRouter.get(
     "/getOne",
     expressAsyncHandler(async (req, res) => {

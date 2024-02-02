@@ -6,6 +6,8 @@ const categoryModel = require("../model/categoryModel");
 const subcategoryModel = require("../model/subCategoryModel");
 const promotionCampaignModel = require("../model/promotionCampaignModel");
 // const productsImagesModel = require("../model/productsImagesModel");
+const promotionModel = require("../model/promotionModel")
+
 
 const homeServices = {
     get: async () => {
@@ -191,6 +193,69 @@ const homeServices = {
         };
         return products;
     },
+    // getRecentProduct: async () => {
+    //     let products = await productModel
+    //         .find(
+    //             {
+    //                 $and: [
+    //                     { isDeal: false },
+    //                     { isActive: true },
+    //                     {
+    //                         $or: [{ isFeatured: true }, { isDiscount: true }],
+    //                     },
+    //                 ],
+    //             },
+    //             projection.hometrendprojection
+    //         )
+    //         .limit(10)
+    //         .sort({ $natural: -1 })
+    //         .lean();
+
+    //     if (products.length !== 0) {
+    //         const currentDate = new Date();
+    //         const promotions = await promotionModel
+    //             .find({
+    //                 expireDate: { $gt: currentDate },
+    //                 status: "active",
+    //             })
+    //             .populate("product");
+
+    //         if (promotions.length !== 0) {
+    //             products = products.map((item) => {
+    //                 const matchedPromotion = promotions.find((promotion) =>
+    //                     promotion.product.some((productId) =>
+    //                         productId.equals(item._id)
+    //                     )
+    //                 );
+
+    //                 if (matchedPromotion) {
+    //                     const discount = matchedPromotion.discount;
+    //                     item.actualPrice = item.variant[0].actualPrice;
+    //                     item.discountedPrice =
+    //                         item.actualPrice - (item.actualPrice / 100) * discount;
+    //                     item.promotiondiscount = discount;
+    //                 }
+
+    //                 // Store actualPrice and discountedPrice in a separate variable
+    //                 const variantPrices = item.variant.map((variant) => ({
+    //                     actualPrice: variant.actualPrice,
+    //                     discountedPrice: variant.discountedPrice || null,
+    //                 }));
+
+    //                 // Delete item.variant
+    //                 delete item.variant;
+
+    //                 // Add variantPrices to the item
+    //                 item.variantPrices = variantPrices;
+
+    //                 return item;
+    //             });
+    //         }
+    //     }
+
+    //     return products;
+    // }
+
     getRecentProduct: async () => {
         let products = await productModel
             .find(
@@ -208,16 +273,75 @@ const homeServices = {
             .limit(10)
             .sort({ $natural: -1 })
             .lean();
-        if (products.length != 0) {
-            products = products.map((item) => {
-                item.actualPrice = item.variant[0].actualPrice;
-                item.discountedPrice = item.variant[0].discountedPrice;
-                delete item.variant;
-                return item;
-            });
+
+        if (products.length !== 0) {
+            const currentDate = new Date();
+            const promotions = await promotionModel
+                .find({
+                    expireDate: { $gt: currentDate },
+                    status: "active",
+                })
+                .populate("product");
+
+            if (promotions.length !== 0) {
+                products = products.map((item) => {
+                    const matchedPromotion = promotions.find((promotion) =>
+                        promotion.product.some((productId) =>
+                            productId.equals(item._id)
+                        )
+                    );
+
+                    if (matchedPromotion) {
+                        const discount = matchedPromotion.discount;
+                        const firstVariant = item.variant[0];
+                        item.promotionPrice =
+                            firstVariant.actualPrice -
+                            (firstVariant.actualPrice / 100) * discount;
+                        item.promotiondiscount = discount;
+                    }
+
+                    const firstVariant = item.variant[0];
+                    item.actualPrice = firstVariant.actualPrice;
+                    item.discountedPrice = firstVariant.discountedPrice || null,
+
+                        delete item.variant;
+
+                    return item;
+                });
+            }
         }
+
         return products;
-    },
+    }
+    ,
+
+    // getRecentProduct: async () => {
+    //     let products = await productModel
+    //         .find(
+    //             {
+    //                 $and: [
+    //                     { isDeal: false },
+    //                     { isActive: true },
+    //                     {
+    //                         $or: [{ isFeatured: true }, { isDiscount: true }],
+    //                     },
+    //                 ],
+    //             },
+    //             projection.hometrendprojection
+    //         )
+    //         .limit(10)
+    //         .sort({ $natural: -1 })
+    //         .lean();
+    //     if (products.length != 0) {
+    //         products = products.map((item) => {
+    //             item.actualPrice = item.variant[0].actualPrice;
+    //             item.discountedPrice = item.variant[0].discountedPrice;
+    //             delete item.variant;
+    //             return item;
+    //         });
+    //     }
+    //     return products;
+    // },
     searchProductByTags: async (text) => {
         const products = await productModel.find(
             {
