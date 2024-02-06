@@ -460,10 +460,11 @@ const categoryServices = {
                             product.promotionPrice =
                                 firstVariant.actualPrice -
                                 (firstVariant.actualPrice / 100) * discount;
-                            product.promotiondiscount = discount;
+                            product.promotionDiscount = discount;
 
                             product.actualPrice = firstVariant.actualPrice;
-                            product.discountedPrice = null;
+                            product.discountedPrice = firstVariant.discountedPrice || null;
+                            // console.log("firstVariant.discountedPrice", firstVariant.discountedPrice)
                         } else {
                             const firstVariant = product.variant[0];
                             product.actualPrice = firstVariant.actualPrice;
