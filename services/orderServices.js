@@ -25,6 +25,10 @@ const productsServices = require("./productsServices");
 const courierServices = require("./courierServices");
 const orderLogService = require("../utils/orderLogService");
 const orderServices = {
+    generateRandomTrackingId: async () => {
+        const randomId = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+        return randomId;
+    },
     orderTracking: async (orderId) => {
         let orderTrack = await orderLogModel.aggregate([
             {
@@ -98,7 +102,8 @@ const orderServices = {
             //     courierType === "POSTEX"
             //         ? deliver.dist.trackingNumber
             //         : deliver.data.data[0].parcelId;
-            const trackingId = '090078601';
+            const trackingId = generateRandomTrackingId();
+            console.log("trackingId", trackingId)
             const courierType = "POSTEX";
             // if (deliver.statusCode === "200" || deliver.status === 200) {
             await Promise.all([
