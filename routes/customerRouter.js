@@ -12,6 +12,7 @@ const { v4: uuidv4 } = require("uuid");
 const saveOtp = require("../utils/saveOtp");
 const jwtService = require("../utils/jwtService");
 const validateMobileNumber = require("../utils/validateMobileNumber");
+const { error } = require("winston");
 customerRouter.post(
     "/signup",
     expressAsyncHandler(async (req, res) => {
@@ -260,6 +261,9 @@ customerRouter.post(
     "/resetpassword/verify",
     expressAsyncHandler(async (req, res) => {
         const { email, otp } = req.body;
+        if (!email || !otp) {
+            return res.status(400).send("Please provide all Feilds");
+        }
         const expireOtp = await saveOtp.validateOTPExpiryByEmail(email);
         if (!expireOtp) {
             res.status(400).send({

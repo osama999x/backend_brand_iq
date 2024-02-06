@@ -102,7 +102,7 @@ const orderServices = {
             //     courierType === "POSTEX"
             //         ? deliver.dist.trackingNumber
             //         : deliver.data.data[0].parcelId;
-            const trackingId = generateRandomTrackingId();
+            const trackingId = await orderServices.generateRandomTrackingId();
             console.log("trackingId", trackingId)
             const courierType = "POSTEX";
             // if (deliver.statusCode === "200" || deliver.status === 200) {
@@ -119,8 +119,13 @@ const orderServices = {
 
             const getPointPerOrder = await pointManageModel.findOne();
             if (getPointPerOrder) {
-                const { pointOrderPrice, pointPerOrder } = getPointPerOrder;
-                const point = Math.ceil(totalBill / pointOrderPrice) * pointPerOrder;
+                //    const { pointOrderPrice, pointPerOrder } = getPointPerOrder;
+                const { pointOrderPriceFrom, pointPerOrder } = getPointPerOrder;
+                //Have to set As Per new modules Addtions now its Random
+                console.log("totalBill:", totalBill);
+                console.log("pointOrderPriceFrom:", pointOrderPriceFrom);
+                console.log("pointPerOrder:", pointPerOrder);
+                const point = Math.ceil(totalBill / pointOrderPriceFrom) * pointPerOrder;
 
                 const data = new pointModel({
                     customer: customerId,
