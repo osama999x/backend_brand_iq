@@ -18,13 +18,13 @@ reviewRouter.patch(
     "/approvedReview",
     expressAsyncHandler(async (req, res) => {
         const { reviewId, isApproved } = req.body;
-        let isReviewApproved = await reviewServices.checkApproved(
-            reviewId,
-            isApproved
-        );
-        if (isReviewApproved) {
-            return res.status(400).send({ msg: "Review status already updated!" });
-        }
+        // let isReviewApproved = await reviewServices.checkApproved(
+        //     reviewId,
+        //     isApproved
+        // );
+        // if (isReviewApproved) {
+        //     return res.status(400).send({ msg: "Review status already updated!" });
+        // }
         const result = await reviewServices.approvedReview(reviewId, isApproved);
         if (result) {
             return res.status(200).send({
