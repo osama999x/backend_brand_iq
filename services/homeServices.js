@@ -356,8 +356,10 @@ const homeServices = {
         let today = new Date(new Date());
         let products = await productModel.aggregate([
             {
-                $match: { tags: { $eq: tags }, isActive: true },
+                //$match: { tags: { $eq: tags }, isActive: true, },
                 // $match: { name: { $regex: new RegExp(text), $options: "si" } },
+                $match: { $text: { $search: tags }, isActive: true, },
+
             },
             {
                 $lookup: {
