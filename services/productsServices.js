@@ -374,6 +374,7 @@ const productsServices = {
             },
         ]);
 
+
         if (product.length != 0 && product[0].isDeal === true) {
             discount = product[0].discount;
             images = product[0].images;
@@ -394,7 +395,176 @@ const productsServices = {
                 }
             }
         }
-        return product[0];
+
+        // Retrieve related products in the same subcategory
+        var relatedProducts = await productsModel.aggregate([
+            {
+                $match: {
+                    subcategory: new mongoose.Types.ObjectId(product[0].subcategory._id),
+                    _id: { $ne: new mongoose.Types.ObjectId(productId) }, // Excluding the current product
+                },
+            },
+            {
+                $lookup: {
+                    from: "promotions",
+                    localField: "_id",
+                    foreignField: "product",
+                    pipeline: [{ $match: { expireDate: { $gte: today } } }],
+                    as: "promotion",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$promotion",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    category: 1,
+                    subcategory: 1,
+                    name: 1,
+                    title: 1,
+                    //description: 1,
+                    //longDescription: 1,
+                    isColor: 1,
+                    thumbnail: 1,
+                    //images: 1,
+                    isActive: 1,
+                    //vendor: 1,
+                    //isFeatured: 1,
+                    //isSale: 1,
+                    //isDeal: 1,
+                    discount: 1,
+                    // oneTimeDeal: 1,
+                    isDiscount: 1,
+                    inStock: 1,
+                    //sequence: 1,
+                    //ratingCount: 1,
+                    //ratingNumber: 1,
+                    //isFavourite: 1,
+                    //isTaxable: 1,
+                    //taxHead: 1,
+                    //taxType: 1,
+                    //isPercentage: 1,
+                    //taxAmount: 1,
+                    //metaData: 1,
+                    //metaDescription: 1,
+                    //addons: 1,
+                    //tags: 1,
+                    //createdAt: 1,
+                    //updatedAt: 1,
+                    variant: {
+                        $map: {
+                            input: "$variant",
+                            as: "variant",
+                            in: {
+                                colorName: "$$variant.colorName",
+                                colorHex: "$$variant.colorHex",
+                                actualPrice: "$$variant.actualPrice",
+                                quantity: "$$variant.quantity",
+                                size: "$$variant.size",
+                                image: "$$variant.image",
+                                sku: "$$variant.sku",
+                                _id: "$$variant._id",
+                                isOnPromotion: { $cond: { if: "$promotion", then: true, else: false } },
+                                discountedPrice: {
+                                    $ifNull: [
+                                        {
+                                            $subtract: [
+                                                "$$variant.actualPrice",
+                                                {
+                                                    $multiply: [
+                                                        "$promotion.discount",
+                                                        {
+                                                            $divide: ["$$variant.actualPrice", 100],
+                                                        },
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                        "$$variant.discountedPrice",
+                                    ],
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            {
+                $lookup: {
+                    from: "categories",
+                    localField: "category",
+                    foreignField: "_id",
+                    let: { id: "$category" },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
+                        { $project: { _id: 1, name: 1 } },
+                    ],
+                    as: "category",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$category",
+                },
+            },
+            {
+                $lookup: {
+                    from: "subcategories",
+                    localField: "subcategory",
+                    foreignField: "_id",
+                    let: { id: "$subcategory" },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
+                        { $project: { _id: 1, name: 1 } },
+                    ],
+                    as: "subcategory",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$subcategory",
+                },
+            },
+        ]);
+        if (relatedProducts.length != 0) {
+            relatedProducts = relatedProducts.map((item) => {
+                if (item.isDeal === true) {
+                    // actualPrice = item.variant[0].actualPrice;
+                    // discountedPrice = item.variant[0].actualPrice - item.discount;
+                    var price = item.variant[0].actualPrice - item.discount;
+                } else if (item.isDiscount === true) {
+                    //actualPrice = item.variant[0].actualPrice;
+                    //discountedPrice = item.variant[0].discountedPrice;
+                    price = item.variant[0].discountedPrice;
+                } else {
+                    //actualPrice = item.variant[0].actualPrice;
+                    //discountedPrice = item.variant[0].discountedPrice;
+                    if (item.variant[0].discountedPrice > 0) {
+                        price = item.variant[0].discountedPrice;
+                    } else {
+                        price = item.variant[0].actualPrice;
+                    }
+                }
+                item.price = price;
+                //item.discountedPrice = discountedPrice;
+                delete item.variant;
+                delete item.isDiscount;
+                delete item.discount;
+                delete item.isDeal;
+
+                return item;
+            });
+        }
+        return {
+            msg: "Products",
+            data: {
+                mainProduct: product[0],
+                relatedProducts: relatedProducts,
+            },
+        };
     },
     getProductsDetails: async (productId, sku, quantity) => {
         var product = await productsModel.findOne({
