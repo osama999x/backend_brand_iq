@@ -321,10 +321,11 @@ const orderServices = {
             },
             {
                 $sort: {
-                    placedOn: -1 // Sort in descending order based on the placedOn field
+                    placedOn: -1
                 },
             }
         ]);
+
 
         //   .find(
         //     {
@@ -388,12 +389,18 @@ const orderServices = {
                 },
             },
             {
+                $unwind: "$product" // Unwind the product array to make it easier to use in $lookup stages
+            },
+            {
                 $lookup: {
                     from: "products",
                     localField: "product.productId",
                     foreignField: "_id",
                     as: "productDetails",
                 },
+            },
+            {
+                $unwind: "$productDetails" // Unwind the productDetails array
             },
             {
                 $lookup: {
@@ -404,57 +411,34 @@ const orderServices = {
                 },
             },
             {
-                $project: {
-                    _id: 1,
-                    paymentMode: 1,
-                    totalBill: 1,
-                    tax: 1,
-                    orderId: 1,
-                    trackingId: 1,
-                    placedOn: 1,
-                    isDeliver: 1,
-                    productThumbnail: {
-                        $arrayElemAt: ["$productDetails.thumbnail", 0],
-                    },
-                    product: {
-                        $map: {
-                            input: {
-                                $zip: {
-                                    inputs: ["$productDetails", "$product", "$categories"],
-                                },
-                            },
-                            as: "item",
-                            in: {
-                                productId: {
-                                    $arrayElemAt: ["$$item.productId", 0],
-                                },
-                                quantity: {
-                                    $arrayElemAt: ["$$item.quantity", 0],
-                                },
-                                price: {
-                                    $arrayElemAt: ["$$item.price", 0],
-                                },
-                                sku: {
-                                    $arrayElemAt: ["$$item.sku", 0],
-                                },
-                                productCategory: {
-                                    $arrayElemAt: ["$$item.name", 1],
-                                },
-                                productName: {
-                                    $arrayElemAt: ["$$item.name", 0],
-                                },
-                                productQuantity: {
-                                    $arrayElemAt: ["$$item.quantity", 0],
-                                },
-                                productPrice: {
-                                    $arrayElemAt: ["$$item.price", 0],
-                                },
-                            },
-                        },
+                $group: {
+                    _id: "$_id",
+                    paymentMode: { $first: "$paymentMode" },
+                    totalBill: { $first: "$totalBill" },
+                    tax: { $first: "$tax" },
+                    orderId: { $first: "$orderId" },
+                    trackingId: { $first: "$trackingId" },
+                    placedOn: { $first: "$placedOn" },
+                    isDeliver: { $first: "$isDeliver" },
+                    productThumbnail: { $first: "$productDetails.thumbnail" },
+                    products: {
+                        $push: {
+                            productId: "$productDetails._id",
+                            quantity: "$product.quantity",
+                            price: "$product.price",
+                            sku: "$product.sku",
+                            productCategory: { $first: "$categories.name" },
+                            productName: "$productDetails.name",
+                            productQuantity: "$product.quantity",
+                            productPrice: "$product.price",
+                        }
                     },
                 },
             },
         ]);
+
+        console.log(result);
+
         //   .findById(
         //     { _id },
         //     {

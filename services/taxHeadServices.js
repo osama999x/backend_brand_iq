@@ -12,10 +12,20 @@ const taxHeadServices = {
     }, getByTaxType: async (taxTypeId) => {
         const result = await taxHeadModel
             .findOne({ taxType: taxTypeId }).select("taxHead")
-        // .populate({
-        //     path: "taxType",
-        //     select: { taxType: 1 },
-        // });
+            .populate({
+                path: "taxType",
+                select: { taxType: 1 },
+            });
+        //hello
+        return result;
+    },
+    getEastWestByTaxType: async () => {
+        const result = await taxHeadModel
+            .find().select("taxHead")
+            .populate({
+                path: "taxType",
+                select: { taxType: 1 },
+            });
         //hello
         return result;
     },

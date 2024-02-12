@@ -552,7 +552,7 @@ const categoryServices = {
     ,
     delete: async (_id) => {
         var _id = mongoose.Types.ObjectId(_id);
-        const result = await categoryModel.deleteOne({ _id });
+        const result = await categoryModel.findOneAndUpdate({ _id: _id }, { isActive: false }, { upsert: true });
         return result;
     },
 };
