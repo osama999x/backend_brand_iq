@@ -529,19 +529,20 @@ const productsServices = {
                 },
             },
         ]);
+
         if (relatedProducts.length != 0) {
             relatedProducts = relatedProducts.map((item) => {
                 if (item.isDeal === true) {
-                    // actualPrice = item.variant[0].actualPrice;
-                    // discountedPrice = item.variant[0].actualPrice - item.discount;
+                    actualPrice = item.variant[0].actualPrice;
+                    discountedPrice = item.variant[0].actualPrice - item.discount;
                     var price = item.variant[0].actualPrice - item.discount;
                 } else if (item.isDiscount === true) {
-                    //actualPrice = item.variant[0].actualPrice;
-                    //discountedPrice = item.variant[0].discountedPrice;
+                    actualPrice = item.variant[0].actualPrice;
+                    discountedPrice = item.variant[0].discountedPrice;
                     price = item.variant[0].discountedPrice;
                 } else {
-                    //actualPrice = item.variant[0].actualPrice;
-                    //discountedPrice = item.variant[0].discountedPrice;
+                    actualPrice = item.variant[0].actualPrice;
+                    discountedPrice = item.variant[0].discountedPrice;
                     if (item.variant[0].discountedPrice > 0) {
                         price = item.variant[0].discountedPrice;
                     } else {
