@@ -4,6 +4,7 @@ const customerModel = require("../model/customerModel");
 const membershipModel = require("../model/membershipModel");
 const customerMembershipModel = require("../model/customerMembershipModel");
 const readNotficationModel = require("../model/readNotificationModel");
+const pointManageModel = require("../model/pointManageModel");
 const pointServices = {
     customerOrderPoints: async (customerId, date) => {
         var pointDate = new Date(new Date().getTime() - date * 24 * 60 * 60 * 1000).toISOString();
@@ -86,7 +87,7 @@ const pointServices = {
         delete orderPoints;
         return orderDetails;
     },
-    customerTotalPoints: async (customer) => {
+    customerTotalPoints: async (customer, orderPrice) => {
         // let customerOrder = await orderModel
         //   .find(
         //     { customer: { $in: customer } },
@@ -124,6 +125,16 @@ const pointServices = {
             },
             { points: 1 }
         );
+        console.log("orderPrice", orderPrice);
+        const eligiblePoints = await pointManageModel.find({
+            pointOrderPriceTo: { $gte: orderPrice },
+            pointOrderPriceFrom: { $lte: orderPrice }
+        });
+
+
+        console.log("eligiblePoints", eligiblePoints);
+
+
         // if (customerPoints) {
         //   var totalPoints = 0;
         //   // var customerId = customerPoints[0].customer;
