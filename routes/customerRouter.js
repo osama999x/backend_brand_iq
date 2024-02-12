@@ -26,6 +26,7 @@ customerRouter.post(
             password,
             reEnterPassword,
             cnic,
+            reigon,
         } = req.body;
         let isValidContact = validateMobileNumber(contact);
         if (!isValidContact) {
@@ -52,7 +53,8 @@ customerRouter.post(
             address,
             gender,
             password,
-            cnic
+            cnic,
+            reigon
         );
         if (result) {
             const uuid = uuidv4();
@@ -186,6 +188,7 @@ customerRouter.post(
             res.status(400).send({ msg: "Fields Missing" });
         }
         const result = await customerServices.login(email, password, fcmToken);
+        console.log("result", result);
         if (result) {
             const validatePassword = await customerServices.validatePassword(
                 password,

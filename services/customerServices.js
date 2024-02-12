@@ -19,6 +19,7 @@ const saveOtp = require("../utils/saveOtp");
 const jwtServices = require("../utils/jwtService");
 const { v4: uuidv4 } = require("uuid");
 const authIdServices = require("./authIdServices");
+const taxHeadServices = require("../services/taxHeadServices")
 
 const customerServices = {
     validatePassword: async (password, realPassword) => {
@@ -26,7 +27,7 @@ const customerServices = {
         return valid;
     },
     login: async (email) => {
-        const customer = await customerModel.findOne({ email: email });
+        const customer = await customerModel.findOne({ email: email }).lean();
         // if (customer) {
         //   // check customer password with hashed password stored in the database
         //   const validPassword = await bcrypt.compare(password, customer.password);
@@ -73,8 +74,12 @@ const customerServices = {
             // refreshToken = encryptRequest(refreshToken);
             // token = encryptRequest(token);
 
+            const taxx = await taxHeadServices.getEastWestByTaxType();
+            customer.taxx = taxx;
+            // console.log(taxx);
             customer.token = token;
             customer.refreshToken = refreshToken;
+
         }
         return customer;
         //   } else {
@@ -126,7 +131,8 @@ const customerServices = {
         address,
         gender,
         password,
-        cnic
+        cnic,
+        reigon
     ) => {
         const checkCustomer = await customerModel.findOne({ email: email });
         if (checkCustomer) {
@@ -150,6 +156,7 @@ const customerServices = {
                 password,
                 cnic,
                 points: initialPoint,
+                reigon
             });
             const result = await customer.save();
             if (result) {

@@ -200,8 +200,8 @@ const subCategoryServices = {
     },
     delete: async (_id) => {
         var _id = mongoose.Types.ObjectId(_id);
-        const result = await subcategoryModel.deleteOne({ _id });
-        console.log("result", result);
+
+        const result = await subCategoryModel.findOneAndUpdate({ _id: _id }, { isActive: false }, { upsert: true });
         return result;
     },
     subcategory: async (category) => {
