@@ -6,7 +6,7 @@ const categoryModel = require("../model/categoryModel");
 const subcategoryModel = require("../model/subCategoryModel");
 const promotionCampaignModel = require("../model/promotionCampaignModel");
 // const productsImagesModel = require("../model/productsImagesModel");
-const promotionModel = require("../model/promotionModel")
+const promotionModel = require("../model/promotionModel");
 
 
 const homeServices = {
