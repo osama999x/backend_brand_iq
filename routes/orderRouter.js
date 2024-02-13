@@ -155,7 +155,7 @@ orderRouter.get(
             });
         } else {
             return res
-                .status(400)
+                .status(200)
                 .send({ msg: "Customer Order History Not Found", data: result });
         }
     })
