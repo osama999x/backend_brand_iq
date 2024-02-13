@@ -397,168 +397,263 @@ const productsServices = {
         }
 
         // Retrieve related products in the same subcategory
+        // var relatedProducts = await productsModel.aggregate([
+        //     {
+        //         $match: {
+        //             subcategory: new mongoose.Types.ObjectId(product[0].subcategory._id),
+        //             _id: { $ne: new mongoose.Types.ObjectId(productId) }, // Excluding the current product
+        //         },
+        //     },
+        //     {
+        //         $lookup: {
+        //             from: "promotions",
+        //             localField: "_id",
+        //             foreignField: "product",
+        //             pipeline: [{ $match: { expireDate: { $gte: today } } }],
+        //             as: "promotion",
+        //         },
+        //     },
+        //     {
+        //         $unwind: {
+        //             path: "$promotion",
+        //             preserveNullAndEmptyArrays: true,
+        //         },
+        //     },
+        //     {
+        //         $project: {
+        //             _id: 1,
+        //             category: 1,
+        //             subcategory: 1,
+        //             name: 1,
+        //             title: 1,
+        //             //description: 1,
+        //             //longDescription: 1,
+        //             isColor: 1,
+        //             thumbnail: 1,
+        //             //images: 1,
+        //             isActive: 1,
+        //             //vendor: 1,
+        //             //isFeatured: 1,
+        //             //isSale: 1,
+        //             //isDeal: 1,
+        //             discount: 1,
+        //             // oneTimeDeal: 1,
+        //             isDiscount: 1,
+        //             inStock: 1,
+        //             //sequence: 1,
+        //             //ratingCount: 1,
+        //             //ratingNumber: 1,
+        //             //isFavourite: 1,
+        //             //isTaxable: 1,
+        //             //taxHead: 1,
+        //             //taxType: 1,
+        //             //isPercentage: 1,
+        //             //taxAmount: 1,
+        //             //metaData: 1,
+        //             //metaDescription: 1,
+        //             //addons: 1,
+        //             //tags: 1,
+        //             //createdAt: 1,
+        //             //updatedAt: 1,
+        //             variant: {
+        //                 $map: {
+        //                     input: "$variant",
+        //                     as: "variant",
+        //                     in: {
+        //                         colorName: "$$variant.colorName",
+        //                         colorHex: "$$variant.colorHex",
+        //                         actualPrice: "$$variant.actualPrice",
+        //                         quantity: "$$variant.quantity",
+        //                         size: "$$variant.size",
+        //                         image: "$$variant.image",
+        //                         sku: "$$variant.sku",
+        //                         _id: "$$variant._id",
+        //                         isOnPromotion: { $cond: { if: "$promotion", then: true, else: false } },
+        //                         discountedPrice: {
+        //                             $ifNull: [
+        //                                 {
+        //                                     $subtract: [
+        //                                         "$$variant.actualPrice",
+        //                                         {
+        //                                             $multiply: [
+        //                                                 "$promotion.discount",
+        //                                                 {
+        //                                                     $divide: ["$$variant.actualPrice", 100],
+        //                                                 },
+        //                                             ],
+        //                                         },
+        //                                     ],
+        //                                 },
+        //                                 "$$variant.discountedPrice",
+
+        //                             ],
+        //                         },
+        //                     },
+        //                 },
+        //             },
+        //             //  promotionDiscount: {
+        //             //     $cond: {
+        //             //         if: { $gt: ["$isOnPromotion", false] },
+        //             //         then: "$variant.discountedPrice",
+        //             //         else: null  // or any default value you prefer when not in promotion
+        //             //     }
+        //             // },
+        //         },
+        //     },
+        //     {
+        //         $lookup: {
+        //             from: "categories",
+        //             localField: "category",
+        //             foreignField: "_id",
+        //             let: { id: "$category" },
+        //             pipeline: [
+        //                 { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
+        //                 { $project: { _id: 1, name: 1 } },
+        //             ],
+        //             as: "category",
+        //         },
+        //     },
+        //     {
+        //         $unwind: {
+        //             path: "$category",
+        //         },
+        //     },
+        //     {
+        //         $lookup: {
+        //             from: "subcategories",
+        //             localField: "subcategory",
+        //             foreignField: "_id",
+        //             let: { id: "$subcategory" },
+        //             pipeline: [
+        //                 { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
+        //                 { $project: { _id: 1, name: 1 } },
+        //             ],
+        //             as: "subcategory",
+        //         },
+        //     },
+        //     {
+        //         $unwind: {
+        //             path: "$subcategory",
+        //         },
+        //     },
+        // ]);
         var relatedProducts = await productsModel.aggregate([
             {
                 $match: {
                     subcategory: new mongoose.Types.ObjectId(product[0].subcategory._id),
-                    _id: { $ne: new mongoose.Types.ObjectId(productId) }, // Excluding the current product
-                },
+                    _id: { $ne: new mongoose.Types.ObjectId(productId) },
+                    isActive: true
+
+                }
             },
             {
-                $lookup: {
-                    from: "promotions",
-                    localField: "_id",
-                    foreignField: "product",
-                    pipeline: [{ $match: { expireDate: { $gte: today } } }],
-                    as: "promotion",
-                },
-            },
-            {
-                $unwind: {
-                    path: "$promotion",
-                    preserveNullAndEmptyArrays: true,
-                },
-            },
-            {
-                $project: {
-                    _id: 1,
-                    category: 1,
-                    subcategory: 1,
-                    name: 1,
-                    title: 1,
-                    //description: 1,
-                    //longDescription: 1,
-                    isColor: 1,
-                    thumbnail: 1,
-                    //images: 1,
-                    isActive: 1,
-                    //vendor: 1,
-                    //isFeatured: 1,
-                    //isSale: 1,
-                    //isDeal: 1,
-                    discount: 1,
-                    // oneTimeDeal: 1,
-                    isDiscount: 1,
-                    inStock: 1,
-                    //sequence: 1,
-                    //ratingCount: 1,
-                    //ratingNumber: 1,
-                    //isFavourite: 1,
-                    //isTaxable: 1,
-                    //taxHead: 1,
-                    //taxType: 1,
-                    //isPercentage: 1,
-                    //taxAmount: 1,
-                    //metaData: 1,
-                    //metaDescription: 1,
-                    //addons: 1,
-                    //tags: 1,
-                    //createdAt: 1,
-                    //updatedAt: 1,
-                    variant: {
-                        $map: {
-                            input: "$variant",
-                            as: "variant",
-                            in: {
-                                colorName: "$$variant.colorName",
-                                colorHex: "$$variant.colorHex",
-                                actualPrice: "$$variant.actualPrice",
-                                quantity: "$$variant.quantity",
-                                size: "$$variant.size",
-                                image: "$$variant.image",
-                                sku: "$$variant.sku",
-                                _id: "$$variant._id",
-                                isOnPromotion: { $cond: { if: "$promotion", then: true, else: false } },
-                                discountedPrice: {
-                                    $ifNull: [
-                                        {
-                                            $subtract: [
-                                                "$$variant.actualPrice",
-                                                {
-                                                    $multiply: [
-                                                        "$promotion.discount",
-                                                        {
-                                                            $divide: ["$$variant.actualPrice", 100],
-                                                        },
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                        "$$variant.discountedPrice",
-                                    ],
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-            {
-                $lookup: {
-                    from: "categories",
-                    localField: "category",
-                    foreignField: "_id",
-                    let: { id: "$category" },
-                    pipeline: [
-                        { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
-                        { $project: { _id: 1, name: 1 } },
-                    ],
-                    as: "category",
-                },
-            },
-            {
-                $unwind: {
-                    path: "$category",
-                },
-            },
-            {
-                $lookup: {
-                    from: "subcategories",
-                    localField: "subcategory",
-                    foreignField: "_id",
-                    let: { id: "$subcategory" },
-                    pipeline: [
-                        { $match: { $expr: { $eq: ["$_id", "$$id"] } } },
-                        { $project: { _id: 1, name: 1 } },
-                    ],
-                    as: "subcategory",
-                },
-            },
-            {
-                $unwind: {
-                    path: "$subcategory",
-                },
+                $project: projection.hometrendprojection,
             },
         ]);
+        if (relatedProducts.length !== 0) {
+            const currentDate = new Date();
+            const promotions = await promotionModel
+                .find({
+                    expireDate: { $gt: currentDate },
+                    status: "active",
+                })
+                .populate("product");
 
-        if (relatedProducts.length != 0) {
-            relatedProducts = relatedProducts.map((item) => {
-                if (item.isDeal === true) {
-                    actualPrice = item.variant[0].actualPrice;
-                    discountedPrice = item.variant[0].actualPrice - item.discount;
-                    var price = item.variant[0].actualPrice - item.discount;
-                } else if (item.isDiscount === true) {
-                    actualPrice = item.variant[0].actualPrice;
-                    discountedPrice = item.variant[0].discountedPrice;
-                    price = item.variant[0].discountedPrice;
-                } else {
-                    actualPrice = item.variant[0].actualPrice;
-                    discountedPrice = item.variant[0].discountedPrice;
-                    if (item.variant[0].discountedPrice > 0) {
-                        price = item.variant[0].discountedPrice;
-                    } else {
-                        price = item.variant[0].actualPrice;
+            if (promotions.length !== 0) {
+                relatedProducts = relatedProducts.map((item) => {
+                    const matchedPromotion = promotions.find((promotion) =>
+                        promotion.product.some((productId) =>
+                            productId.equals(item._id)
+                        )
+                    );
+
+                    if (matchedPromotion) {
+                        const discount = matchedPromotion.discount;
+                        const firstVariant = item.variant[0];
+                        item.promotionPrice =
+                            firstVariant.actualPrice -
+                            (firstVariant.actualPrice / 100) * discount;
+                        item.promotiondiscount = discount;
                     }
-                }
-                item.price = price;
-                //item.discountedPrice = discountedPrice;
-                delete item.variant;
-                delete item.isDiscount;
-                delete item.discount;
-                delete item.isDeal;
 
-                return item;
-            });
+                    const firstVariant = item.variant[0];
+                    item.actualPrice = firstVariant.actualPrice;
+                    item.discountedPrice = firstVariant.discountedPrice || null,
+
+                        delete item.variant;
+
+                    return item;
+                });
+            }
         }
+
+        // if (relatedProducts.length != 0) {
+        //     relatedProducts = relatedProducts.map((item) => {
+        //         if (item.isDeal === true) {
+        //             actualPrice = item.variant[0].actualPrice;
+        //             discountedPrice = item.variant[0].actualPrice - item.discount;
+        //             var price = item.variant[0].actualPrice - item.discount;
+        //         } else if (item.isDiscount === true) {
+        //             actualPrice = item.variant[0].actualPrice;
+        //             discountedPrice = item.variant[0].discountedPrice;
+        //             price = item.variant[0].discountedPrice;
+        //         } else {
+        //             actualPrice = item.variant[0].actualPrice;
+        //             discountedPrice = item.variant[0].discountedPrice;
+        //             if (item.variant[0].discountedPrice > 0) {
+        //                 price = item.variant[0].discountedPrice;
+        //             } else {
+        //                 price = item.variant[0].actualPrice;
+        //             }
+        //         }
+
+        //         item.actualPrice = actualPrice;
+        //         item.discountedPrice = discountedPrice;
+        //         item.price = price;
+        //         //item.discountedPrice = discountedPrice;
+        //         delete item.variant;
+        //         delete item.isDiscount;
+        //         delete item.discount;
+        //         delete item.isDeal;
+
+        //         return item;
+        //     });
+        // }
+        // if (relatedProducts.length != 0) {
+        //     relatedProducts = relatedProducts.map((item) => {
+        //         let price;
+
+        //         // Check if the product has a promotionDiscount
+        //         if (item.promotionDiscount) {
+        //             price = parseFloat(item.promotionDiscount); // Assuming promotionDiscount is a String, parse it to a Number
+        //         } else {
+        //             // Use the existing logic for calculating price if promotionDiscount is not present
+        //             if (item.isDeal === true) {
+        //                 price = item.variant[0].actualPrice - item.discount;
+        //             } else if (item.isDiscount === true) {
+        //                 price = item.variant[0].discountedPrice;
+        //             } else {
+        //                 if (item.variant[0].discountedPrice > 0) {
+        //                     price = item.variant[0].discountedPrice;
+        //                 } else {
+        //                     price = item.variant[0].actualPrice;
+        //                 }
+        //             }
+        //         }
+
+        //         item.actualPrice = item.variant[0].actualPrice;
+        //         item.discountedPrice = item.variant[0].discountedPrice;
+        //         // item.price = price;
+
+        //         delete item.variant;
+        //         delete item.isDiscount;
+        //         delete item.discount;
+        //         delete item.isDeal;
+
+        //         return item;
+        //     });
+        // }
+
         return {
             msg: "Products",
             data: {

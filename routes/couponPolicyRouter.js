@@ -41,16 +41,16 @@ couponPolicyRouter.post(
 
         const isCoupon = await couponPolicyServices.checkCoupon(couponCode);
         if (!isCoupon) {
-            res.status(400).send({ msg: "Coupon doesn't Exist.", isCoupon: false });
+            res.status(200).send({ msg: "Coupon doesn't Exist.", isCoupon: false });
             return;
         }
         const inActive = await couponPolicyServices.inActive(couponCode);
         if (inActive) {
-            res.status(409).send({ msg: "Coupon is InActive!" })
+            res.status(200).send({ msg: "Coupon is InActive!" })
         }
         const orderLimitInfo = await couponPolicyServices.getOrderLimit(couponCode, orderPriceLimit);
         if (!orderLimitInfo.isValid) {
-            res.status(400).send({
+            res.status(200).send({
                 msg: "Order limit is less than Required.",
                 orderLimitInfo,
             });
@@ -59,7 +59,7 @@ couponPolicyRouter.post(
         const validCoupon = await couponPolicyServices.getValidCoupon(couponCode);
         const isbuy = await couponPolicyServices.isbuy(couponCode, customerId);
         if (isbuy) {
-            res.status(409).send({ msg: "You have already used this Coupon!" });
+            res.status(200).send({ msg: "You have already used this Coupon!" });
         }
         const isUseCoupon = await couponPolicyServices.checkCustomerCoupon(
             couponCode,
