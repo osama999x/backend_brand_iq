@@ -65,9 +65,9 @@ promotionCampaignRouter.get(
 promotionCampaignRouter.get(
     "/promotionProductDetail",
     expressAsyncHandler(async (req, res) => {
-        const { promotionId } = req.query;
+        const { campaignId } = req.query;
         const result = await promotionCampaignServices.getPromotionProductDetail(
-            promotionId
+            campaignId
         );
         if (result) {
             return res.status(200).send({ msg: "Promotions", data: result });
