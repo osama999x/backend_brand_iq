@@ -83,7 +83,9 @@ promotionCampaignRouter.post(
         if (!campaignName || !banner || !description || !activeFrom || !activeTo) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
-        banner = await uploadFile(banner);
+        if (banner) {
+            banner = await uploadFile(banner);
+        }
         const result = await promotionCampaignServices.addNew(
             campaignName,
             description,
