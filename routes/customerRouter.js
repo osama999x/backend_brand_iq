@@ -13,6 +13,7 @@ const saveOtp = require("../utils/saveOtp");
 const jwtService = require("../utils/jwtService");
 const validateMobileNumber = require("../utils/validateMobileNumber");
 const { error } = require("winston");
+
 customerRouter.post(
     "/signup",
     expressAsyncHandler(async (req, res) => {

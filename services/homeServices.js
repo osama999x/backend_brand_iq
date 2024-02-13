@@ -82,7 +82,7 @@ const homeServices = {
                 return item;
             });
         }
-        let currentDate = new Date(new Date().toLocaleDateString());
+        let currentDate = new Date();
         // let deals = await productModel
         //     .find(
         //         {
@@ -107,10 +107,18 @@ const homeServices = {
         //     });
         // }
 
-        const campaign = await promotionCampaignModel.find(
-            { activeFrom: { $lte: currentDate }, activeTo: { $gte: currentDate } },
-            projection.projection
-        );
+        const campaign = await promotionCampaignModel.aggregate([
+            {
+                $match: {
+                    activeFrom: { $lte: currentDate },
+                    activeTo: { $gte: currentDate }
+                }
+            },
+            {
+                $project: projection.projection
+            }
+        ]);
+        //        console.log("campaign", campaign);
         const result = {
             categories: categories,
             // subcategories: subcategories,

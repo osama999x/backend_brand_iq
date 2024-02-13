@@ -14,7 +14,7 @@ const promotionModel = require("../model/promotionModel");
 const promotionCampaignServices = {
     get: async () => {
         const now = new Date();
-        console.log(now);
+        //console.log(now);
         const result = await promotionCampaignModel.find(
             {
                 activeFrom: { $lte: now },
@@ -59,7 +59,7 @@ const promotionCampaignServices = {
         return result;
     },
     getPromotionProductDetail: async (campaign) => {
-        console.log(campaign);
+        // console.log(campaign);
         let currentDate = new Date(new Date().toLocaleDateString());
         let result = await promotionModel.aggregate([
             {
@@ -86,7 +86,7 @@ const promotionCampaignServices = {
             },
         ]);
 
-        console.log(result.length);
+        // console.log(result.length);
 
         if (result.length !== 0) {
             result.forEach(promotion => {
@@ -175,7 +175,7 @@ const promotionCampaignServices = {
             activeTo,
         });
         var result = await data.save();
-        console.log("description", result.description);
+        // console.log("description", result.description);
         // if (result) {
         //   let subject = sendEmailNotificationInfo.promotion.title;
         //   let text = sendEmailNotificationInfo.promotion.body;
