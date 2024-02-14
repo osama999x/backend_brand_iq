@@ -12,6 +12,7 @@ const sendNotificationEmail = require("../utils/sendNotificationEmail");
 const productVariantServices = require("./productVariantServices");
 const dealBuyerLogModel = require("../model/dealBuyerLogModel");
 // const productsImagesModel = require("../model/productsImagesModel");
+const reviewServices = require("../services/reviewServices");
 
 const productsServices = {
     getproducts: async () => {
@@ -653,7 +654,10 @@ const productsServices = {
         //         return item;
         //     });
         // }
-
+        const Review = await reviewServices.getProductReview(productId);
+        if (Review) {
+            product[0].Review = Review;
+        }
         return {
             msg: "Products",
             data: {
