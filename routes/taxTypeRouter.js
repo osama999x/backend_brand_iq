@@ -63,6 +63,18 @@ taxTypeRouter.patch(
         }
     })
 );
+taxTypeRouter.get("/byId", expressAsyncHandler(async (req, res) => {
+    const { taxTypeId } = req.query;
+    if (!taxTypeId) {
+        return res.status(400).send({ msg: "Missing Fields" });
+    }
+    const result = await taxTypeServices.getTaxDeliveryChargesBytaxtypeId(taxTypeId);
+    if (result) {
+        return res.status(200).send({ msg: "Fetched.", data: result });
+    } else {
+        return res.status(400).send({ msg: "Not Found" });
+    }
+}));
 taxTypeRouter.delete(
     "/",
     expressAsyncHandler(async (req, res) => {

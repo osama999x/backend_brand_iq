@@ -168,7 +168,7 @@ const favouriteServices = {
                                     },
                                 ],
                             },
-                            else: "$product.variant.actualPrice",
+                            else: "$product.variant.discountedPrice",
                         },
                     },
                     "product.isFavourite": true,

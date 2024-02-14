@@ -6,7 +6,8 @@ const uuid = require("uuid");
 const schema = new Schema(
     {
         Region: {
-            type: String,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "TaxType",
             required: true,
             unique: true,
         },
