@@ -239,19 +239,21 @@ orderRouter.post(
             channel,
             couponCode,
             tax,
+            billingAddress,
+            shippingAddress
         } = req.body;
-        if (!city) {
-            city = "Islamabad";
-        }
+        // if (!city) {
+        //     city = "Islamabad";
+        // }
         if (!customer || !product || !paymentMode || !totalBill) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
-        const isValidContact = validateMobileNumber(contact);
-        if (!isValidContact) {
-            return res.status(400).send({
-                msg: "Please enter valid contact number ",
-            });
-        }
+        // const isValidContact = validateMobileNumber(contact);
+        // if (!isValidContact) {
+        //     return res.status(400).send({
+        //         msg: "Please enter valid contact number ",
+        //     });
+        // }
         try {
             let orderId = Math.floor(Math.random() * 100000 + 100000)
                 .toString()
@@ -315,7 +317,7 @@ orderRouter.post(
                                 customerFcm.fcmToken
                             );
                         }
-                        console.log("orderId///////////////////////////////////////////////", orderResult._id);
+                        // console.log("orderId///////////////////////////////////////////////", orderResult._id);
                         const history = await paymentHistoryService.new(
                             customer,
                             orderResult._id,
@@ -354,7 +356,9 @@ orderRouter.post(
                     orderId,
                     channel,
                     couponCode,
-                    tax
+                    tax,
+                    billingAddress,
+                    shippingAddress
                 );
 
                 const UseCoupon = await couponPolicyServices.useCoupon(couponCode, customer)

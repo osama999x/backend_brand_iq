@@ -669,6 +669,7 @@ const orderServices = {
     },
     checkDealProduct: async (customer, product) => {
         const currentDate = new Date(new Date().toLocaleDateString());
+        let errorMessages = [];
 
         for (let i = 0; i < product.length; i++) {
             const { productId, quantity, price, sku, size } = product[i];
@@ -683,17 +684,45 @@ const orderServices = {
                 }
             );
 
+            // if (!Product || !Product.variant.length) {
+            //     console.log(1)
+
+            //     throw { message: { msg: `Product Doesn't Exist` } };
+            // }
+
+            // if (quantity > Product.variant[0].quantity) {
+            //     console.log(2)
+
+            //     throw { message: { msg: `ProductID: ${Product._id} & ${Product.name} has not Enough Quantity! Available Quantity : ${Product.variant[0].quantity}` } };
+            // }
             if (!Product || !Product.variant.length) {
-                throw { message: { msg: `Product doesn't exist` } };
+                errorMessages.push({ msg: `ProductID: ${productId} & ${Product.name} doesn't exist` });
+                console.log(1)
+
+                continue;
             }
 
             if (quantity > Product.variant[0].quantity) {
-                throw { message: { msg: `${Product.name} not enough quantity!` } };
+                errorMessages.push({
+                    productId: productId,
+                    ProductName: Product.name,
+                    AvailableQuantity: Product.variant[0].quantity,
+                    sku: Product.variant[0].sku,
+                    msg: `Out of Stock`,
+                });
+                console.log(2);
+                continue; // Continue to the next product
             }
 
             if (Product.isDeal) {
+                console.log(3)
+
                 if (Product.dealExpire >= currentDate) {
+                    console.log(4)
+
                     if (price !== Product.variant[0].actualPrice - Product.discount) {
+                        console.log(5)
+
                         throw {
                             message: {
                                 msg: `${Product.name} price has been changed, update the cart!`,
@@ -707,6 +736,8 @@ const orderServices = {
                     });
 
                     if (buy) {
+                        console.log(6)
+
                         throw {
                             message: {
                                 msg: `You already bought this deal product, remove ${Product.name} from the cart!`,
@@ -714,40 +745,56 @@ const orderServices = {
                         };
                     }
                 } else {
+                    console.log(7)
+
                     throw {
                         message: {
                             msg: `Deal expired, remove ${Product.name} from the cart!`,
                         },
                     };
                 }
-            } else if (Product.variant[0].isDiscount) {
-                console.log({ price, discountedPrice: Product.variant[0].discountedPrice });
+            }
+            // console.log(Product.variant[0])
+            if (Product.variant[0].isDiscount || Product.variant[0].discountedPrice) {
+                console.log(8)
+
+                // console.log({ price, discountedPrice: Product.variant[0].discountedPrice });
 
                 if (price !== Product.variant[0].discountedPrice) {
+                    console.log(9)
+
                     throw {
                         message: {
-                            msg: `${Product.name} price has been changed, update the cart!`,
+                            msg: `${Product.name} price has been changed ${Product.variant[0].discountedPrice}, update the cart!`,
                         },
                     };
                 }
             } else if (price !== Product.variant[0].actualPrice) {
+                console.log(10)
+
                 throw {
                     message: {
-                        msg: `${Product.name} price has been changed, update the cart!`,
+                        msg: `${Product.name} price has been changed, update the Cart!`,
                     },
                 };
             } else {
+                console.log(11)
+
                 const checkPromotion = await promotionModel.findOne({
                     product: { $in: productId },
                     expireDate: { $gte: currentDate },
                 });
 
                 if (checkPromotion) {
+                    console.log(12)
+
                     if (
                         price !==
                         Product.variant[0].actualPrice -
                         (Product.variant[0].actualPrice * checkPromotion.discount) / 100
                     ) {
+                        console.log(13)
+
                         throw {
                             message: {
                                 msg: `Promotion expired, update the cart or remove ${Product.name} from it!`,
@@ -755,10 +802,16 @@ const orderServices = {
                         };
                     }
                 } else {
+                    console.log(14)
+
                     // Product is not in promotion
                     if (Product.variant[0].isDiscount) {
                         // Product variant has a discount
+                        console.log(15)
+
                         if (price !== Product.variant[0].discountedPrice) {
+                            console.log(16)
+
                             throw {
                                 message: {
                                     msg: `${Product.name} price has been changed, update the cart!`,
@@ -766,8 +819,12 @@ const orderServices = {
                             };
                         }
                     } else {
+                        console.log(17)
+
                         // Product variant has no discount, check against actual price
                         if (price !== Product.variant[0].actualPrice) {
+                            console.log(18)
+
                             throw {
                                 message: {
                                     msg: `${Product.name} price has been changed, update the cart!`,
@@ -777,6 +834,10 @@ const orderServices = {
                     }
                 }
             }
+        }
+        if (errorMessages.length > 0) {
+            // If there are any error messages, throw them as a combined message
+            throw { message: { data: errorMessages } };
         }
 
 
@@ -926,7 +987,9 @@ const orderServices = {
         orderId,
         channel,
         couponCode,
-        tax
+        tax,
+        billingAddress,
+        shippingAddress
     ) => {
         try {
             // //check customer already buy deal product or not
@@ -1010,7 +1073,9 @@ const orderServices = {
                 placedOn: currentDate,
                 channel,
                 couponCode,
-                tax
+                tax,
+                billingAddress,
+                shippingAddress
             });
             //ORDER PLACED
             var result = await order.save();
