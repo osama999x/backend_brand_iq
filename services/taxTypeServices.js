@@ -1,6 +1,7 @@
 const projection = require("../config/mongoProjection");
 const mongoose = require("mongoose");
 const taxTypeModel = require("../model/taxTypeModel");
+const { ObjectId } = require("mongodb");
 
 const taxTypeServices = {
     get: async () => {
@@ -20,7 +21,46 @@ const taxTypeServices = {
         const result = await data.save();
         return result;
     },
-
+    getTaxDeliveryChargesBytaxtypeId: async (taxTypeId) => {
+        const dup = await taxTypeModel.aggregate([
+            {
+                $match: {
+                    _id: mongoose.Types.ObjectId(taxTypeId),
+                }
+            },
+            {
+                $lookup: {
+                    from: "taxheads",
+                    localField: "_id",
+                    foreignField: "taxType",
+                    as: "tax"
+                }
+            },
+            {
+                $unwind: "$tax"
+            },
+            {
+                $lookup: {
+                    from: "deliverycharges",
+                    localField: "_id",
+                    foreignField: "Region",
+                    as: "charges"
+                }
+            },
+            {
+                $unwind: "$charges"
+            },
+            {
+                $project: {
+                    taxType: 1,
+                    "tax.taxHead": 1,
+                    "charges.deliveryCharges": 1
+                }
+            }
+        ]
+        );
+        return dup;
+    },
     update: async (_id, taxType) => {
         var _id = mongoose.Types.ObjectId(_id);
         const result = await taxTypeModel.findOneAndUpdate(

@@ -225,12 +225,31 @@ const reviewServices = {
                 select: { firstName: 1, lastName: 1 },
             })
             .lean();
-        if (result.length != 0) {
+        // if (result.length != 0) {
+        //     var ID = result[0].productId._id.toString();
+        //     var list = result.map((item) => {
+        //         item.image = item.images;
+        //         item.productName = item.productId.name;
+        //         // item.Id = item.productId._id;
+        //         item.actualPrice = item.productId.variant[0].actualPrice;
+        //         item.discountedPrice = item.productId.variant[0].discountedPrice;
+        //         const whiteSpace = " ";
+        //         item.customerName = item.customerId.firstName.concat(
+        //             whiteSpace,
+        //             item.customerId.lastName
+        //         );
+        //         delete item.productId;
+        //         delete item.customerId;
+        //         delete item.images;
+        //         return item;
+        //     });
+        //     result.list = list;
+        // }
+        if (result.length !== 0) {
             var ID = result[0].productId._id.toString();
             var list = result.map((item) => {
                 item.image = item.images;
                 item.productName = item.productId.name;
-                // item.Id = item.productId._id;
                 item.actualPrice = item.productId.variant[0].actualPrice;
                 item.discountedPrice = item.productId.variant[0].discountedPrice;
                 const whiteSpace = " ";
@@ -243,8 +262,9 @@ const reviewServices = {
                 delete item.images;
                 return item;
             });
-            result.list = list;
+            result['list'] = list;  // or result.list = list;
         }
+
         return { result, ID };
     },
     addNewRate: async (
