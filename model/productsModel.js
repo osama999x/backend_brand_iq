@@ -32,13 +32,13 @@ const schema = new Schema(
         },
         variant: [
             {
-                colorName: { type: String, default: "" },
+                colorName: { type: String, default: "", trim: true },
                 colorHex: { type: String, default: "" },
                 actualPrice: { type: Number, required: true, min: 0, default: 0 },
                 discountedPrice: { type: Number, min: 0, default: 0 },
                 quantity: { type: Number, required: true, min: 0, default: 0 },
                 sku: { type: String, required: true, unique: true },
-                size: { type: String, default: "" },
+                size: { type: String, default: "", trim: true },
                 image: { type: String },
                 isDiscount: { type: Boolean, default: false, required: true, }
             },
@@ -128,6 +128,7 @@ const schema = new Schema(
         tags: {
             type: String,
         },
+
         promotionDiscount:
         {
             type: String

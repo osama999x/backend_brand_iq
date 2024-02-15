@@ -754,8 +754,64 @@ const orderServices = {
                     };
                 }
             }
+            console.log(11)
+
+            const checkPromotion = await promotionModel.findOne({
+                product: { $in: productId },
+                expireDate: { $gte: currentDate },
+            });
+
+            if (checkPromotion) {
+                console.log(12)
+
+                if (
+                    price !==
+                    Product.variant[0].actualPrice -
+                    (Product.variant[0].actualPrice * checkPromotion.discount) / 100
+                ) {
+                    console.log(13)
+
+                    throw {
+                        message: {
+                            msg: `Promotion expired, update the cart or remove ${Product.name} from it!`,
+                        },
+                    };
+                }
+            }
+            // else {
+            //     console.log(14)
+
+            //     // Product is not in promotion
+            //     if (Product.variant[0].isDiscount) {
+            //         // Product variant has a discount
+            //         console.log(15)
+
+            //         if (price !== Product.variant[0].discountedPrice) {
+            //             console.log(16)
+
+            //             throw {
+            //                 message: {
+            //                     msg: `${Product.name} price has been changed, update the cart!`,
+            //                 },
+            //             };
+            //         }
+            //     } else {
+            //         console.log(17)
+
+            //         // Product variant has no discount, check against actual price
+            //         if (price !== Product.variant[0].actualPrice) {
+            //             console.log(18)
+
+            //             throw {
+            //                 message: {
+            //                     msg: `${Product.name} price has been changed, update the cart!`,
+            //                 },
+            //             };
+            //         }
+            //     }
+            // } commented just for now
             // console.log(Product.variant[0])
-            if (Product.variant[0].isDiscount || Product.variant[0].discountedPrice) {
+            else if (Product.variant[0].isDiscount || Product.variant[0].discountedPrice) {
                 console.log(8)
 
                 // console.log({ price, discountedPrice: Product.variant[0].discountedPrice });
@@ -777,62 +833,6 @@ const orderServices = {
                         msg: `${Product.name} price has been changed, update the Cart!`,
                     },
                 };
-            } else {
-                console.log(11)
-
-                const checkPromotion = await promotionModel.findOne({
-                    product: { $in: productId },
-                    expireDate: { $gte: currentDate },
-                });
-
-                if (checkPromotion) {
-                    console.log(12)
-
-                    if (
-                        price !==
-                        Product.variant[0].actualPrice -
-                        (Product.variant[0].actualPrice * checkPromotion.discount) / 100
-                    ) {
-                        console.log(13)
-
-                        throw {
-                            message: {
-                                msg: `Promotion expired, update the cart or remove ${Product.name} from it!`,
-                            },
-                        };
-                    }
-                } else {
-                    console.log(14)
-
-                    // Product is not in promotion
-                    if (Product.variant[0].isDiscount) {
-                        // Product variant has a discount
-                        console.log(15)
-
-                        if (price !== Product.variant[0].discountedPrice) {
-                            console.log(16)
-
-                            throw {
-                                message: {
-                                    msg: `${Product.name} price has been changed, update the cart!`,
-                                },
-                            };
-                        }
-                    } else {
-                        console.log(17)
-
-                        // Product variant has no discount, check against actual price
-                        if (price !== Product.variant[0].actualPrice) {
-                            console.log(18)
-
-                            throw {
-                                message: {
-                                    msg: `${Product.name} price has been changed, update the cart!`,
-                                },
-                            };
-                        }
-                    }
-                }
             }
         }
         if (errorMessages.length > 0) {
