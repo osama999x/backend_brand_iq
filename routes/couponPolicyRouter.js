@@ -56,7 +56,11 @@ couponPolicyRouter.post(
             });
             return;
         }
-        const validCoupon = await couponPolicyServices.getValidCoupon(couponCode);
+        const validCoupon = await couponPolicyServices.getValidCoupon(couponCode)
+        if (!validCoupon) {
+            res.status(200).send({ msg: "Coupon Has Expired" });
+            return;
+        }
         const isbuy = await couponPolicyServices.isbuy(couponCode, customerId);
         if (isbuy) {
             res.status(200).send({ msg: "You have already used this Coupon!" });
@@ -65,6 +69,10 @@ couponPolicyRouter.post(
             couponCode,
             customerId
         );
+        if (!isUseCoupon) {
+
+            res.status(200).send({ msg: "This Coupon has already been redeemed." });
+        }
         // if (isUseCoupon) {
         //     res
         //         .status(400)
