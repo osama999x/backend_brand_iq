@@ -35,18 +35,18 @@ const schema = new Schema(
                 },
             },
         ],
-        address: {
-            type: String,
-            required: true,
-        },
-        city: {
-            type: String,
-            required: true,
-        },
-        contact: {
-            type: Number,
-            required: true,
-        },
+        // address: {
+        //     type: String,
+        //     required: true,
+        // },
+        // city: {
+        //     type: String,
+        //     required: true,
+        // },
+        // contact: {
+        //     type: Number,
+        //     required: true,
+        // },
         status: {
             type: String,
             default: "Pending",
@@ -54,11 +54,12 @@ const schema = new Schema(
         totalBill: {
             type: Number,
             required: true,
-        },
+        },//including TotalBill
         totalAmount: {
             type: Number,
             required: true,
         },
+        //WithOut tax amount and Shipping Amount
         tax: {
             type: Number,
             default: 0
