@@ -560,44 +560,32 @@ const productsServices = {
                 })
                 .populate("product");
 
-            if (relatedProducts.length !== 0) {
-                const currentDate = new Date();
-                const promotions = await promotionModel
-                    .find({
-                        expireDate: { $gt: currentDate },
-                        status: "active",
-                    })
-                    .populate("product");
+            relatedProducts = relatedProducts.map((item) => {
+                const firstVariant = item.variant[0];
 
-                relatedProducts = relatedProducts.map((item) => {
-                    const firstVariant = item.variant[0];
+                item.actualPrice = firstVariant.actualPrice;
+                item.discountedPrice = firstVariant.discountedPrice || null;
 
-                    // Include first variant's actual price and discounted price
-                    item.actualPrice = firstVariant.actualPrice;
-                    item.discountedPrice = firstVariant.discountedPrice || null;
+                delete item.variant;
 
-                    // Delete the 'variant' property
-                    delete item.variant;
+                const matchedPromotion = promotions.find((promotion) =>
+                    promotion.product.some((productId) =>
+                        productId.equals(item._id)
+                    )
+                );
 
-                    const matchedPromotion = promotions.find((promotion) =>
-                        promotion.product.some((productId) =>
-                            productId.equals(item._id)
-                        )
-                    );
+                if (matchedPromotion) {
+                    const discount = matchedPromotion.discount;
+                    item.promotionPrice =
+                        firstVariant.actualPrice - (firstVariant.actualPrice / 100) * discount;
+                    item.promotionDiscount = discount;
+                }
 
-                    if (matchedPromotion) {
-                        // Calculate promotion price and include promotion discount
-                        const discount = matchedPromotion.discount;
-                        item.promotionPrice =
-                            firstVariant.actualPrice - (firstVariant.actualPrice / 100) * discount;
-                        item.promotionDiscount = discount;
-                    }
-
-                    return item;
-                });
-            }
-
+                return item;
+            });
         }
+
+
 
 
 
