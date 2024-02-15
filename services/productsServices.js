@@ -560,8 +560,25 @@ const productsServices = {
                 })
                 .populate("product");
 
-            if (promotions.length !== 0) {
+            if (relatedProducts.length !== 0) {
+                const currentDate = new Date();
+                const promotions = await promotionModel
+                    .find({
+                        expireDate: { $gt: currentDate },
+                        status: "active",
+                    })
+                    .populate("product");
+
                 relatedProducts = relatedProducts.map((item) => {
+                    const firstVariant = item.variant[0];
+
+                    // Include first variant's actual price and discounted price
+                    item.actualPrice = firstVariant.actualPrice;
+                    item.discountedPrice = firstVariant.discountedPrice || null;
+
+                    // Delete the 'variant' property
+                    delete item.variant;
+
                     const matchedPromotion = promotions.find((promotion) =>
                         promotion.product.some((productId) =>
                             productId.equals(item._id)
@@ -569,24 +586,20 @@ const productsServices = {
                     );
 
                     if (matchedPromotion) {
+                        // Calculate promotion price and include promotion discount
                         const discount = matchedPromotion.discount;
-                        const firstVariant = item.variant[0];
                         item.promotionPrice =
-                            firstVariant.actualPrice -
-                            (firstVariant.actualPrice / 100) * discount;
-                        item.promotiondiscount = discount;
+                            firstVariant.actualPrice - (firstVariant.actualPrice / 100) * discount;
+                        item.promotionDiscount = discount;
                     }
-
-                    const firstVariant = item.variant[0];
-                    item.actualPrice = firstVariant.actualPrice;
-                    item.discountedPrice = firstVariant.discountedPrice || null,
-
-                        delete item.variant;
 
                     return item;
                 });
             }
+
         }
+
+
 
         // if (relatedProducts.length != 0) {
         //     relatedProducts = relatedProducts.map((item) => {
