@@ -763,17 +763,17 @@ const orderServices = {
 
             if (checkPromotion) {
                 console.log(12)
-
-                if (
-                    price !==
-                    Product.variant[0].actualPrice -
+                const promotiondiscount = Product.variant[0].actualPrice -
                     (Product.variant[0].actualPrice * checkPromotion.discount) / 100
+                if (
+                    price !== promotiondiscount
+
                 ) {
-                    console.log(13)
+                    console.log(13);
 
                     throw {
                         message: {
-                            msg: `Promotion expired, update the cart or remove ${Product.name} from it!`,
+                            msg: `Product is in Promotion. Price is: ${promotiondiscount}`,
                         },
                     };
                 }
