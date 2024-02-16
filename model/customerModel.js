@@ -35,11 +35,12 @@ const schema = new Schema(
         },
         cnic: {
             type: String,
-            required: true,
+            unique: true
         },
         contact: {
             type: String,
             required: true,
+            unique: true,
         },
         address: {
             type: String,
