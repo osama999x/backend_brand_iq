@@ -11,7 +11,7 @@ const deliveryServices = {
 
     },
     getAll: async () => {
-        const allData = await deliveryModel.find();
+        const allData = await deliveryModel.find().populate({ path: 'Region', model: 'TaxType', select: 'taxType' });
         return allData;
     },
     getById: async (id) => {

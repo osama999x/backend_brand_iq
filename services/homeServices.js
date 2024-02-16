@@ -72,13 +72,47 @@ const homeServices = {
                     ],
                 },
                 projection.hometrendprojection
-            )
-            .lean();
-        if (products.length != 0) {
+            ).limit(10)
+            .sort({ $natural: -1 })
+            .lean()
+        // if (products.length != 0) {
+        //     products = products.map((item) => {
+        //         item.actualPrice = item.variant[0].actualPrice;
+        //         item.discountedPrice = item.variant[0].discountedPrice;
+        //         delete item.variant;
+        //         return item;
+        //     });
+        // }
+        if (products.length !== 0) {
+            const currentDate = new Date();
+            const promotions = await promotionModel
+                .find({
+                    expireDate: { $gt: currentDate },
+                    status: "active",
+                })
+                .populate("product");
+
             products = products.map((item) => {
-                item.actualPrice = item.variant[0].actualPrice;
-                item.discountedPrice = item.variant[0].discountedPrice;
+                const firstVariant = item.variant[0];
+
+                item.actualPrice = firstVariant.actualPrice;
+                item.discountedPrice = firstVariant.discountedPrice || null;
+
                 delete item.variant;
+
+                const matchedPromotion = promotions.find((promotion) =>
+                    promotion.product.some((productId) =>
+                        productId.equals(item._id)
+                    )
+                );
+
+                if (matchedPromotion) {
+                    const discount = matchedPromotion.discount;
+                    item.promotionPrice =
+                        firstVariant.actualPrice - (firstVariant.actualPrice / 100) * discount;
+                    item.promotionDiscount = discount;
+                }
+
                 return item;
             });
         }
