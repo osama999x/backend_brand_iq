@@ -324,7 +324,7 @@ const customerServices = {
                 password,
             },
             {
-                new: true,
+                upsert: true,
             }
         );
         return result;
