@@ -97,6 +97,8 @@ const homeServices = {
 
                 item.actualPrice = firstVariant.actualPrice;
                 item.discountedPrice = firstVariant.discountedPrice || null;
+                item.promotionPrice = null;
+                item.promotionDiscount = null;
 
                 delete item.variant;
 

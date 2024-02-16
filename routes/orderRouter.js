@@ -219,7 +219,7 @@ orderRouter.post(
             return res.status(200).send({ validate: true });
         } catch (e) {
             console.log(e.message)
-            return res.status(400).send(e.message);
+            return res.status(200).send(e.message);
         }
     })
 );

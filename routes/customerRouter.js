@@ -298,33 +298,35 @@ customerRouter.post(
     "/resetpassword/set",
     expressAsyncHandler(async (req, res) => {
         const { userId, password, reEnterPassword } = req.body;
+        console.log(req.body);
+        console.log("password", password, 'reEnterPassword', reEnterPassword);
         if (password !== reEnterPassword) {
             return res.status(400).send({ msg: "Passwords Don't Match" });
         }
-        if (!validator.schema.validate(password)) {
-            return res.status(400).send({
-                msg: "Password must have at least:1 uppercase letter,1 lowercase letter,1 number and 1 special character",
 
-                //validator.schema.validate(password, { list: true }),
-            });
-        }
-        const result = await customerServices.setNewPassword(userId, password);
-        if (result) {
-            res.status(200).json({ msg: "Password Updated", data: result });
-            const customerFcm = await customerModel.findOne(
-                { _id: userId },
-                { fcmToken: 1 }
-            );
-            await systemNotificationServices.newNotification(
-                notificationInfo.password.body,
-                notificationInfo.password.title,
-                customerFcm.fcmToken
-            );
-        } else {
-            res.status(400).json({ msg: "Password Not Updated" });
+        try {
+            const result = await customerServices.setNewPassword(userId, password);
+            if (result) {
+
+                res.status(200).json({ msg: "Password Updated" });
+                const customerFcm = await customerModel.findOne(
+                    { _id: userId },
+                    { fcmToken: 1 }
+                );
+                await systemNotificationServices.newNotification(
+                    notificationInfo.password.body,
+                    notificationInfo.password.title,
+                    customerFcm.fcmToken
+                );
+            } else {
+                res.status(400).json({ msg: "Password Not Updated" });
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ msg: "Internal Server Error" });
         }
     })
-);
+);;
 customerRouter.post(
     "/resetpassword/forgot",
     expressAsyncHandler(async (req, res) => {

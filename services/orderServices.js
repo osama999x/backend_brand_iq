@@ -696,7 +696,7 @@ const orderServices = {
             //     throw { message: { msg: `ProductID: ${Product._id} & ${Product.name} has not Enough Quantity! Available Quantity : ${Product.variant[0].quantity}` } };
             // }
             if (!Product || !Product.variant.length) {
-                errorMessages.push({ msg: `ProductID: ${productId} & ${Product.name} doesn't exist` });
+                errorMessages.push({ msg: `ProductID: ${productId} & ${Product.name} doesn't exist`, productId: productId, sku: Product.variant[0].sku });
                 console.log(1)
 
                 continue;
@@ -773,7 +773,9 @@ const orderServices = {
 
                     throw {
                         message: {
-                            msg: `Product is in Promotion. Price is: ${promotiondiscount}`,
+                            msg: `Product is in Promotion.`,
+                            productId: productId,
+                            discount: promotiondiscount
                         },
                     };
                 }
