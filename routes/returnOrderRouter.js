@@ -20,7 +20,7 @@ returnOrderRouter.post(
         if (!orderId || !exchangeReason || !shipmentType) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
-
+        console.log(1);
         const delivered = await orderModel.findOne(
             {
                 _id: orderId,

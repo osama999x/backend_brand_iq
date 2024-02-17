@@ -1335,10 +1335,11 @@ const orderServices = {
             await productModel.findOneAndUpdate(filter, update);
             productLog = new productLogModel({
                 product: mongoose.Types.ObjectId(productId),
-                description: `return product,PRODUCTID:${productId},SKU:${sku},QUANTITY:${quantity},PRICE:${price},CUSTOMER:${customerId},Size:${size}`,
+                description: `return product,PRODUCTID:${productId},SKU:${sku},QUANTITY:${quantity},PRICE:${price},CUSTOMER:${order.customer},Size:${size}`,
             });
             await productLog.save();
         }
+        console.log("totalPrice", totalPrice);
         return totalPrice;
     },
     findOrder: async (orderId) => {
