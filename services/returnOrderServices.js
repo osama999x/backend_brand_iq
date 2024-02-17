@@ -38,6 +38,7 @@ const returnOrderServices = {
         } else {
             imgArr = [];
         }
+        console.log(2);
         const returnDate = new Date(new Date().toLocaleDateString());
         const request = new returnOrderModel({
             orderId,
@@ -213,24 +214,56 @@ const returnOrderServices = {
             } else {
                 //if order partially returned
                 try {
+                    console.log("orderId", orderId, "returnProduct", returnProduct);
                     let returnOrderProduct = await orderServices.popReturnProduct(
                         orderId,
                         returnProduct
                     );
-                    totalPrice = returnOrderProduct.totalPrice;
-                    let getPointPerOrder = await pointManageModel.find({});
+                    console.log(1);
+                    totalPrice = returnOrderProduct;
+                    console.log("totalPrice", totalPrice);
+                    // let getPointPerOrder = await pointManageModel.find({
+                    //     pointOrderPriceFrom: { $lte: totalPrice }
+                    // });
+
+                    // totalBill = totalBill - totalPrice;
+                    // console.log("totalBill", totalBill);
+                    // if (getPointPerOrder.length != 0) {
+                    //     pointOrderPrice = getPointPerOrder[0].pointOrderPriceFrom;
+                    //     pointPerOrder = getPointPerOrder[0].pointPerOrder;
+                    //     var point = Math.ceil(totalBill / pointOrderPrice);
+                    //     point = point * pointPerOrder;
+                    //     await pointModel.findOneAndUpdate(
+                    //         { orderId: OrderId },
+                    //         { points: point }
+                    //     );
+                    // }
+                    let getPointPerOrder = await pointManageModel.find({
+                        pointOrderPriceFrom: { $lte: totalPrice }
+                    });
+
                     totalBill = totalBill - totalPrice;
                     console.log("totalBill", totalBill);
-                    if (getPointPerOrder.length != 0) {
-                        pointOrderPrice = getPointPerOrder[0].pointOrderPrice;
-                        pointPerOrder = getPointPerOrder[0].pointPerOrder;
-                        var point = Math.ceil(totalBill / pointOrderPrice);
-                        point = point * pointPerOrder;
-                        await pointModel.findOneAndUpdate(
-                            { orderId: OrderId },
-                            { points: point }
-                        );
+
+                    let point = 0; // Initialize point outside the if block
+
+                    if (getPointPerOrder.length !== 0) {
+                        let pointOrderPrice = getPointPerOrder[0].pointOrderPriceFrom;
+                        let pointPerOrder = getPointPerOrder[0].pointPerOrder;
+
+                        // Check if pointOrderPrice is not 0 to avoid division by zero
+                        if (pointOrderPrice !== 0) {
+                            point = Math.ceil(totalBill / pointOrderPrice) * pointPerOrder;
+                        }
                     }
+
+                    await pointModel.findOneAndUpdate(
+                        { orderId: OrderId },
+                        { points: point }
+                    );
+
+
+
                     let user = await customerModel.findOneAndUpdate(
                         { _id: order.customer },
                         { $inc: { points: -orderPoint } }
@@ -248,23 +281,23 @@ const returnOrderServices = {
                     await sendNotificationEmail(subject, text, email);
                     //return order log status by admin
                     const returnOrderLog = new returnOrderStatusLogModel({
-                        orderStatus: mongoose.Types.ObjectId(status),
-                        orderId,
+                        orderStatus: status,
+                        orderId: OrderId,
                         time,
                     });
                     await returnOrderLog.save();
                     //log of changing status of order after return some product
                     const data = new orderLogModel({
                         orderStatus: "Delivered",
-                        orderId: OrderId,
+                        orderId: orderId,
                         time,
                         message,
                     });
                     await data.save();
-                    await productsServices.updateLogDealProduct(
-                        returnProduct,
-                        order.customer
-                    );
+                    // await productsServices.updateLogDealProduct(
+                    //     returnProduct,
+                    //     order.customer
+                    // );
                     await returnOrderModel.deleteOne({ orderId: orderId });
                     return true;
                 } catch (e) {
