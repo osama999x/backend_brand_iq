@@ -5,6 +5,8 @@ const mongoose = require("mongoose");
 const subcategoryModel = require("../model/subCategoryModel");
 const uploadFile = require("../utils/uploadFile");
 const categoryModel = require("../model/categoryModel");
+const promotionCampaignModel = require("../model/promotionCampaignModel");
+const promotionModel = require("../model/promotionModel");
 
 const subCategoryServices = {
     getsubcategories: async () => {
@@ -104,21 +106,59 @@ const subCategoryServices = {
                     },
                 },
             ]);
-            if (products.length != 0) {
+            // if (products.length != 0) {
+            //     products = products.map((item) => {
+            //         if (item.isDeal === true) {
+            //             var discountedPrice = item.variant[0].actualPrice - item.discount;
+            //         } else if (item.isDiscount === true) {
+            //             discountedPrice = item.variant[0].discountedPrice;
+            //         } else {
+            //             discountedPrice = item.variant[0].discountedPrice;
+            //         }
+            //         item.actualPrice = item.variant[0].actualPrice;
+            //         item.discountedPrice = discountedPrice;
+            //         delete item.variant;
+            //         delete item.isDiscount;
+            //         delete item.discount;
+            //         delete item.isDeal;
+
+            //         return item;
+            //     });
+            // }
+            if (products.length !== 0) {
+                const currentDate = new Date();
+                const promotions = await promotionModel
+                    .find({
+                        expireDate: { $gt: currentDate },
+                        status: "active",
+                    })
+                    .populate("product");
+
                 products = products.map((item) => {
-                    if (item.isDeal === true) {
-                        var price = item.variant[0].actualPrice - item.discount;
-                    } else if (item.isDiscount === true) {
-                        price = item.variant[0].discountedPrice;
-                    } else {
-                        price = item.variant[0].discountedPrice;
-                    }
-                    item.actualPrice = item.variant[0].actualPrice;
-                    item.price = price;
+                    const firstVariant = item.variant[0];
+
+                    item.actualPrice = firstVariant.actualPrice;
+                    item.discountedPrice = firstVariant.discountedPrice || null;
+                    item.promotionPrice = null;
+                    item.promotionDiscount = null;
                     delete item.variant;
                     delete item.isDiscount;
                     delete item.discount;
                     delete item.isDeal;
+
+
+                    const matchedPromotion = promotions.find((promotion) =>
+                        promotion.product.some((productId) =>
+                            productId.equals(item._id)
+                        )
+                    );
+
+                    if (matchedPromotion) {
+                        const discount = matchedPromotion.discount;
+                        item.promotionPrice =
+                            firstVariant.actualPrice - (firstVariant.actualPrice / 100) * discount;
+                        item.promotionDiscount = discount;
+                    }
 
                     return item;
                 });
