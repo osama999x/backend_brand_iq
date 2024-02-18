@@ -116,6 +116,7 @@ const orderServices = {
                     true
                 ),
             ]);
+            //  const getPointPerOrder = await pointManageModel.findOne({ pointOrderPrice: { $lte: totalBill } });
 
             const getPointPerOrder = await pointManageModel.findOne();
             if (getPointPerOrder) {
@@ -436,8 +437,6 @@ const orderServices = {
                 },
             },
         ]);
-
-        console.log(result);
 
         //   .findById(
         //     { _id },
