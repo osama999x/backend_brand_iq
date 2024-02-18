@@ -569,9 +569,7 @@ const productsServices = {
                 delete item.variant;
 
                 const matchedPromotion = promotions.find((promotion) =>
-                    promotion.product.some((productId) =>
-                        productId.equals(item._id)
-                    )
+                    promotion.product.some((productId) => productId.equals(item._id))
                 );
 
                 if (matchedPromotion) {
@@ -579,11 +577,15 @@ const productsServices = {
                     item.promotionPrice =
                         firstVariant.actualPrice - (firstVariant.actualPrice / 100) * discount;
                     item.promotionDiscount = discount;
+                } else {
+                    item.promotionPrice = null;
+                    item.promotionDiscount = null;
                 }
 
                 return item;
             });
         }
+
 
 
 
