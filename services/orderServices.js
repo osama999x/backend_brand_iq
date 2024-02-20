@@ -886,6 +886,7 @@ const orderServices = {
             const checkPromotion = await promotionModel.findOne({
                 product: { $in: productId },
                 expireDate: { $gte: currentDate },
+                status: "active"
             });
 
             if (checkPromotion) {
