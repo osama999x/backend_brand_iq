@@ -65,8 +65,17 @@ const promotionCampaignServices = {
             {
                 $match: {
                     campaignId: new mongoose.Types.ObjectId(campaign),
+                    status: 'active',
                     expireDate: { $gte: currentDate },
                 },
+            },
+            {
+                $lookup: {
+                    from: "campaigns",
+                    localField: "campaignId",
+                    foreignField: "_id",
+                    as: "campaigns",
+                }
             },
             {
                 $lookup: {
@@ -78,10 +87,13 @@ const promotionCampaignServices = {
             },
             {
                 $project: {
+                    campaignId: 1,
+                    'campaigns.campaignName': 1,
+                    'campaigns.description': 1,
                     _id: 1,
                     discount: 1,
-                    campaignId: 1,
                     products: 1,
+
                 },
             },
         ]);

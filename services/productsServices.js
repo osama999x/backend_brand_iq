@@ -254,7 +254,7 @@ const productsServices = {
                     from: "promotions",
                     localField: "_id",
                     foreignField: "product",
-                    pipeline: [{ $match: { expireDate: { $gte: today } } }],
+                    pipeline: [{ $match: { expireDate: { $gte: today }, status: 'active' } }],
                     as: "promotion",
                 },
             },

@@ -26,6 +26,10 @@ const customerServices = {
         const valid = await bcrypt.compare(password, realPassword);
         return valid;
     },
+    getById: async (id) => {
+        const customer = await customerModel.findById(id);
+        return customer;
+    },
     login: async (email) => {
         const customer = await customerModel.findOne({ email: email }).lean();
         // if (customer) {
@@ -128,6 +132,9 @@ const customerServices = {
         lastName,
         email,
         contact,
+        province,
+        state,
+        zipCode,
         address,
         gender,
         password,
@@ -151,6 +158,9 @@ const customerServices = {
                 lastName,
                 email,
                 contact,
+                province,
+                state,
+                zipCode,
                 address,
                 gender,
                 password,

@@ -42,6 +42,15 @@ const schema = new Schema(
             required: true,
             unique: true,
         },
+        province: {
+            type: String,
+        },
+        state: {
+            type: String,
+        },
+        zipCode: {
+            type: String,
+        },
         address: {
             type: String,
             required: true,
