@@ -1,21 +1,39 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const CustomerCareSchema = new Schema(
-  {
-    customerName: { type: String, required: true },
-    customerEmail: { type: String, required: true },
-    customerPhone: { type: String },
-    inquiry: { type: String, required: true },
-    complaint: { type: String },
-    resolution: { type: String },
-    status: { type: String, default: "Open" },
-    createdAt: { type: Date, default: Date.now },
-  },
-  { timestamps: true }
+    {
+        customerName: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true
+        },
+        customerEmail: {
+            type: String,
+            required: true
+        },
+        customerPhone: {
+            type: String
+        },
+        inquiry: {
+            type: String,
+            required: true
+        },
+        complaint: {
+            type: String
+        },
+        resolution: {
+            type: String
+        },
+        status: {
+            type: String,
+            default: "Open"
+        },
+        createdAt: { type: Date, default: Date.now },
+    },
+    { timestamps: true }
 );
 const CustomerCareModel = new mongoose.model(
-  "CustomerCare",
-  CustomerCareSchema
+    "CustomerCare",
+    CustomerCareSchema
 );
 module.exports = CustomerCareModel;
 //the inquiry field is used to store the initial inquiry or question that a customer has when they contact the customer care center.
