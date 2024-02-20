@@ -106,12 +106,12 @@ reviewRouter.post(
     "/",
     expressAsyncHandler(async (req, res) => {
         const { productId, customerId, rating, comment, images, channel } = req.body;
-        const isPurchase = await orderServices.orderProduct(customerId, productId);
-        if (!isPurchase) {
-            return res.status(400).send({
-                msg: "You can't reviewed this product",
-            });
-        }
+        // const isPurchase = await orderServices.orderProduct(customerId, productId);
+        // if (!isPurchase) {
+        //     return res.status(400).send({
+        //         msg: "You can't reviewed this product",
+        //     });
+        // }
         if (!productId || !customerId) {
             return res.status(400).send({ msg: "Fields Missing" });
         }

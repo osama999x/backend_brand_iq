@@ -31,6 +31,10 @@ const homeServices = {
                 $addFields: {
                     productCount: { $size: "$products" },
                 }
+            }, {
+                $sort: {
+                    createdAt: -1
+                }
             },
             {
                 $lookup: {
@@ -58,6 +62,7 @@ const homeServices = {
                     // "products.description": 1,
                 },
             },
+
         ]);
 
         let products = await productModel

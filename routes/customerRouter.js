@@ -10,6 +10,7 @@ const validator = require("../utils/passwordValidator");
 const uploadFile = require("../utils/uploadFile");
 const { v4: uuidv4 } = require("uuid");
 const saveOtp = require("../utils/saveOtp");
+const sendNotificationEmail = require("../utils/sendNotificationEmail");
 const jwtService = require("../utils/jwtService");
 const validateMobileNumber = require("../utils/validateMobileNumber");
 const { error } = require("winston");
@@ -22,6 +23,9 @@ customerRouter.post(
             lastName,
             email,
             contact,
+            province,
+            state,
+            zipCode,
             address,
             gender,
             password,
@@ -51,6 +55,9 @@ customerRouter.post(
             lastName,
             email,
             contact,
+            province,
+            state,
+            zipCode,
             address,
             gender,
             password,
@@ -126,6 +133,25 @@ customerRouter.post(
         }
     })
 );
+customerRouter.get(
+    '/byId/:id',
+    expressAsyncHandler(async (req, res) => {
+        let id = req.params.id;
+        if (!id) {
+            res.status(400).send({
+                msg: "Fields Missing",
+            });
+        }
+        const result = await customerServices.getById(id);
+        if (result) {
+            res.status(200).send({ msg: "Fetched", data: result })
+        }
+        else {
+            res.status(200).send({ msg: "Not Found" })
+        }
+
+
+    }))
 customerRouter.patch(
     "/uploadProfileImage",
     expressAsyncHandler(async (req, res) => {
@@ -309,15 +335,15 @@ customerRouter.post(
             if (result) {
 
                 res.status(200).json({ msg: "Password Updated" });
-                const customerFcm = await customerModel.findOne(
-                    { _id: userId },
-                    { fcmToken: 1 }
-                );
-                await systemNotificationServices.newNotification(
-                    notificationInfo.password.body,
-                    notificationInfo.password.title,
-                    customerFcm.fcmToken
-                );
+                // const customerFcm = await customerModel.findOne(
+                //     { _id: userId },
+                //     { fcmToken: 1 }
+                // );
+                // await systemNotificationServices.newNotification(
+                //     notificationInfo.password.body,
+                //     notificationInfo.password.title,
+                //     customerFcm.fcmToken
+                // );
             } else {
                 res.status(400).json({ msg: "Password Not Updated" });
             }
@@ -342,17 +368,28 @@ customerRouter.post(
             });
         }
         const result = await customerServices.setForgotPassword(email, password);
+
         if (result) {
-            res.status(200).json({ msg: "Password Updated" });
-            const customerFcm = await customerModel.findOne(
+            let subject = 'Forgot Password';
+            let text =
+                `Your Password has been Updated Successfully. Your New Password is: ${password}`;
+            let userEmail = await customerModel.findOne(
                 { email: email },
-                { fcmToken: 1 }
+                { email: 1, _id: 0 }
             );
-            await systemNotificationServices.newNotification(
-                notificationInfo.password.body,
-                notificationInfo.password.title,
-                customerFcm.fcmToken
-            );
+            if (userEmail) {
+                await sendNotificationEmail(subject, text, userEmail.email);
+            }
+            res.status(200).json({ msg: "Password Updated" });
+            // const customerFcm = await customerModel.findOne(
+            //     { email: email },
+            //     { fcmToken: 1 }
+            // );
+            // await systemNotificationServices.newNotification(
+            //     notificationInfo.password.body,
+            //     notificationInfo.password.title,
+            //     customerFcm.fcmToken
+            // );
         } else {
             res.status(400).json({ msg: "Password Not Updated" });
         }
