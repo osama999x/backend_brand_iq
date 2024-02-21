@@ -85,5 +85,19 @@ pointManageRouter.delete(
         }
     })
 );
+pointManageRouter.get(
+    '/check',
+    expressAsyncHandler(async (req, res) => {
+
+        const { price, pointsCheck } = req.query;
+
+        const result = await pointManageServices.check(price, pointsCheck);
+
+        if (result.success) {
+            res.status(200).json(result);
+        } else {
+            res.status(400).json(result);
+        }
+    }));
 
 module.exports = pointManageRouter;

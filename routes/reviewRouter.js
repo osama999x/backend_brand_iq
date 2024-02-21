@@ -117,19 +117,19 @@ reviewRouter.post(
         }
         var imgArr = [];
         if (images.length != 0) {
-            var arrayLength = images.length;
-            for (var i = 0; i < arrayLength; i++) {
-                img = await uploadFile(images[i]);
-                imgArr.push(img);
-            }
+            // var arrayLength = images.length;
+            // for (var i = 0; i < arrayLength; i++) {
+            var img = await uploadFile(images)
+            // imgArr.push(img);
         }
+        //   }
 
         const result = await reviewServices.addNewRate(
             productId,
             customerId,
             rating,
             comment,
-            imgArr,
+            img,
             channel
         );
         if (result) {
