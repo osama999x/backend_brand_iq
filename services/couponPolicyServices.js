@@ -74,9 +74,9 @@ const coupanPolicyServices = {
 
         const couponPolicy = await couponPolicyModel.findOne({ couponCode: couponCode });
 
-        if (!couponPolicy) {
-            throw new Error('Coupon not found.');
-        }
+        // if (!couponPolicy) {
+        //     throw new Error('Coupon not found.');
+        // }
 
         const isValid = orderPriceLimit >= couponPolicy.orderPriceLimit;
 

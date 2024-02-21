@@ -48,7 +48,10 @@ couponPolicyRouter.post(
         if (inActive) {
             return res.status(200).send({ msg: "Coupon is InActive!" });
         }
-
+        const validCoupon = await couponPolicyServices.getValidCoupon(couponCode);
+        if (!validCoupon) {
+            return res.status(200).send({ msg: "Coupon Has Expired" });
+        }
         const orderLimitInfo = await couponPolicyServices.getOrderLimit(couponCode, orderPriceLimit);
         if (!orderLimitInfo.isValid) {
             return res.status(200).send({
@@ -57,10 +60,7 @@ couponPolicyRouter.post(
             });
         }
 
-        const validCoupon = await couponPolicyServices.getValidCoupon(couponCode);
-        if (!validCoupon) {
-            return res.status(200).send({ msg: "Coupon Has Expired" });
-        }
+
 
         const isbuy = await couponPolicyServices.isbuy(couponCode, customerId);
         if (isbuy) {
