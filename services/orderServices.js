@@ -1253,7 +1253,7 @@ const orderServices = {
                     await sendNotificationEmail(subject, text, userEmail.email);
                 }
                 //consume Customer Coupon
-                if (result.couponCode !== "00") {
+                if (result.couponCode) {
                     coupanPolicyServices.consumeCoupon(customerId, result.couponCode);
                 }
                 //UPDATE PRODUCT QUANTITY
