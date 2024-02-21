@@ -118,7 +118,12 @@ const orderServices = {
             ]);
             //  const getPointPerOrder = await pointManageModel.findOne({ pointOrderPrice: { $lte: totalBill } });
 
-            const getPointPerOrder = await pointManageModel.findOne();
+            // const getPointPerOrder = await pointManageModel.findOne();
+            const getPointPerOrder = await pointManageModel.findOne({
+                pointOrderPriceTo: { $lte: totalBill },
+                pointOrderPriceFrom: { $gte: totalBill }
+            });
+            console.log('getPointPerOrder', getPointPerOrder);
             if (getPointPerOrder) {
                 //    const { pointOrderPrice, pointPerOrder } = getPointPerOrder;
                 const { pointOrderPriceFrom, pointPerOrder } = getPointPerOrder;
@@ -296,6 +301,8 @@ const orderServices = {
                     orderId: 1,
                     placedOn: 1,
                     firstProduct: 1,
+                    status: 1,
+                    trackingId: 1
                 },
             },
             {
@@ -513,6 +520,7 @@ const orderServices = {
                     totalBill: { $first: "$totalBill" },
                     tax: { $first: "$tax" },
                     orderId: { $first: "$orderId" },
+                    status: { $first: "$status" },
                     trackingId: { $first: "$trackingId" },
                     placedOn: { $first: "$placedOn" },
                     isDeliver: { $first: "$isDeliver" },
@@ -527,6 +535,8 @@ const orderServices = {
                             productName: "$productDetails.name",
                             productQuantity: "$product.quantity",
                             productPrice: "$product.price",
+                            size: "$product.size",
+                            colour: "$product.colour",
                         }
                     },
                 },
@@ -868,7 +878,7 @@ const orderServices = {
 
                     throw {
                         message: {
-                            msg: `Product is in Promotion.`,
+                            msg: `${Product.name} is in Promotion.`,
                             productId: productId,
                             discount: promotiondiscount
                         },
@@ -918,7 +928,9 @@ const orderServices = {
 
                     throw {
                         message: {
-                            msg: `${Product.name} price has been changed ${Product.variant[0].discountedPrice}, update the cart!`,
+                            msg: `${Product.name} Price has been changed, update the Cart!`,
+                            Name: Product.name,
+                            discount: Product.variant[0].discountedPrice,
                         },
                     };
                 }
@@ -1086,30 +1098,80 @@ const orderServices = {
         shippingAddress
     ) => {
         try {
+            var productArr = [];
+            var currentDate = new Date(new Date().toLocaleString());
+            var productLength = product.length;
+
+            for (let i = 0; i < productLength; i++) {
+                const productId = product[i].productId;
+                const quantity = product[i].quantity;
+                const price = product[i].price;
+                const sku = product[i].sku;
+                // const size = product[i].size;
+                // const colour = product[i].colour;
+
+                const Product = await productModel.findOne(
+                    { _id: productId },
+                    {
+                        variant: {
+                            $elemMatch: { sku: sku },
+                            name: 1,
+                            discount: 1,
+
+                        },
+                    }
+                );
+
+                if (!Product || !Product.variant || Product.variant.length === 0) {
+                    continue;
+                }
+
+
+                const variant = Product.variant[0];
+                console.log("variant", variant);
+
+                const variantSize = variant.size || "";
+                const variantColour = variant.colorName || "";
+
+                const productInfo = {
+                    productId: productId,
+                    quantity: quantity,
+                    price: price,
+                    sku: sku,
+                    size: variantSize,
+                    colour: variantColour,
+                };
+
+
+                productArr.push(productInfo);
+            }
+
+
             // //check customer already buy deal product or not
             // var productArr = [];
-            var currentDate = new Date(new Date().toLocaleString());
+            // var currentDate = new Date(new Date().toLocaleString());
             // var productLength = product.length;
             // for (let i = 0; i < productLength; i++) {
-            //   productId = product[i].productId;
-            //   quantity = product[i].quantity;
-            //   price = product[i].price;
-            //   sku = product[i].sku;
-            //   size = product[i].size;
-            //   if (price <= 0) {
-            //     return;
-            //   }
-            //   var Product = await productModel.findOne(
-            //     { _id: productId, isDeal: true },
-            //     {
-            //       variant: {
-            //         $elemMatch: { sku: sku },
-            //         name: 1,
-            //         discount: 1,
-            //         dealExpire: 1,
-            //       },
-            //     }
-            //   );
+            //     productId = product[i].productId;
+            //     quantity = product[i].quantity;
+            //     price = product[i].price;
+            //     sku = product[i].sku;
+            //     size = product[i].size;
+            //     //   if (price <= 0) {
+            //     //     return;
+            //     //   }
+            //     var Product = await productModel.findOne(
+            //         { _id: productId, isDeal: true },
+            //         {
+            //             variant: {
+            //                 $elemMatch: { sku: sku },
+            //                 name: 1,
+            //                 discount: 1,
+            //                 dealExpire: 1,
+            //             },
+            //         }
+            //     );
+            // }
             //   if (
             //     Product != null &&
             //     price === Product.variant[0].actualPrice - Product.discount
@@ -1155,7 +1217,7 @@ const orderServices = {
             // }
             var order = new orderModel({
                 customer: mongoose.Types.ObjectId(customer),
-                product,
+                product: productArr,
                 paymentMode,
                 totalBill,
                 totalAmount,

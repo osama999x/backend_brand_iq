@@ -33,6 +33,9 @@ const schema = new Schema(
                 size: {
                     type: String,
                 },
+                colour: {
+                    type: String,
+                }
             },
         ],
         // address: {

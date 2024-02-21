@@ -29,13 +29,12 @@ const pointManageServices = {
         var _id = mongoose.Types.ObjectId(_id);
 
         if (initialPoint) {
-            const result = await pointManageModel.updateMany(
+            const result1 = await pointManageModel.updateMany(
                 {},
                 { initialPoint: initialPoint },
                 { upsert: true }
             );
-            return result;
-        } else {
+
             const result = await pointManageModel.findOneAndUpdate(
                 { _id },
                 { pointOrderPriceTo, pointOrderPriceFrom, pointPerOrder, ReedemPoints },
@@ -52,6 +51,39 @@ const pointManageServices = {
         const result = await pointManageModel.deleteOne({ _id });
         return result;
     },
-};
+    check: async (price, pointsCheck) => {
+        const getPointPerOrder = await pointManageModel.findOne({
+            pointOrderPriceTo: { $lte: price },
+            pointOrderPriceFrom: { $gte: price }
+        });
+
+        if (getPointPerOrder) {
+            const { ReedemPoints, pointOrderPriceTo, pointOrderPriceFrom } = getPointPerOrder;
+
+            if (ReedemPoints >= pointsCheck) {
+                return {
+                    success: true,
+                    message: "Price falls within the specified range.",
+                    pointOrderPriceTo,
+                    pointOrderPriceFrom,
+                    MaximumPointsToReedem: ReedemPoints
+                };
+            } else {
+                return {
+                    success: false,
+                    message: "Points check failed. ReedemPoints is greater than pointsCheck.",
+                    pointOrderPriceTo,
+                    pointOrderPriceFrom,
+                    MaximumPointsToReedem: ReedemPoints
+                };
+            }
+        } else {
+            return {
+                success: false,
+                message: "No matching document found for the given price range."
+            };
+        }
+    }
+}
 
 module.exports = pointManageServices;
