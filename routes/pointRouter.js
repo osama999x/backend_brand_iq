@@ -18,7 +18,7 @@ pointRouter.post(
 
         const result = await pointServices.customerOrderPoints(customerId, date);
 
-        if (result.orderDetails.length !== 0 || result.totalPoints.length !== 0) {
+        if (result) {
             res.status(200).send({
                 msg: "Points",
                 data: result,
