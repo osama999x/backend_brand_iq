@@ -69,7 +69,6 @@ const schema = new Schema(
         },
         redeemValue: {
             type: Number,
-            required: true,
         },
         paymentMode: {
             type: String,
