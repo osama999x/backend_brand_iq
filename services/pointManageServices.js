@@ -1,6 +1,7 @@
 const pointManageModel = require("../model/pointManageModel");
 const mongoose = require("mongoose");
 const projection = require("../config/mongoProjection");
+const customerModel = require("../model/customerModel");
 
 const pointManageServices = {
     get: async () => {
@@ -51,14 +52,32 @@ const pointManageServices = {
         const result = await pointManageModel.deleteOne({ _id });
         return result;
     },
-    check: async (price, pointsCheck) => {
-        const getPointPerOrder = await pointManageModel.findOne({
+    check: async (price, pointsCheck, customerId) => {
+
+        const customerPoints = await customerModel.findById(customerId, { points: 1 });
+
+        if (!customerPoints) {
+            return {
+                success: false,
+                message: "You don't have any points to avail.",
+            };
+        }
+
+        if (pointsCheck > customerPoints.points) {
+            return {
+                success: false,
+                message: `You have a total of ${customerPoints.points} points available. Points check failed.`,
+                PointsAvailable: customerPoints.points,
+            };
+        }
+
+        const pointPerOrder = await pointManageModel.findOne({
             pointOrderPriceTo: { $lte: price },
             pointOrderPriceFrom: { $gte: price }
         });
 
-        if (getPointPerOrder) {
-            const { ReedemPoints, pointOrderPriceTo, pointOrderPriceFrom } = getPointPerOrder;
+        if (pointPerOrder) {
+            const { ReedemPoints, pointOrderPriceTo, pointOrderPriceFrom } = pointPerOrder;
 
             if (ReedemPoints >= pointsCheck) {
                 return {
@@ -66,24 +85,29 @@ const pointManageServices = {
                     message: "Price falls within the specified range.",
                     pointOrderPriceTo,
                     pointOrderPriceFrom,
-                    MaximumPointsToReedem: ReedemPoints
+                    MaximumPointsToRedeem: ReedemPoints,
+                    PointsProvidedToAvail: pointsCheck
                 };
             } else {
                 return {
                     success: false,
-                    message: "Points check failed. ReedemPoints is greater than pointsCheck.",
+                    message: `Points check failed. You can cash a minimum of: ${ReedemPoints}, For this Order.`,
                     pointOrderPriceTo,
                     pointOrderPriceFrom,
-                    MaximumPointsToReedem: ReedemPoints
+                    MaximumPointsToRedeem: ReedemPoints,
+
+
                 };
             }
         } else {
             return {
                 success: false,
-                message: "No matching document found for the given price range."
+                message: "No matching document found for the given price range.",
             };
         }
+
     }
+
 }
 
 module.exports = pointManageServices;

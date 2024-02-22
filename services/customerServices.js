@@ -144,7 +144,12 @@ const customerServices = {
         const checkCustomer = await customerModel.findOne({ email: email });
         if (checkCustomer) {
             throw new Error("Email already exist");
-        } else {
+        }
+        const Checkcnic = await customerModel.findOne({ cnic: cnic });
+        if (Checkcnic) {
+            throw new Error("Driving License Number Already exist");
+        }
+        else {
             let getInitialPoint = await pointManageModel.find({});
             if (getInitialPoint.length != 0) {
                 var initialPoint = getInitialPoint[0].initialPoint;
