@@ -177,7 +177,7 @@ customerRouter.patch(
 customerRouter.patch(
     "/updateCustomerProfile",
     expressAsyncHandler(async (req, res) => {
-        const { customerID, firstName, lastName, contact, address, zipCode, province, reigon } =
+        const { customerID, firstName, lastName, contact, address, gender, zipCode, province, reigon } =
             req.body;
         if (
             !customerID ||
