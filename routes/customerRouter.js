@@ -177,7 +177,7 @@ customerRouter.patch(
 customerRouter.patch(
     "/updateCustomerProfile",
     expressAsyncHandler(async (req, res) => {
-        const { customerID, firstName, lastName, contact, address, gender } =
+        const { customerID, firstName, lastName, contact, address, zipCode, province, reigon } =
             req.body;
         if (
             !customerID ||
@@ -185,7 +185,9 @@ customerRouter.patch(
             !lastName ||
             !contact ||
             !address ||
-            !gender
+            !gender ||
+            !province ||
+            !reigon
         ) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
@@ -196,7 +198,10 @@ customerRouter.patch(
             lastName,
             contact,
             address,
-            gender
+            gender,
+            zipCode,
+            province,
+            reigon
         );
         if (result) {
             return res
