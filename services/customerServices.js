@@ -143,45 +143,62 @@ const customerServices = {
     ) => {
         const checkCustomer = await customerModel.findOne({ email: email });
         if (checkCustomer) {
-            throw new Error("Email already exist");
+            throw new Error("Email already exists");
         }
-        const Checkcnic = await customerModel.findOne({ cnic: cnic });
-        if (Checkcnic) {
-            throw new Error("Driving License Number Already exist");
-        }
-        else {
-            let getInitialPoint = await pointManageModel.find({});
-            if (getInitialPoint.length != 0) {
-                var initialPoint = getInitialPoint[0].initialPoint;
-            } else {
-                initialPoint = 0;
+
+        // Check if cnic is an empty field
+        if (cnic === "") {
+            // Continue with the rest of the code or handle it as needed
+            console.log("CNIC is empty");
+        } else {
+            const checkCnic = await customerModel.findOne({ cnic: cnic });
+
+            // Check if checkCnic is not null (meaning cnic already exists)
+            if (checkCnic) {
+                throw new Error("Driving License Number already exists");
             }
-            const salt = await bcrypt.genSalt(10);
-            password = await bcrypt.hash(password, salt);
-            customer = new customerModel({
-                firstName,
-                lastName,
-                email,
-                contact,
-                province,
-                state,
-                zipCode,
-                address,
-                gender,
-                password,
-                cnic,
-                points: initialPoint,
-                reigon
-            });
-            const result = await customer.save();
-            if (result) {
-                id = result._id;
-                points = result.points;
-                await pointServices.assaignPointMembership(id, points);
-            }
-            return result;
         }
-    },
+        // Rest of the code for non-empty cnic
+        let getInitialPoint = await pointManageModel.find({});
+        let initialPoint = 0;
+
+        if (getInitialPoint.length !== 0) {
+            initialPoint = getInitialPoint[0].initialPoint;
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const customer = new customerModel({
+            firstName,
+            lastName,
+            email,
+            contact,
+            province,
+            state,
+            zipCode,
+            address,
+            gender,
+            password: hashedPassword,
+            cnic,
+            points: initialPoint,
+            reigon
+        });
+
+        const result = await customer.save();
+
+        if (result) {
+            const id = result._id;
+            const points = result.points;
+            await pointServices.assaignPointMembership(id, points);
+        }
+
+        return result;
+
+    }
+
+
+    ,
     addNewWeb: async (
         firstName,
         lastName,
