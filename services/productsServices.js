@@ -990,7 +990,8 @@ const productsServices = {
     },
     delete: async (_id) => {
         var _id = mongoose.Types.ObjectId(_id);
-        const result = await productsModel.deleteOne({ _id: _id });
+        const result = await productsModel.findOneAndUpdate({ _id: _id }, { isActive: false }, { upsert: true });
+
         return result;
     },
     getMultipleProducts: async (ids) => {
