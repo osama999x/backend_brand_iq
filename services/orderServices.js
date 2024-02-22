@@ -1244,7 +1244,7 @@ const orderServices = {
                 let subject = sendEmailNotificationInfo.orderResponse.title;
                 let text =
                     sendEmailNotificationInfo.orderResponse.body +
-                    `Your Order has been SuccesFully Placed on Msafa and your orderId is :${Result.orderId}`;
+                    `Your Order has been SuccesFully Placed on Msafa and your Order Id: ${Result.orderId}, Total Bill ${Result.totalBill}, PlacedOn: ${Result.placedOn}. Happy Shopping :)`;
                 let userEmail = await customerModel.findOne(
                     { _id: customerId },
                     { email: 1, _id: 0 }
