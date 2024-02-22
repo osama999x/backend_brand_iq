@@ -276,15 +276,18 @@ const customerServices = {
             return result;
         }
     },
-    updateDetails: async (_id, firstName, lastName, contact, address, gender) => {
+    updateDetails: async (_id, firstName, lastName, contact, address, gender, zipCode, province, reigon) => {
         result = await customerModel.findOneAndUpdate(
             { _id },
             {
-                firstName,
-                lastName,
-                contact,
-                address,
-                gender,
+                firstName: firstName,
+                lastName: lastName,
+                contact: contact,
+                address: address,
+                gender: gender,
+                zipCode: zipCode,
+                province: province,
+                reigon: reigon
             },
             {
                 new: true,
