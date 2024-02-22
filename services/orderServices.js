@@ -118,7 +118,12 @@ const orderServices = {
             ]);
             //  const getPointPerOrder = await pointManageModel.findOne({ pointOrderPrice: { $lte: totalBill } });
 
-            const getPointPerOrder = await pointManageModel.findOne();
+            // const getPointPerOrder = await pointManageModel.findOne();
+            const getPointPerOrder = await pointManageModel.findOne({
+                pointOrderPriceTo: { $lte: totalBill },
+                pointOrderPriceFrom: { $gte: totalBill }
+            });
+            console.log('getPointPerOrder', getPointPerOrder);
             if (getPointPerOrder) {
                 //    const { pointOrderPrice, pointPerOrder } = getPointPerOrder;
                 const { pointOrderPriceFrom, pointPerOrder } = getPointPerOrder;
@@ -277,89 +282,58 @@ const orderServices = {
         return result;
     },
     customerOrderHistory: async (customerId) => {
-        // let result = await orderModel.aggregate([
-        //     {
-        //         $match: {
-        //             customer: new mongoose.Types.ObjectId(customerId),
-        //             isDeletedByUser: 0,
-        //         },
-        //     },
-        //     {
-        //         $addFields: {
-        //             firstProduct: {
-        //                 $arrayElemAt: ["$product", 0],
-        //             },
-        //         },
-        //     },
-        //     {
-        //         $project: {
-        //             orderId: 1,
-        //             placedOn: 1,
-        //             firstProduct: 1,
-        //         },
-        //     },
-        //     {
-        //         $lookup: {
-        //             from: "products",
-        //             localField: "firstProduct.productId",
-        //             foreignField: "_id",
-        //             as: "product_info",
-        //         },
-        //     },
-        //     {
-        //         $unwind: {
-        //             path: "$product_info",
-        //         },
-        //     },
-        //     {
-        //         $project: {
-        //             orderId: 1,
-        //             placedOn: 1,
-        //             status: 1,
-        //             isDeliver: 1,
-        //             thumbnail: "$product_info.thumbnail",
-        //         },
-        //     },
-        //     {
-        //         $sort: {
-        //             placedOn: -1
-        //         },
-        //     },
-        //     // {
-        //     //     $lookup: {
-        //     //         from: "categories",
-        //     //         localField: "product_info.category",
-        //     //         foreignField: "_id",
-        //     //         as: "categories",
-        //     //     },
-        //     // },
+        let result = await orderModel.aggregate([
+            {
+                $match: {
+                    customer: new mongoose.Types.ObjectId(customerId),
+                    isDeletedByUser: 0,
+                },
+            },
+            {
+                $addFields: {
+                    firstProduct: {
+                        $arrayElemAt: ["$product", 0],
+                    },
+                },
+            },
+            {
+                $project: {
+                    orderId: 1,
+                    placedOn: 1,
+                    firstProduct: 1,
+                    status: 1,
+                    trackingId: 1
+                },
+            },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "firstProduct.productId",
+                    foreignField: "_id",
+                    as: "product_info",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$product_info",
+                },
+            },
+            {
+                $project: {
+                    orderId: 1,
+                    placedOn: 1,
+                    status: 1,
+                    isDeliver: 1,
+                    thumbnail: "$product_info.thumbnail",
+                },
+            },
+            {
+                $sort: {
+                    placedOn: -1
+                },
+            },
 
-        //     // {
-        //     //     $group: {
-        //     //         _id: _id,
-        //     //         paymentMode: { $first: "$paymentMode" },
-        //     //         totalBill: { $first: "$totalBill" },
-        //     //         tax: { $first: "$tax" },
-        //     //         orderId: { $first: "$orderId" },
-        //     //         trackingId: { $first: "$trackingId" },
-        //     //         placedOn: { $first: "$placedOn" },
-        //     //         isDeliver: { $first: "$isDeliver" },
-        //     //         productThumbnail: { $first: "$productDetails.thumbnail" },
-        //     //         products: {
-        //     //             $push: {
-        //     //                 productId: "$firstProduct.productDetails._id",
-        //     //                 quantity: "$firstProduct.product.quantity",
-        //     //                 price: "$firstProduct.product.price",
-        //     //                 sku: "$firstProduct.product.sku",
-        //     //                 productCategory: { $first: "$categories.name" },
-        //     //                 productName: "$firstProduct.productDetails.name",
-        //     //                 productQuantity: "$firstProduct.product.quantity",
-        //     //                 productPrice: "$firstProduct.product.price",
-        //     //             }
-        //     //         },
-        //     //     },
-        //     // }
-        // ]);
+        ]);
 
         // let result1 = await orderModel.aggregate([
         //     {
@@ -438,45 +412,45 @@ const orderServices = {
         //   });
         // }
 
-        let result = await orderModel.aggregate([
-            {
-                $match: {
-                    customer: new mongoose.Types.ObjectId(customerId),
-                    isDeletedByUser: 0,
-                },
-            },
-            {
-                $lookup: {
-                    from: "products",
-                    localField: "product.productId",
-                    foreignField: "_id",
-                    as: "products_info",
-                },
-            },
-            {
-                $project: {
-                    customer: 1,
-                    "product._id": 1,
-                    "product.quantity": 1,
-                    "product.price": 1,
-                    "product.sku": 1,
-                    "product.size": 1,
-                    status: 1,
-                    totalBill: 1,
-                    totalAmount: 1,
-                    paymentMode: 1,
-                    orderId: 1,
-                    trackingId: 1,
-                    placedOn: 1,
-                    "products_info.thumbnail": 1
-                },
-            },
-            {
-                $sort: {
-                    placedOn: -1
-                },
-            }
-        ])
+        // let result = await orderModel.aggregate([
+        //     {
+        //         $match: {
+        //             customer: new mongoose.Types.ObjectId(customerId),
+        //             isDeletedByUser: 0,
+        //         },
+        //     },
+        //     {
+        //         $lookup: {
+        //             from: "products",
+        //             localField: "product.productId",
+        //             foreignField: "_id",
+        //             as: "products_info",
+        //         },
+        //     },
+        //     {
+        //         $project: {
+        //             customer: 1,
+        //             "product._id": 1,
+        //             "product.quantity": 1,
+        //             "product.price": 1,
+        //             "product.sku": 1,
+        //             "product.size": 1,
+        //             status: 1,
+        //             totalBill: 1,
+        //             totalAmount: 1,
+        //             paymentMode: 1,
+        //             orderId: 1,
+        //             trackingId: 1,
+        //             placedOn: 1,
+        //             "products_info.thumbnail": 1
+        //         },
+        //     },
+        //     {
+        //         $sort: {
+        //             placedOn: -1
+        //         },
+        //     }
+        // ])
         return result;
     },
     getorder: async () => {
@@ -510,61 +484,64 @@ const orderServices = {
         return result;
     },
     getOrderHistoryDetail: async (_id) => {
-        // let result = await orderModel.aggregate([
-        //     {
-        //         $match: {
-        //             _id: new mongoose.Types.ObjectId(_id),
-        //             isDeletedByUser: 0,
-        //         },
-        //     },
-        //     {
-        //         $unwind: "$product" // Unwind the product array to make it easier to use in $lookup stages
-        //     },
-        //     {
-        //         $lookup: {
-        //             from: "products",
-        //             localField: "product.productId",
-        //             foreignField: "_id",
-        //             as: "productDetails",
-        //         },
-        //     },
-        //     {
-        //         $unwind: "$productDetails" // Unwind the productDetails array
-        //     },
-        //     {
-        //         $lookup: {
-        //             from: "categories",
-        //             localField: "productDetails.category",
-        //             foreignField: "_id",
-        //             as: "categories",
-        //         },
-        //     },
-        //     {
-        //         $group: {
-        //             _id: "$_id",
-        //             paymentMode: { $first: "$paymentMode" },
-        //             totalBill: { $first: "$totalBill" },
-        //             tax: { $first: "$tax" },
-        //             orderId: { $first: "$orderId" },
-        //             trackingId: { $first: "$trackingId" },
-        //             placedOn: { $first: "$placedOn" },
-        //             isDeliver: { $first: "$isDeliver" },
-        //             productThumbnail: { $first: "$productDetails.thumbnail" },
-        //             products: {
-        //                 $push: {
-        //                     productId: "$productDetails._id",
-        //                     quantity: "$product.quantity",
-        //                     price: "$product.price",
-        //                     sku: "$product.sku",
-        //                     productCategory: { $first: "$categories.name" },
-        //                     productName: "$productDetails.name",
-        //                     productQuantity: "$product.quantity",
-        //                     productPrice: "$product.price",
-        //                 }
-        //             },
-        //         },
-        //     },
-        // ]);
+        let result = await orderModel.aggregate([
+            {
+                $match: {
+                    _id: new mongoose.Types.ObjectId(_id),
+                    isDeletedByUser: 0,
+                },
+            },
+            {
+                $unwind: "$product" // Unwind the product array to make it easier to use in $lookup stages
+            },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "product.productId",
+                    foreignField: "_id",
+                    as: "productDetails",
+                },
+            },
+            {
+                $unwind: "$productDetails" // Unwind the productDetails array
+            },
+            {
+                $lookup: {
+                    from: "categories",
+                    localField: "productDetails.category",
+                    foreignField: "_id",
+                    as: "categories",
+                },
+            },
+            {
+                $group: {
+                    _id: "$_id",
+                    paymentMode: { $first: "$paymentMode" },
+                    totalBill: { $first: "$totalBill" },
+                    tax: { $first: "$tax" },
+                    orderId: { $first: "$orderId" },
+                    status: { $first: "$status" },
+                    trackingId: { $first: "$trackingId" },
+                    placedOn: { $first: "$placedOn" },
+                    isDeliver: { $first: "$isDeliver" },
+                    productThumbnail: { $first: "$productDetails.thumbnail" },
+                    products: {
+                        $push: {
+                            productId: "$productDetails._id",
+                            quantity: "$product.quantity",
+                            price: "$product.price",
+                            sku: "$product.sku",
+                            productCategory: { $first: "$categories.name" },
+                            productName: "$productDetails.name",
+                            productQuantity: "$product.quantity",
+                            productPrice: "$product.price",
+                            size: "$product.size",
+                            colour: "$product.colour",
+                        }
+                    },
+                },
+            },
+        ]);
 
         //   .findById(
         //     { _id },
@@ -886,6 +863,7 @@ const orderServices = {
             const checkPromotion = await promotionModel.findOne({
                 product: { $in: productId },
                 expireDate: { $gte: currentDate },
+                status: "active"
             });
 
             if (checkPromotion) {
@@ -900,7 +878,7 @@ const orderServices = {
 
                     throw {
                         message: {
-                            msg: `Product is in Promotion.`,
+                            msg: `${Product.name} is in Promotion.`,
                             productId: productId,
                             discount: promotiondiscount
                         },
@@ -950,7 +928,9 @@ const orderServices = {
 
                     throw {
                         message: {
-                            msg: `${Product.name} price has been changed ${Product.variant[0].discountedPrice}, update the cart!`,
+                            msg: `${Product.name} Price has been changed, update the Cart!`,
+                            Name: Product.name,
+                            discount: Product.variant[0].discountedPrice,
                         },
                     };
                 }
@@ -1118,30 +1098,80 @@ const orderServices = {
         shippingAddress
     ) => {
         try {
+            var productArr = [];
+            var currentDate = new Date(new Date().toLocaleString());
+            var productLength = product.length;
+
+            for (let i = 0; i < productLength; i++) {
+                const productId = product[i].productId;
+                const quantity = product[i].quantity;
+                const price = product[i].price;
+                const sku = product[i].sku;
+                // const size = product[i].size;
+                // const colour = product[i].colour;
+
+                const Product = await productModel.findOne(
+                    { _id: productId },
+                    {
+                        variant: {
+                            $elemMatch: { sku: sku },
+                            name: 1,
+                            discount: 1,
+
+                        },
+                    }
+                );
+
+                if (!Product || !Product.variant || Product.variant.length === 0) {
+                    continue;
+                }
+
+
+                const variant = Product.variant[0];
+                console.log("variant", variant);
+
+                const variantSize = variant.size || "";
+                const variantColour = variant.colorName || "";
+
+                const productInfo = {
+                    productId: productId,
+                    quantity: quantity,
+                    price: price,
+                    sku: sku,
+                    size: variantSize,
+                    colour: variantColour,
+                };
+
+
+                productArr.push(productInfo);
+            }
+
+
             // //check customer already buy deal product or not
             // var productArr = [];
-            var currentDate = new Date(new Date().toLocaleString());
+            // var currentDate = new Date(new Date().toLocaleString());
             // var productLength = product.length;
             // for (let i = 0; i < productLength; i++) {
-            //   productId = product[i].productId;
-            //   quantity = product[i].quantity;
-            //   price = product[i].price;
-            //   sku = product[i].sku;
-            //   size = product[i].size;
-            //   if (price <= 0) {
-            //     return;
-            //   }
-            //   var Product = await productModel.findOne(
-            //     { _id: productId, isDeal: true },
-            //     {
-            //       variant: {
-            //         $elemMatch: { sku: sku },
-            //         name: 1,
-            //         discount: 1,
-            //         dealExpire: 1,
-            //       },
-            //     }
-            //   );
+            //     productId = product[i].productId;
+            //     quantity = product[i].quantity;
+            //     price = product[i].price;
+            //     sku = product[i].sku;
+            //     size = product[i].size;
+            //     //   if (price <= 0) {
+            //     //     return;
+            //     //   }
+            //     var Product = await productModel.findOne(
+            //         { _id: productId, isDeal: true },
+            //         {
+            //             variant: {
+            //                 $elemMatch: { sku: sku },
+            //                 name: 1,
+            //                 discount: 1,
+            //                 dealExpire: 1,
+            //             },
+            //         }
+            //     );
+            // }
             //   if (
             //     Product != null &&
             //     price === Product.variant[0].actualPrice - Product.discount
@@ -1187,7 +1217,7 @@ const orderServices = {
             // }
             var order = new orderModel({
                 customer: mongoose.Types.ObjectId(customer),
-                product,
+                product: productArr,
                 paymentMode,
                 totalBill,
                 totalAmount,
@@ -1223,7 +1253,7 @@ const orderServices = {
                     await sendNotificationEmail(subject, text, userEmail.email);
                 }
                 //consume Customer Coupon
-                if (result.couponCode !== "00") {
+                if (result.couponCode) {
                     coupanPolicyServices.consumeCoupon(customerId, result.couponCode);
                 }
                 //UPDATE PRODUCT QUANTITY

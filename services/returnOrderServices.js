@@ -31,13 +31,9 @@ const returnOrderServices = {
     ) => {
         let imgArr = [];
         if (images.length != 0) {
-            for (var i = 0; i < images.length; i++) {
-                var image = await uploadFile(images[i]);
-                imgArr.push(image);
-            }
-        } else {
-            imgArr = [];
+            var image = await uploadFile(images);
         }
+
         console.log(2);
         const returnDate = new Date(new Date().toLocaleDateString());
         const request = new returnOrderModel({
@@ -47,7 +43,7 @@ const returnOrderServices = {
             returnProduct,
             returnDate,
             exchangeReason,
-            images: imgArr,
+            images: image,
         });
         const result = await request.save();
         if (result) {

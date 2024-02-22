@@ -46,8 +46,14 @@ const reviewServices = {
                     "customer.membershipCategory": "$customer.membershipCategory",
                     "product._id": "$product._id",
                     "product.name": "$product.name",
+                    createdAt: 1
                 },
             },
+            {
+                $sort: {
+                    createdAt: -1
+                }
+            }
         ]);
         // .find({}, { _id: 1, channel: 1, isApproved: 1 })
         // .populate({
@@ -272,18 +278,18 @@ const reviewServices = {
         customerId,
         rating,
         comment,
-        images,
+        img,
         channel
     ) => {
-        if (images.length === 0) {
-            images[0] = "images/profile.png";
+        if (img.length === 0) {
+            img = "images/profile.png";
         }
         const data = new reviewModel({
             productId: mongoose.Types.ObjectId(productId),
             customerId: mongoose.Types.ObjectId(customerId),
             rating,
             comment,
-            images,
+            images: img,
             channel,
         });
         const result = await data.save();

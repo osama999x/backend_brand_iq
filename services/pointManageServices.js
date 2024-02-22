@@ -1,6 +1,7 @@
 const pointManageModel = require("../model/pointManageModel");
 const mongoose = require("mongoose");
 const projection = require("../config/mongoProjection");
+const customerModel = require("../model/customerModel");
 
 const pointManageServices = {
     get: async () => {
@@ -29,13 +30,12 @@ const pointManageServices = {
         var _id = mongoose.Types.ObjectId(_id);
 
         if (initialPoint) {
-            const result = await pointManageModel.updateMany(
+            const result1 = await pointManageModel.updateMany(
                 {},
                 { initialPoint: initialPoint },
                 { upsert: true }
             );
-            return result;
-        } else {
+
             const result = await pointManageModel.findOneAndUpdate(
                 { _id },
                 { pointOrderPriceTo, pointOrderPriceFrom, pointPerOrder, ReedemPoints },
@@ -52,6 +52,62 @@ const pointManageServices = {
         const result = await pointManageModel.deleteOne({ _id });
         return result;
     },
-};
+    check: async (price, pointsCheck, customerId) => {
+
+        const customerPoints = await customerModel.findById(customerId, { points: 1 });
+
+        if (!customerPoints) {
+            return {
+                success: false,
+                message: "You don't have any points to avail.",
+            };
+        }
+
+        if (pointsCheck > customerPoints.points) {
+            return {
+                success: false,
+                message: `You have a total of ${customerPoints.points} points available. Points check failed.`,
+                PointsAvailable: customerPoints.points,
+            };
+        }
+
+        const pointPerOrder = await pointManageModel.findOne({
+            pointOrderPriceTo: { $lte: price },
+            pointOrderPriceFrom: { $gte: price }
+        });
+
+        if (pointPerOrder) {
+            const { ReedemPoints, pointOrderPriceTo, pointOrderPriceFrom } = pointPerOrder;
+
+            if (ReedemPoints >= pointsCheck) {
+                return {
+                    success: true,
+                    message: "Price falls within the specified range.",
+                    pointOrderPriceTo,
+                    pointOrderPriceFrom,
+                    MaximumPointsToRedeem: ReedemPoints,
+                    PointsProvidedToAvail: pointsCheck
+                };
+            } else {
+                return {
+                    success: false,
+                    message: `Points check failed. You can cash a minimum of: ${ReedemPoints}, For this Order.`,
+                    pointOrderPriceTo,
+                    pointOrderPriceFrom,
+                    MaximumPointsToRedeem: ReedemPoints,
+
+
+                };
+            }
+        } else {
+            return {
+                success: false,
+                message: "No matching document found for the given price range.",
+            };
+        }
+
+    }
+
+}
 
 module.exports = pointManageServices;
