@@ -50,7 +50,7 @@ const returnOrderServices = {
             const time = new Date(new Date().toLocaleDateString());
             //log order status
             const data = new orderLogModel({
-                orderStatus: "Returned",
+                orderStatus: "Pending",
                 orderId: mongoose.Types.ObjectId(orderId),
                 time,
                 message: exchangeReason,
@@ -58,7 +58,7 @@ const returnOrderServices = {
             await data.save();
             await orderModel.findOneAndUpdate(
                 { _id: orderId },
-                { status: "Returned" },
+                { status: "Pending" },
                 { new: true }
             );
         }
