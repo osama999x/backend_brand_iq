@@ -89,9 +89,9 @@ pointManageRouter.get(
     '/check',
     expressAsyncHandler(async (req, res) => {
 
-        const { price, pointsCheck } = req.query;
+        const { price, pointsCheck, customerId } = req.query;
 
-        const result = await pointManageServices.check(price, pointsCheck);
+        const result = await pointManageServices.check(price, pointsCheck, customerId);
 
         if (result.success) {
             res.status(200).json(result);
