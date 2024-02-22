@@ -38,7 +38,7 @@ returnOrderRouter.post(
             placedOn30DaysPlus = new Date(placedOn30DaysPlus);
             if (date > placedOn30DaysPlus) {
                 return res
-                    .status(400)
+                    .status(200)
                     .send({ msg: "Order return request applicable under 30 days" });
             } else {
                 const result = await returnOrderServices.exchangeOrder(
@@ -56,12 +56,12 @@ returnOrderRouter.post(
                     });
                 } else {
                     return res
-                        .status(400)
+                        .status(200)
                         .send({ msg: "Order return request not submitted" });
                 }
             }
         } else {
-            return res.status(400).send({
+            return res.status(200).send({
                 msg: "Order return request is Not Applicable",
             });
         }
