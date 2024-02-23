@@ -374,17 +374,7 @@ const categoryServices = {
             },
             {
                 $addFields: {
-                    totalProducts: {
-                        $size: {
-                            $filter: {
-                                input: "$products",
-                                as: "product",
-                                cond: {
-                                    $eq: ["$$product.isActive", true], // Check for isActive field
-                                },
-                            },
-                        },
-                    },
+                    totalProducts: { $size: "$products" }, // Add the total number of products for the main category
                     subcategories: {
                         $map: {
                             input: "$subcategories",
@@ -399,10 +389,7 @@ const categoryServices = {
                                                     input: "$products",
                                                     as: "product",
                                                     cond: {
-                                                        $and: [
-                                                            { $eq: ["$$product.subcategory", "$$subcategory._id"] },
-                                                            { $eq: ["$$product.isActive", true] }, // Check for isActive field
-                                                        ],
+                                                        $eq: ["$$product.subcategory", "$$subcategory._id"],
                                                     },
                                                 },
                                             },
@@ -413,11 +400,17 @@ const categoryServices = {
                         },
                     },
                     products: {
-                        $filter: {
+                        $map: {
                             input: "$products",
                             as: "product",
-                            cond: {
-                                $eq: ["$$product.isActive", true], // Include only active products
+                            in: {
+                                _id: "$$product._id",
+                                name: "$$product.name",
+                                title: "$$product.title",
+                                description: "$$product.description",
+                                images: "$$product.images",
+                                thumbnail: "$$product.thumbnail",
+                                variant: "$$product.variant",
                             },
                         },
                     },
@@ -441,7 +434,6 @@ const categoryServices = {
                 },
             },
         ]);
-
 
 
         if (subcategories.length > 0 && subcategories[0].products.length > 0) {
