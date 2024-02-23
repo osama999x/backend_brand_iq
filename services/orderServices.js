@@ -139,6 +139,7 @@ const orderServices = {
                     orderId: secondOrderId,
                 });
                 await data.save();
+                const pointsorder = await orderModel.findOneAndUpdate({ orderId: secondOrderId }, { points: point }, { upsert: true, new: true });
 
                 const updatedPoints = await customerModel.findByIdAndUpdate(
                     customerId,
@@ -302,7 +303,10 @@ const orderServices = {
                     placedOn: 1,
                     firstProduct: 1,
                     status: 1,
-                    trackingId: 1
+                    trackingId: 1,
+                    totalAmount: 1,
+                    totalBill: 1
+
                 },
             },
             {
@@ -325,6 +329,9 @@ const orderServices = {
                     status: 1,
                     isDeliver: 1,
                     thumbnail: "$product_info.thumbnail",
+                    totalAmount: 1,
+                    totalBill: 1
+
                 },
             },
             {

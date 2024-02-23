@@ -103,14 +103,15 @@ categoryRouter.post(
 categoryRouter.patch(
     "/",
     expressAsyncHandler(async (req, res) => {
-        const { categoryId, name, icon, description, thumbnail, isFeatured } = req.body;
+        const { categoryId, name, icon, description, thumbnail, isFeatured, isActive } = req.body;
         const result = await categoryServices.update(
             categoryId,
             name,
             icon,
             description,
             thumbnail,
-            isFeatured
+            isFeatured,
+            isActive
         );
         if (result) {
             return res.status(200).send({ msg: "Category Updated.", data: result });

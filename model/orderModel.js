@@ -151,6 +151,9 @@ const schema = new Schema(
             }, addressLine: {
                 type: String,
             }
+        },
+        points: {
+            type: String,
         }
     },
     { timestamps: true }
