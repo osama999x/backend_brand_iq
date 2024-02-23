@@ -329,10 +329,116 @@ const categoryServices = {
     //     }
     // }
     getSubcategoriesAndProductsByCategoryId: async (categoryId, page, pageSize) => {
+        // const subcategories = await categoryModel.aggregate([
+        //     {
+        //         $match: {
+        //             _id: mongoose.Types.ObjectId(categoryId),
+        //         },
+        //     },
+        //     {
+        //         $lookup: {
+        //             from: "subcategories",
+        //             localField: "_id",
+        //             foreignField: "category",
+        //             as: "subcategories",
+        //         },
+        //     },
+        //     {
+        //         $project: {
+        //             _id: 1,
+        //             name: 1,
+        //             icon: 1,
+        //             description: 1,
+        //             subcategories: {
+        //                 $map: {
+        //                     input: "$subcategories",
+        //                     as: "subcategory",
+        //                     in: {
+        //                         _id: "$$subcategory._id",
+        //                         name: "$$subcategory.name",
+        //                         thumbnail: "$$subcategory.thumbnail",
+        //                         description: "$$subcategory.description",
+        //                         icon: "$$subcategory.icon",
+        //                     },
+        //                 },
+        //             },
+        //         },
+        //     },
+        //     {
+        //         $lookup: {
+        //             from: "products",
+        //             localField: "_id",
+        //             foreignField: "category",
+        //             as: "products",
+        //         },
+        //     },
+        //     {
+        //         $addFields: {
+        //             totalProducts: { $size: "$products" },
+        //             subcategories: {
+        //                 $map: {
+        //                     input: "$subcategories",
+        //                     as: "subcategory",
+        //                     in: {
+        //                         $mergeObjects: [
+        //                             "$$subcategory",
+        //                             {
+        //                                 totalProducts: {
+        //                                     $size: {
+        //                                         $filter: {
+        //                                             input: "$products",
+        //                                             as: "product",
+        //                                             cond: {
+        //                                                 $eq: ["$$product.subcategory", "$$subcategory._id"],
+        //                                             },
+        //                                         },
+        //                                     },
+        //                                 },
+        //                             },
+        //                         ],
+        //                     },
+        //                 },
+        //             },
+        //             products: {
+        //                 $map: {
+        //                     input: "$products",
+        //                     as: "product",
+        //                     in: {
+        //                         _id: "$$product._id",
+        //                         name: "$$product.name",
+        //                         title: "$$product.title",
+        //                         description: "$$product.description",
+        //                         images: "$$product.images",
+        //                         thumbnail: "$$product.thumbnail",
+        //                         variant: "$$product.variant",
+        //                     },
+        //                 },
+        //             },
+        //         },
+        //     },
+        //     {
+        //         $project: {
+        //             _id: 1,
+        //             name: 1,
+        //             icon: 1,
+        //             description: 1,
+        //             subcategories: {
+        //                 _id: 1,
+        //                 name: 1,
+        //                 thumbnail: 1,
+        //                 description: 1,
+        //                 icon: 1,
+        //                 totalProducts: 1,
+        //             },
+        //             products: 1,
+        //         },
+        //     },
+        // ]);
+
         const subcategories = await categoryModel.aggregate([
             {
                 $match: {
-                    _id: mongoose.Types.ObjectId(categoryId),
+                    _id: ObjectId("65d7a405a6385b46b9f89dcf"),
                 },
             },
             {
@@ -357,7 +463,8 @@ const categoryServices = {
                                 _id: "$$subcategory._id",
                                 name: "$$subcategory.name",
                                 thumbnail: "$$subcategory.thumbnail",
-                                description: "$$subcategory.description",
+                                description:
+                                    "$$subcategory.description",
                                 icon: "$$subcategory.icon",
                             },
                         },
@@ -374,7 +481,17 @@ const categoryServices = {
             },
             {
                 $addFields: {
-                    totalProducts: { $size: "$products" }, // Add the total number of products for the main category
+                    totalProducts: {
+                        $size: {
+                            $filter: {
+                                input: "$products",
+                                as: "product",
+                                cond: {
+                                    $eq: ["$$product.isActive", true],
+                                },
+                            },
+                        },
+                    },
                     subcategories: {
                         $map: {
                             input: "$subcategories",
@@ -389,7 +506,20 @@ const categoryServices = {
                                                     input: "$products",
                                                     as: "product",
                                                     cond: {
-                                                        $eq: ["$$product.subcategory", "$$subcategory._id"],
+                                                        $and: [
+                                                            {
+                                                                $eq: [
+                                                                    "$$product.subcategory",
+                                                                    "$$subcategory._id",
+                                                                ],
+                                                            },
+                                                            {
+                                                                $eq: [
+                                                                    "$$product.isActive",
+                                                                    true,
+                                                                ],
+                                                            },
+                                                        ],
                                                     },
                                                 },
                                             },
@@ -401,7 +531,15 @@ const categoryServices = {
                     },
                     products: {
                         $map: {
-                            input: "$products",
+                            input: {
+                                $filter: {
+                                    input: "$products",
+                                    as: "product",
+                                    cond: {
+                                        $eq: ["$$product.isActive", true],
+                                    },
+                                },
+                            },
                             as: "product",
                             in: {
                                 _id: "$$product._id",
