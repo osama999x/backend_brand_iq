@@ -736,8 +736,10 @@ const orderServices = {
                     totalBill: 1,
                     "product.sku": 1,
                     "product.size": 1,
+                    "product.colour": 1,
                     "product.quantity": 1,
                     "product.price": 1,
+                    "shippingAddress": 1
 
                 }
             )
@@ -1489,7 +1491,8 @@ const orderServices = {
             );
             const filter = { _id: productId, "variant.sku": sku };
             const update = { $inc: { "variant.$.quantity": +quantity } };
-            await productModel.findOneAndUpdate(filter, update);
+            const procheck = await productModel.findOneAndUpdate(filter, update);
+            console.log("procheck", procheck);
             productLog = new productLogModel({
                 product: mongoose.Types.ObjectId(productId),
                 description: `return product,PRODUCTID:${productId},SKU:${sku},QUANTITY:${quantity},PRICE:${price},CUSTOMER:${order.customer},Size:${size}`,

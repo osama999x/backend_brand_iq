@@ -86,7 +86,7 @@ app.use((req, res, next) => {
     console.log(`Route called: ${req.originalUrl}`);
     next();
 });
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json({ limit: "200mb" }));
 app.use(express.static("public"));
 app.use(express.static(path.join(__dirname, "public")));
 //app.use(decryptData);//Cipher

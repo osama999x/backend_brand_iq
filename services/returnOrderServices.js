@@ -302,7 +302,7 @@ const returnOrderServices = {
             }
         } else {
             //if admint don't approved returned order
-            if (oldOrderStatus === "Returned") {
+            if (oldOrderStatus === "Return") {
                 try {
                     //return order status log by admin
                     // let cancelStatus = await orderStatusServices.orderStatus("Canceled");
