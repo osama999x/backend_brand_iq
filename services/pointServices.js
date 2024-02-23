@@ -59,7 +59,7 @@ const pointServices = {
     //         totalPoints = totalPoints.points;
     //     }
     //     return { totalPoints, orderDetails };
-    // },
+    // }
     customerOrderPoints: async (customerId) => {
         const getDateRange = (days) => {
             return new Date(new Date().getTime() - days * 24 * 60 * 60 * 1000).toISOString();
@@ -79,7 +79,8 @@ const pointServices = {
                         orderId: 1,
                         channel: 1,
                         totalAmount: 1,
-                        product: 1,  // Include 'product' field for mapping in populate
+                        product: 1,  // Include 'product' field for mapping in populate,
+                        points: 1
                     }
                 )
                 .populate({

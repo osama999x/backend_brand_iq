@@ -655,7 +655,7 @@ const categoryServices = {
         const result = await category.save();
         return result;
     },
-    update: async (_id, name, icon, description, thumbnail, isFeatured) => {
+    update: async (_id, name, icon, description, thumbnail, isFeatured, isActive) => {
         try {
             let uploadedIcon, uploadedThumbnail;
 
@@ -676,6 +676,7 @@ const categoryServices = {
                     isFeatured: isFeatured,
                     icon: uploadedIcon,
                     thumbnail: uploadedThumbnail,
+                    isActive
                 },
                 { upsert: true }
             );

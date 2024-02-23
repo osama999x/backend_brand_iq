@@ -139,6 +139,7 @@ const orderServices = {
                     orderId: secondOrderId,
                 });
                 await data.save();
+                const pointsorder = await orderModel.findOneAndUpdate({ orderId: secondOrderId }, { points: point }, { upsert: true, new: true });
 
                 const updatedPoints = await customerModel.findByIdAndUpdate(
                     customerId,
@@ -302,7 +303,10 @@ const orderServices = {
                     placedOn: 1,
                     firstProduct: 1,
                     status: 1,
-                    trackingId: 1
+                    trackingId: 1,
+                    totalAmount: 1,
+                    totalBill: 1
+
                 },
             },
             {
@@ -325,6 +329,9 @@ const orderServices = {
                     status: 1,
                     isDeliver: 1,
                     thumbnail: "$product_info.thumbnail",
+                    totalAmount: 1,
+                    totalBill: 1
+
                 },
             },
             {
@@ -1246,7 +1253,7 @@ const orderServices = {
                 let subject = sendEmailNotificationInfo.orderResponse.title;
                 let text =
                     sendEmailNotificationInfo.orderResponse.body +
-                    `Your Order has been SuccesFully Placed on Msafa and your Order Id: ${Result.orderId}, Total Bill ${Result.totalBill}, PlacedOn: ${Result.placedOn}. Happy Shopping :)`;
+                    `Your Order has been SuccesFully Placed on Msafa and your Order Id:  ${Result.orderId}, Total Bill ${totalBill}, PlacedOn: ${placedOn}. Happy Shopping :)`;
                 let userEmail = await customerModel.findOne(
                     { _id: customerId },
                     { email: 1, _id: 0 }
