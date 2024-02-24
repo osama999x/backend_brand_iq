@@ -1506,19 +1506,15 @@ const orderServices = {
             }
             const update = { $inc: { "variant.$.quantity": +quantity } };
             const procheck = await productModel.findOneAndUpdate(filter, update);
-            console.log("procheck", procheck);
+            //console.log("procheck", procheck);
 
-            // const filter = { _id: productId, "variant.sku": sku };
-            //const update = { $inc: { "variant.$.quantity": +quantity } };
-            //const procheck = await productModel.findOneAndUpdate(filter, update);
-            // console.log("procheck", procheck);
             productLog = new productLogModel({
                 product: mongoose.Types.ObjectId(productId),
                 description: `return product,PRODUCTID:${productId},SKU:${sku},QUANTITY:${quantity},PRICE:${price},CUSTOMER:${order.customer},Size:${size}`,
             });
             await productLog.save();
         }
-        console.log("totalPrice", totalPrice);
+        //console.log("totalPrice", totalPrice);
         return totalPrice;
     },
     findOrder: async (orderId) => {

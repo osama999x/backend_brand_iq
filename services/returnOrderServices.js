@@ -240,6 +240,8 @@ const returnOrderServices = {
                         pointOrderPriceFrom: { $lte: totalPrice },
                     });
 
+                    console.log('getPointPerOrder', getPointPerOrder);
+
                     const { pointOrderPriceFrom, pointPerOrder } = getPointPerOrder;
 
                     totalBill = totalBill - totalPrice;
@@ -248,11 +250,11 @@ const returnOrderServices = {
                     let point = 0;
 
                     if (getPointPerOrder.length !== 0) {
-                        let pointOrderPrice = getPointPerOrder[0].pointOrderPriceFrom;
-                        let pointPerOrder = getPointPerOrder[0].pointPerOrder;
+                        // let pointOrderPrice = getPointPerOrder[0].pointOrderPriceFrom;
+                        // let pointPerOrder = getPointPerOrder[0].pointPerOrder;
 
                         // Check if pointOrderPrice is not 0 to avoid division by zero
-                        if (pointOrderPrice !== 0) {
+                        if (pointOrderPriceFrom !== 0) {
                             // point = Math.ceil(totalBill / pointOrderPrice) * pointPerOrder;
                             point = Math.ceil(totalBill / pointOrderPriceFrom) * pointPerOrder;
                         }

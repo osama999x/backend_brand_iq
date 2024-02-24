@@ -19,7 +19,7 @@ const productLogServices = {
                 update = { $inc: { "variant.$.quantity": +quantity } };
             }
             const updateQuantity = await productsModel.findOneAndUpdate(filter, update);
-            console.log("updatedQuantityafterOrderReturnnnn     ", updateQuantity);
+            //console.log("updatedQuantityafterOrderReturnnnn     ", updateQuantity);
             let productLog = new productLogModel({
                 product: mongoose.Types.ObjectId(productId),
                 description: `${status} order,PRODUCTID:${productId},SKU:${sku},QUANTITY:${quantity},PRICE:${price},CUSTOMER:${customerId},Size:${size}`,
