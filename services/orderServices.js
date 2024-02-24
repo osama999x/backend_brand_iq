@@ -128,10 +128,11 @@ const orderServices = {
                 //    const { pointOrderPrice, pointPerOrder } = getPointPerOrder;
                 const { pointOrderPriceFrom, pointPerOrder } = getPointPerOrder;
                 //Have to set As Per new modules Addtions now its Random
-                console.log("totalBill:", totalBill);
-                console.log("pointOrderPriceFrom:", pointOrderPriceFrom);
-                console.log("pointPerOrder:", pointPerOrder);
+                // console.log("totalBill:", totalBill);
+                // console.log("pointOrderPriceFrom:", pointOrderPriceFrom);
+                // console.log("pointPerOrder:", pointPerOrder);
                 const point = Math.ceil(totalBill / pointOrderPriceFrom) * pointPerOrder;
+                console.log("points", point)
 
                 const data = new pointModel({
                     customer: customerId,
@@ -1253,7 +1254,7 @@ const orderServices = {
                 let subject = sendEmailNotificationInfo.orderResponse.title;
                 let text =
                     sendEmailNotificationInfo.orderResponse.body +
-                    `Your Order has been SuccesFully Placed on Msafa and your Order Id:  ${Result.orderId}, Total Bill ${totalBill}, PlacedOn: ${placedOn}. Happy Shopping :)`;
+                    `Your Order has been SuccesFully Placed on Msafa and your Order Id:  ${Result.orderId}, Total Bill ${totalBill}, PlacedOn: ${currentDate}. Happy Shopping :)`;
                 let userEmail = await customerModel.findOne(
                     { _id: customerId },
                     { email: 1, _id: 0 }
@@ -1497,16 +1498,23 @@ const orderServices = {
                 { new: true }
             );
             const filter = { _id: productId, "variant.sku": sku };
+            const existingProduct = await productModel.findOne(filter);
+
+            if (!existingProduct) {
+                console.log(`Product not found in productModel for productId: ${productId} and sku: ${sku}`);
+
+            }
             const update = { $inc: { "variant.$.quantity": +quantity } };
             const procheck = await productModel.findOneAndUpdate(filter, update);
-            console.log("procheck", procheck);
+            //console.log("procheck", procheck);
+
             productLog = new productLogModel({
                 product: mongoose.Types.ObjectId(productId),
                 description: `return product,PRODUCTID:${productId},SKU:${sku},QUANTITY:${quantity},PRICE:${price},CUSTOMER:${order.customer},Size:${size}`,
             });
             await productLog.save();
         }
-        console.log("totalPrice", totalPrice);
+        //console.log("totalPrice", totalPrice);
         return totalPrice;
     },
     findOrder: async (orderId) => {

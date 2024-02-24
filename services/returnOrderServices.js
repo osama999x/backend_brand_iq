@@ -164,6 +164,7 @@ const returnOrderServices = {
             if (orderPoint) {
                 orderPoint = orderPoint?.points;
             }
+            console.log("orderPoint", orderPoint);
 
 
 
@@ -235,28 +236,36 @@ const returnOrderServices = {
                     //     );
                     // }
                     let getPointPerOrder = await pointManageModel.find({
-                        pointOrderPriceFrom: { $lte: totalPrice }
+                        pointOrderPriceTo: { $gte: totalPrice },
+                        pointOrderPriceFrom: { $lte: totalPrice },
                     });
+
+                    console.log('getPointPerOrder', getPointPerOrder);
+
+                    const { pointOrderPriceFrom, pointPerOrder } = getPointPerOrder;
 
                     totalBill = totalBill - totalPrice;
                     console.log("totalBill", totalBill);
 
-                    let point = 0; // Initialize point outside the if block
+                    let point = 0;
 
                     if (getPointPerOrder.length !== 0) {
-                        let pointOrderPrice = getPointPerOrder[0].pointOrderPriceFrom;
-                        let pointPerOrder = getPointPerOrder[0].pointPerOrder;
+                        // let pointOrderPrice = getPointPerOrder[0].pointOrderPriceFrom;
+                        // let pointPerOrder = getPointPerOrder[0].pointPerOrder;
 
                         // Check if pointOrderPrice is not 0 to avoid division by zero
-                        if (pointOrderPrice !== 0) {
-                            point = Math.ceil(totalBill / pointOrderPrice) * pointPerOrder;
+                        if (pointOrderPriceFrom !== 0) {
+                            // point = Math.ceil(totalBill / pointOrderPrice) * pointPerOrder;
+                            point = Math.ceil(totalBill / pointOrderPriceFrom) * pointPerOrder;
                         }
                     }
+                    console.log("point : ", point);
 
-                    await pointModel.findOneAndUpdate(
+                    const updateorderpoints = await pointModel.findOneAndUpdate(
                         { orderId: OrderId },
                         { points: point }
                     );
+                    console.log("updatedorderpoints : ", updateorderpoints)
 
 
 
@@ -264,10 +273,12 @@ const returnOrderServices = {
                         { _id: order.customer },
                         { $inc: { points: -orderPoint } }
                     );
+                    console.log("Minus user Points : ", user)
                     let newPoint = await customerModel.findOneAndUpdate(
                         { _id: order.customer },
                         { $inc: { points: +point } }
                     );
+                    console.log("Added user Points : ", newPoint);
                     let points = newPoint.points + point;
                     //update customer membership in case of rturned order order
                     await pointServices.assaignPointMembership(order.customer, points);
