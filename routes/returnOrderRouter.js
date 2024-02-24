@@ -22,6 +22,7 @@ returnOrderRouter.post(
             return res.status(400).send({ msg: "Fields Missing" });
         }
         console.log(1);
+        const Return = await orderModel.findOne({ _id: orderId, status: { $eq: "Return" } }, { placedOn: 1 });
         const delivered = await orderModel.findOne(
             {
                 _id: orderId,
@@ -29,6 +30,9 @@ returnOrderRouter.post(
             },
             { placedOn: 1 }
         );
+        if (Return) {
+            return res.status(200).send({ msg: "You Have Already Made Request for Return" });
+        }
         if (delivered) {
             let date = new Date(new Date().toLocaleDateString());
             let placedOn30DaysPlus = new Date(delivered.placedOn);
