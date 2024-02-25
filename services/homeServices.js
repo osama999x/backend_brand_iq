@@ -29,7 +29,17 @@ const homeServices = {
             },
             {
                 $addFields: {
-                    productCount: { $size: "$products" },
+                    productCount: {
+                        $size: {
+                            $filter: {
+                                input: "$products",
+                                as: "product",
+                                cond: {
+                                    $eq: ["$$product.isActive", true],
+                                },
+                            },
+                        },
+                    },
                 }
             }, {
                 $sort: {

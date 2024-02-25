@@ -823,7 +823,9 @@ const orderServices = {
                     AvailableQuantity: Product.variant[0].quantity,
                     sku: Product.variant[0].sku,
                     msg: `Out of Stock`,
+
                 });
+                continue;
                 console.log(2);
                 continue; // Continue to the next product
             }
@@ -888,7 +890,7 @@ const orderServices = {
 
                     throw {
                         message: {
-                            msg: `${Product.name} is in Promotion.`,
+                            msg: `Product is in Promotion.`,
                             productId: productId,
                             discount: promotiondiscount
                         },
@@ -938,7 +940,7 @@ const orderServices = {
 
                     throw {
                         message: {
-                            msg: `${Product.name} Price has been changed, update the Cart!`,
+                            msg: `Product Price has been changed, Update Your Cart!`,
                             Name: Product.name,
                             discount: Product.variant[0].discountedPrice,
                         },
@@ -949,7 +951,7 @@ const orderServices = {
 
                 throw {
                     message: {
-                        msg: `${Product.name} price has been changed, update the Cart!`,
+                        msg: `Product Price has been changed, Update Your Cart!`,
                     },
                 };
             }
