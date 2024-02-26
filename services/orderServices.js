@@ -24,6 +24,7 @@ const productLogServices = require("./productLogServices");
 const productsServices = require("./productsServices");
 const courierServices = require("./courierServices");
 const orderLogService = require("../utils/orderLogService");
+
 const orderServices = {
     generateRandomTrackingId: async () => {
         const randomId = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
@@ -1113,7 +1114,7 @@ const orderServices = {
             var productArr = [];
             var currentDate = new Date(new Date().toLocaleString());
             var productLength = product.length;
-
+            console.log("productLength", productLength);
             for (let i = 0; i < productLength; i++) {
                 const productId = product[i].productId;
                 const quantity = product[i].quantity;
@@ -1137,16 +1138,16 @@ const orderServices = {
                 if (!Product || !Product.variant || Product.variant.length === 0) {
                     continue;
                 }
-
-
-                const variant = Product.variant[i];
+                console.log("index", i)
+                console.log("Product.variant[i]", Product?.variant?.[i]);
+                const variant = Product?.variant?.[i];
                 console.log("variant", variant);
 
-                let variantSize = variant.size !== undefined ? variant.size : "";
+                let variantSize = variant?.size !== undefined ? variant?.size : "";
 
 
                 // let variantSize = variant.size || "";
-                let variantColour = variant.colorName !== undefined ? variant.colorName : "";
+                let variantColour = variant?.colorName !== undefined ? variant?.colorName : "";
                 // console.log("size", variantSize);
                 // console.log("colour", variantColour);
                 const productInfo = {
@@ -1258,6 +1259,7 @@ const orderServices = {
             console.log("Result", Result);
             if (result) {
                 let subject = sendEmailNotificationInfo.orderResponse.title;
+                let html = "";
                 let text =
                     sendEmailNotificationInfo.orderResponse.body +
                     `Your Order has been SuccesFully Placed on Msafa and your Order Id:  ${Result.orderId}, Total Bill ${totalBill}, PlacedOn: ${currentDate}. Happy Shopping :)`;
