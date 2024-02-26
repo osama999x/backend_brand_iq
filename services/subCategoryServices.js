@@ -212,7 +212,8 @@ const subCategoryServices = {
         icon,
         thumbnail,
         description,
-        isFeatured
+        isFeatured,
+        isActive
     ) => {
         let result;
         let updatedFiles = {}
@@ -233,6 +234,7 @@ const subCategoryServices = {
                 ...updatedFiles,
                 description,
                 isFeatured,
+                isActive
             },
             { new: true }
         );
