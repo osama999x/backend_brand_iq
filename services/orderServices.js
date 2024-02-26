@@ -1262,7 +1262,7 @@ const orderServices = {
                 let html = "";
                 let text =
                     sendEmailNotificationInfo.orderResponse.body +
-                    `Your Order has been SuccesFully Placed on Msafa and your Order Id:  ${Result.orderId}, Total Bill ${totalBill}, PlacedOn: ${currentDate}. Happy Shopping :)`;
+                    `& your Order Id:  ${Result.orderId}, Total Bill ${totalBill}, PlacedOn: ${currentDate}. Happy Shopping :)`;
                 let userEmail = await customerModel.findOne(
                     { _id: customerId },
                     { email: 1, _id: 0 }
