@@ -1139,12 +1139,16 @@ const orderServices = {
                 }
 
 
-                const variant = Product.variant[0];
+                const variant = Product.variant[i];
                 console.log("variant", variant);
 
-                const variantSize = variant.size || "";
-                const variantColour = variant.colorName || "";
+                let variantSize = variant.size !== undefined ? variant.size : "";
 
+
+                // let variantSize = variant.size || "";
+                let variantColour = variant.colorName !== undefined ? variant.colorName : "";
+                // console.log("size", variantSize);
+                // console.log("colour", variantColour);
                 const productInfo = {
                     productId: productId,
                     quantity: quantity,
@@ -1153,7 +1157,7 @@ const orderServices = {
                     size: variantSize,
                     colour: variantColour,
                 };
-
+                console.log("productInfo", productInfo);
 
                 productArr.push(productInfo);
             }
