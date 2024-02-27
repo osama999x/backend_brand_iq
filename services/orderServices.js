@@ -1368,13 +1368,13 @@ const orderServices = {
                     year: new Date().getFullYear(),
                     month: new Date().getMonth() + 1, // Add 1 to represent the actual month
                     status: "Delivered",
-                    totalDelivered: 0,
+                    total: 0,
                 },
                 {
                     year: new Date().getFullYear(),
                     month: new Date().getMonth() + 1, // Add 1 to represent the actual month
                     status: "Returned",
-                    totalReturned: 0,
+                    total: 0,
                 },
             ];
         } else {

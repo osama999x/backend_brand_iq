@@ -78,8 +78,8 @@ const pointServices = {
                         placedOn: 1,
                         orderId: 1,
                         channel: 1,
-                        totalAmount: 1,
-                        product: 1,  // Include 'product' field for mapping in populate,
+                        totalBill: 1,
+                        product: 1,
                         points: 1
                     }
                 )
