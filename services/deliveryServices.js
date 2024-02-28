@@ -20,12 +20,15 @@ const deliveryServices = {
             return idfound[0];
         }
     },
-    update: async (id, Region, deliveryCharges) => {
+    update: async (id, Region, Charges) => {
         var _id = mongoose.Types.ObjectId(id);
         const result = await deliveryModel.findOneAndUpdate(
             { _id },
-            { Region, deliveryCharges },
-            { new: true }
+            {
+                Region,
+                deliveryCharges: Charges
+            },
+            { upsert: true }
         );
         return result;
     }, delete: async (_id) => {

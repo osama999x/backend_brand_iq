@@ -54,6 +54,7 @@ deliveryChargesRouter.patch(
     expressAsyncHandler(async (req, res) => {
         const id = req.params.id;
         const { Region, Charges } = req.body;
+        console.log(req.body);
         if (!Region || !Charges) {
             return res.status(400).send({ msg: "Missing Fields" });
         }
