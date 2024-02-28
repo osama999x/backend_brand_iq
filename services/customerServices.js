@@ -387,10 +387,17 @@ const customerServices = {
                     lastName: 1,
                     contact: 1,
                     email: 1,
+                    zipCode: 1,
+                    province: 1,
                     address: 1,
                     gender: 1,
+                    reigon: 1
                 }
-            )
+            ).populate({
+                path: 'reigon',
+                model: 'TaxType',
+                select: "taxType"
+            })
             .lean();
         list = list.map((item) => {
             const whiteSpace = " ";

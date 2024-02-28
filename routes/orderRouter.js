@@ -48,7 +48,6 @@ orderRouter.post(
             !orderId ||
             //!originCityCode ||
             !orderType ||
-            !description ||
             !packing ||
             !weight
             //!courierType
@@ -383,12 +382,14 @@ orderRouter.post(
         }
     })
 );
-orderRouter.get(
+orderRouter.post(
     "/orderReport",
     expressAsyncHandler(async (req, res) => {
         const { startDate, endDate } = req.query;
+        console.log(startDate, endDate);
         const result = await orderServices.orderReport(startDate, endDate);
 
+        console.log(result);
         if (result.length !== 0) {
             return res.status(200).send({
                 msg: "Orders Details",
