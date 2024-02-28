@@ -32,7 +32,7 @@ roleRouter.post(
     "/",
     expressAsyncHandler(async (req, res) => {
         const { name, description } = req.body;
-        if (!name || !description) {
+        if (!name) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
         const result = await roleServices.addNew(name, description);

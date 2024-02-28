@@ -469,7 +469,7 @@ const orderServices = {
                     $or: [
                         {
                             $and: [
-                                { status: { $ne: "Returned" } },
+                                { status: { $ne: "Return" } },
                                 { isAdminReturn: { $eq: false } },
                             ],
                         },
@@ -1325,6 +1325,8 @@ const orderServices = {
         let matchQuery = {
             status: { $in: ["Delivered", "Returned"] },
         };
+        console.log(new Date(startDate));
+        console.log(new Date(endDate));
 
         if (startDate && endDate) {
             matchQuery.placedOn = {
@@ -1337,7 +1339,7 @@ const orderServices = {
                 $lte: endDate ? new Date(endDate) : new Date(),
             };
         }
-
+        console.log(matchQuery)
         let result = await orderModel.aggregate([
             {
                 $match: matchQuery,
@@ -1383,7 +1385,7 @@ const orderServices = {
                 month,
                 status,
                 total: order,
-            }));
+            }))
         }
 
         result.push({
