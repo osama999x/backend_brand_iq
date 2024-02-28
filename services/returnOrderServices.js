@@ -97,9 +97,10 @@ const returnOrderServices = {
             .populate({
                 path: "orderId",
                 select: {
-                    address: 1,
+                    shippingAddress: 1,
                     contact: 1,
                     orderId: 1,
+                    totalBill: 1,
                     "product.quantity": 1,
                     "product.price": 1,
                 },
