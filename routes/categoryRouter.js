@@ -82,7 +82,7 @@ categoryRouter.post(
         // if (!thumbnail) {
         //     return res.status(400).json({ msg: "Thumnail image is required!" })
         // }
-        if (!name || !icon || !description || !thumbnail) {
+        if (!name || !icon || !thumbnail) {
             return res.status(400).send({ msg: "Fields Missing." });
         }
         const result = await categoryServices.add(

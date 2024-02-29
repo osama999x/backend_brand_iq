@@ -47,7 +47,7 @@ roleRouter.patch(
     "/",
     expressAsyncHandler(async (req, res) => {
         const { roleId, name, description } = req.body;
-        if (!roleId || !name || !description) {
+        if (!roleId || !name) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
         const result = await roleServices.update(roleId, name, description);

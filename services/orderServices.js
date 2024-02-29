@@ -1267,24 +1267,24 @@ const orderServices = {
             if (result) {
                 let subject = sendEmailNotificationInfo.orderResponse.title;
                 let html = "";
-                let text =
-                    `Dear ${Name},
-                    Thank you for shopping with us!
+                let text = `Dear ${Name},
+    Thank you for shopping with us!
 
-                    <strong>Order Details:</strong>
+    <strong>Order Details:</strong>
 
-                    <ul>
-                        <li>Order ID: # ${Result.orderId}</li>
-                        <li>Order Date: ${currentDate}</li>
-                        <li>Billing Address: ${Result.billingAddress.addressLine}</li>
-                        <li>Shipping Address: ${Result.shippingAddress.addressLine}</li>
-                        <li>Total Amount: ${Result.totalBill}</li>
-                    </ul>
+    <ul>
+        <li>Order ID: # ${result.orderId}</li>
+        <li>Order Date: ${currentDate}</li>
+        <li>Billing Address: ${result.billingAddress ? result.billingAddress.addressLine : 'N/A'}</li>
+        <li>Shipping Address: ${result.shippingAddress ? result.shippingAddress.addressLine : 'N/A'}</li>
+        <li>Total Amount: ${result.totalBill}</li>
+    </ul>
 
-                    We will keep you updated on the status of your order. If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+    We will keep you updated on the status of your order. If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
 
-                    Thank you for choosing MSAFA!
-                    `;
+    Thank you for choosing MSAFA!
+`;
+
                 let userEmail = await customerModel.findOne(
                     { _id: customerId },
                     { email: 1, _id: 0 }

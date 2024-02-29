@@ -276,6 +276,10 @@ customerRouter.post(
     "/resetpassword/otp",
     expressAsyncHandler(async (req, res) => {
         const { email } = req.body;
+        const chkk = await customerServices.checkCustomer(email);
+        if (!chkk) {
+            res.status(200).json({ msg: "User is Not Registered" });
+        }
         const result = await customerServices.resetPassword(email);
         if (result) {
             res.status(200).json({ msg: "OTP sent" });
