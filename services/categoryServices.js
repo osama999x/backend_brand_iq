@@ -434,11 +434,11 @@ const categoryServices = {
         //         },
         //     },
         // ]);
-
         const subcategories = await categoryModel.aggregate([
             {
                 $match: {
                     _id: mongoose.Types.ObjectId(categoryId),
+                    isActive: true,
                 },
             },
             {
@@ -457,14 +457,19 @@ const categoryServices = {
                     description: 1,
                     subcategories: {
                         $map: {
-                            input: "$subcategories",
+                            input: {
+                                $filter: {
+                                    input: "$subcategories",
+                                    as: "subcategory",
+                                    cond: { $eq: ["$$subcategory.isActive", true] },
+                                },
+                            },
                             as: "subcategory",
                             in: {
                                 _id: "$$subcategory._id",
                                 name: "$$subcategory.name",
                                 thumbnail: "$$subcategory.thumbnail",
-                                description:
-                                    "$$subcategory.description",
+                                description: "$$subcategory.description",
                                 icon: "$$subcategory.icon",
                             },
                         },
@@ -572,6 +577,7 @@ const categoryServices = {
                 },
             },
         ]);
+
 
 
         if (subcategories.length > 0 && subcategories[0].products.length > 0) {
