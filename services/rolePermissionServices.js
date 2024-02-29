@@ -130,19 +130,11 @@ const rolePermissionServices = {
             })
             .populate({
                 path: "modules.module",
-                select: {
-                    // _id: 0,
-                    createdAt: 0,
-                    updatedAt: 0,
-                    __v: 0,
-                    permissions: 0,
-                },
-                // options:{sort:{orderPosition:1}}
+
             })
             .populate({
                 path: "modules.permissions",
                 select: {
-                    // _id: 0,
                     createdAt: 0,
                     updatedAt: 0,
                     __v: 0,
@@ -151,7 +143,6 @@ const rolePermissionServices = {
             .populate({
                 path: "modules.subModules.subModule",
                 select: {
-                    // _id: 0,
                     createdAt: 0,
                     updatedAt: 0,
                     __v: 0,
@@ -163,25 +154,17 @@ const rolePermissionServices = {
             .populate({
                 path: "modules.subModules.permissions",
                 select: {
-                    // _id: 0,
                     createdAt: 0,
                     updatedAt: 0,
                     __v: 0,
                 },
             });
-        // if (roleDetails){
 
-        //     roleDetails.modules = roleDetails?.modules?.filter((item) => {
-        //         return item.permissions.length || item.subModules.length
-        //     })
-        //     roleDetails.modules.subModules=roleDetails?.modules?.subModules.filter((item) =>{
-        //         return item.permissions.length || item.subModules.length
-        //     })
-        //     return roleDetails;
-        // }
         if (roleDetails) {
-            roleDetails.modules = roleDetails.modules.filter((module) => {
+            // Sort modules array based on createdAt field
+            roleDetails.modules.sort((a, b) => a.module.createdAt - b.module.createdAt);
 
+            roleDetails.modules = roleDetails.modules.filter((module) => {
                 return (module.permissions && module.permissions.length) || (module.subModules && module.subModules.length);
             });
 
@@ -193,7 +176,100 @@ const rolePermissionServices = {
 
             return roleDetails;
         }
-    },
+    }
+    ,
+    // getByRole: async (roleId) => {
+    //     const roleDetails = await rolePermissionModel
+    //         .findOne(
+    //             { role: { $in: roleId } },
+    //             {
+    //                 createdAt: 0,
+    //                 updatedAt: 0,
+    //                 __v: 0,
+    //                 "modules.isSubmodule": 0,
+    //                 "modules._id": 0,
+    //                 "modules.module._id": 0,
+    //                 "modules.permission._id": 0,
+    //                 "modules.subModules._id": 0,
+    //                 "modules.subModules.subModule._id": 0,
+    //                 "modules.subModules.permission._id": 0,
+    //             }
+    //         )
+    //         .populate({
+    //             path: "role",
+    //             select: {
+    //                 _id: 0,
+    //                 createdAt: 0,
+    //                 updatedAt: 0,
+    //                 __v: 0,
+    //             },
+    //         })
+    //         .populate({
+    //             path: "modules.module",
+    //             select: {
+    //                 // _id: 0,
+    //                 createdAt: 0,
+    //                 updatedAt: 0,
+    //                 __v: 0,
+    //                 permissions: 0,
+    //             },
+    //             // options:{sort:{orderPosition:1}}
+    //         })
+    //         .populate({
+    //             path: "modules.permissions",
+    //             select: {
+    //                 // _id: 0,
+    //                 createdAt: 0,
+    //                 updatedAt: 0,
+    //                 __v: 0,
+    //             },
+    //         })
+    //         .populate({
+    //             path: "modules.subModules.subModule",
+    //             select: {
+    //                 // _id: 0,
+    //                 createdAt: 0,
+    //                 updatedAt: 0,
+    //                 __v: 0,
+    //                 permissions: 0,
+    //                 isSubmodule: 0,
+    //                 module: 0,
+    //             },
+    //         })
+    //         .populate({
+    //             path: "modules.subModules.permissions",
+    //             select: {
+    //                 // _id: 0,
+    //                 createdAt: 0,
+    //                 updatedAt: 0,
+    //                 __v: 0,
+    //             },
+    //         });
+    //     // if (roleDetails){
+
+    //     //     roleDetails.modules = roleDetails?.modules?.filter((item) => {
+    //     //         return item.permissions.length || item.subModules.length
+    //     //     })
+    //     //     roleDetails.modules.subModules=roleDetails?.modules?.subModules.filter((item) =>{
+    //     //         return item.permissions.length || item.subModules.length
+    //     //     })
+    //     //     return roleDetails;
+    //     // }
+    //     if (roleDetails) {
+    //         roleDetails.modules = roleDetails.modules.filter((module) => {
+
+    //             return (module.permissions && module.permissions.length) || (module.subModules && module.subModules.length);
+    //         });
+
+    //         roleDetails.modules.forEach((module) => {
+    //             module.subModules = module.subModules.filter((subModule) => {
+    //                 return subModule.permissions && subModule.permissions.length;
+    //             });
+    //         });
+
+    //         return roleDetails;
+    //     }
+    // },
     getRolePermission: async (roleId) => {
         const roleDetails = await rolePermissionModel
             .findOne(

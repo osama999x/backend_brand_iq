@@ -147,6 +147,7 @@ const returnOrderServices = {
             product,
             orderId: OrderId,
         } = order;
+        var currentDate = new Date(new Date().toLocaleString());
 
         console.log('this is order somethig', order)
         console.log("Product Log", product)
@@ -182,9 +183,24 @@ const returnOrderServices = {
                     let points = user.points - orderPoint;
                     //update customer membership in case of rturned order order
                     await pointServices.assaignPointMembership(order.customer, points);
+                    let Name = "";
+                    if (user) {
+                        Name = `${user.firstName} ${user.lastName}`;
+                    }
                     email = user.email;
-                    let subject = sendEmailNotificationInfo.orderResponse.title;
-                    let text = `your order ${OrderId} has been returned successfully`;
+                    let subject = `Order Return Request`;
+                    let text = `Dear ${Name},
+                    Your Order Return Request has been Approved!
+
+                    Order Details:
+
+                    -Order ID: # ${order.orderId}
+                    -Approved Date: ${currentDate}
+                    -Total Amount: ${order.totalBill}
+
+                    If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+
+                    ThankYou for choosing MSAFA!`;
                     //return order status log by admin
                     let returnStatus = await orderStatusServices.orderStatus("Returned");
                     console.log(returnStatus);
@@ -221,6 +237,10 @@ const returnOrderServices = {
                     console.log(1);
                     totalPrice = returnOrderProduct;
                     console.log("totalPrice", totalPrice);
+                    const updatedtotalBill = await orderModel.findOneAndUpdate({ _id: orderId }, {
+                        totalBill: totalBill - totalPrice
+                    }, { upsert: true })
+
                     // let getPointPerOrder = await pointManageModel.find({
                     //     pointOrderPriceFrom: { $lte: totalPrice }
                     // });
@@ -275,6 +295,15 @@ const returnOrderServices = {
                         { _id: order.customer },
                         { $inc: { points: -orderPoint } }
                     );
+                    let Name = "";
+                    if (user) {
+                        Name = `${user.firstName} ${user.lastName}`;
+                    }
+
+
+
+
+
                     console.log("Minus user Points : ", user)
                     let newPoint = await customerModel.findOneAndUpdate(
                         { _id: order.customer },
@@ -282,11 +311,23 @@ const returnOrderServices = {
                     );
                     console.log("Added user Points : ", newPoint);
                     let points = newPoint.points + point;
+
                     //update customer membership in case of rturned order order
                     await pointServices.assaignPointMembership(order.customer, points);
                     email = user.email;
-                    let subject = sendEmailNotificationInfo.orderResponse.title;
-                    let text = `your order ${OrderId} return product approved successfully`;
+                    let subject = `Product Return Request`;
+                    let text = `Dear ${Name},
+                    Your Product Return Request has been Approved!
+
+                    Order Details:
+
+                    -Order ID: # ${updatedtotalBill.orderId}
+                    -Approved Date: ${currentDate}
+                    -Total Amount: ${updatedtotalBill.totalBill}
+
+                    If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+
+                    ThankYou for choosing MSAFA!`;
                     await sendNotificationEmail(subject, text, email);
                     //return order log status by admin
                     const returnOrderLog = new returnOrderStatusLogModel({
