@@ -169,11 +169,30 @@ const rolePermissionServices = {
                     __v: 0,
                 },
             });
-        if (roleDetails)
-            roleDetails.modules = roleDetails?.modules?.filter((item) => {
-                return item.permissions.length || item.subModules.length
-            })
-        return roleDetails;
+        // if (roleDetails){
+
+        //     roleDetails.modules = roleDetails?.modules?.filter((item) => {
+        //         return item.permissions.length || item.subModules.length
+        //     })
+        //     roleDetails.modules.subModules=roleDetails?.modules?.subModules.filter((item) =>{
+        //         return item.permissions.length || item.subModules.length
+        //     })
+        //     return roleDetails;
+        // }
+        if (roleDetails) {
+            roleDetails.modules = roleDetails.modules.filter((module) => {
+
+                return (module.permissions && module.permissions.length) || (module.subModules && module.subModules.length);
+            });
+
+            roleDetails.modules.forEach((module) => {
+                module.subModules = module.subModules.filter((subModule) => {
+                    return subModule.permissions && subModule.permissions.length;
+                });
+            });
+
+            return roleDetails;
+        }
     },
     getRolePermission: async (roleId) => {
         const roleDetails = await rolePermissionModel

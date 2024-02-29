@@ -382,7 +382,7 @@ orderRouter.post(
         }
     })
 );
-orderRouter.post(
+orderRouter.get(
     "/orderReport",
     expressAsyncHandler(async (req, res) => {
         const { startDate, endDate } = req.query;

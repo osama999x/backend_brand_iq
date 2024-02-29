@@ -66,7 +66,7 @@ const pointManageServices = {
         if (pointsCheck > customerPoints.points) {
             return {
                 success: false,
-                message: `You have a total of ${customerPoints.points} points available. Points check failed.`,
+                message: `You can redeem upto a total of ${customerPoints.points} Points.`,
                 PointsAvailable: customerPoints.points,
             };
         }
@@ -91,7 +91,7 @@ const pointManageServices = {
             } else {
                 return {
                     success: false,
-                    message: `Points check failed. You can cash a minimum of: ${ReedemPoints}, For this Order.`,
+                    message: `You can cash a minimum of: ${ReedemPoints}, For this Order.`,
                     pointOrderPriceTo,
                     pointOrderPriceFrom,
                     MaximumPointsToRedeem: ReedemPoints,
