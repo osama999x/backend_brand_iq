@@ -106,7 +106,7 @@ const userServices = {
     resetPassword: async (email) => {
         const customer = await userModel.findOne({ email: email });
         if (!customer) {
-            throw new Error('User is Not Registered', 404);
+            throw new Error('User is Not Registered', 200);
         }
         if (customer) {
             result = await userSendEmail(email);

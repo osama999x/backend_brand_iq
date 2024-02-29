@@ -76,7 +76,7 @@ subCategoryRouter.post(
     expressAsyncHandler(async (req, res) => {
         const { categoryId, name, icon, thumbnail, description, isFeatured } =
             req.body;
-        if (!categoryId || !name || !icon || !description || !thumbnail) {
+        if (!categoryId || !name || !icon || !thumbnail) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
         const result = await subCategoryServices.add(

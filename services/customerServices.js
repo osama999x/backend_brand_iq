@@ -320,10 +320,19 @@ const customerServices = {
         );
         return result;
     },
+    checkCustomer: async (email) => {
+        const customer = await customerModel.findOne({
+            email: email,
+        });
+        return customer;
+    },
     resetPassword: async (email) => {
         const customer = await customerModel.findOne({
             email: email,
         });
+        if (!customer) {
+            throw new Error('User is Not Registered', 200);
+        }
         if (customer) {
             result = await sendEmail(email);
             console.log(result);
