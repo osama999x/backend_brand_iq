@@ -389,7 +389,7 @@ orderRouter.get(
         console.log(startDate, endDate);
         const result = await orderServices.orderReport(startDate, endDate);
 
-        console.log(result);
+        // console.log(result);
         if (result.length !== 0) {
             return res.status(200).send({
                 msg: "Orders Details",

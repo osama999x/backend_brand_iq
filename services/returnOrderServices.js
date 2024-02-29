@@ -87,6 +87,7 @@ const returnOrderServices = {
                     images: 1,
                     shipmentType: 1,
                     isOrderReturn: 1,
+                    returnProduct: 1, // Include the returnProduct field
                 }
             )
             .populate({
