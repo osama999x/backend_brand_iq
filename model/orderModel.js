@@ -35,6 +35,10 @@ const schema = new Schema(
                 },
                 colour: {
                     type: String,
+                },
+                returnStatus: {
+                    type: Boolean,
+                    default: false,
                 }
             },
         ],

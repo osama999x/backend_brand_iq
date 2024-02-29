@@ -1343,7 +1343,7 @@ const orderServices = {
     },
     orderReport: async (startDate, endDate) => {
         let matchQuery = {
-            status: { $in: ["Delivered", "Returned"] },
+            status: { $in: ["Delivered", "Returned", "Pending", "Return"] },
         };
 
         console.log("StartDate", new Date(startDate));
