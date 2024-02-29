@@ -177,7 +177,7 @@ customerRouter.patch(
 customerRouter.patch(
     "/updateCustomerProfile",
     expressAsyncHandler(async (req, res) => {
-        const { customerID, firstName, lastName, contact, address, gender } =
+        const { customerID, firstName, lastName, contact, address, gender, zipCode, province, reigon } =
             req.body;
         if (
             !customerID ||
@@ -185,7 +185,9 @@ customerRouter.patch(
             !lastName ||
             !contact ||
             !address ||
-            !gender
+            !gender ||
+            !province ||
+            !reigon
         ) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
@@ -196,7 +198,10 @@ customerRouter.patch(
             lastName,
             contact,
             address,
-            gender
+            gender,
+            zipCode,
+            province,
+            reigon
         );
         if (result) {
             return res
@@ -271,6 +276,10 @@ customerRouter.post(
     "/resetpassword/otp",
     expressAsyncHandler(async (req, res) => {
         const { email } = req.body;
+        const chkk = await customerServices.checkCustomer(email);
+        if (!chkk) {
+            res.status(200).json({ msg: "User is Not Registered" });
+        }
         const result = await customerServices.resetPassword(email);
         if (result) {
             res.status(200).json({ msg: "OTP sent" });

@@ -50,7 +50,7 @@ const returnOrderServices = {
             const time = new Date(new Date().toLocaleDateString());
             //log order status
             const data = new orderLogModel({
-                orderStatus: "Returned",
+                orderStatus: "Return",
                 orderId: mongoose.Types.ObjectId(orderId),
                 time,
                 message: exchangeReason,
@@ -58,7 +58,7 @@ const returnOrderServices = {
             await data.save();
             await orderModel.findOneAndUpdate(
                 { _id: orderId },
-                { status: "Returned" },
+                { status: "Return" },
                 { new: true }
             );
         }
@@ -97,9 +97,10 @@ const returnOrderServices = {
             .populate({
                 path: "orderId",
                 select: {
-                    address: 1,
+                    shippingAddress: 1,
                     contact: 1,
                     orderId: 1,
+                    totalBill: 1,
                     "product.quantity": 1,
                     "product.price": 1,
                 },
@@ -148,7 +149,7 @@ const returnOrderServices = {
 
         console.log('this is order somethig', order)
         console.log("Product Log", product)
-        if (status === "Returned" && oldOrderStatus === "Returned") {
+        if (status === "Returned" && oldOrderStatus === "Return") {
 
             let returnOrder = await returnOrderModel.findOne(
                 { orderId: orderId },
@@ -164,6 +165,7 @@ const returnOrderServices = {
             if (orderPoint) {
                 orderPoint = orderPoint?.points;
             }
+            console.log("orderPoint", orderPoint);
 
 
 
@@ -235,28 +237,36 @@ const returnOrderServices = {
                     //     );
                     // }
                     let getPointPerOrder = await pointManageModel.find({
-                        pointOrderPriceFrom: { $lte: totalPrice }
+                        pointOrderPriceTo: { $gte: totalPrice },
+                        pointOrderPriceFrom: { $lte: totalPrice },
                     });
+
+                    console.log('getPointPerOrder', getPointPerOrder);
+
+                    const { pointOrderPriceFrom, pointPerOrder } = getPointPerOrder;
 
                     totalBill = totalBill - totalPrice;
                     console.log("totalBill", totalBill);
 
-                    let point = 0; // Initialize point outside the if block
+                    let point = 0;
 
                     if (getPointPerOrder.length !== 0) {
-                        let pointOrderPrice = getPointPerOrder[0].pointOrderPriceFrom;
-                        let pointPerOrder = getPointPerOrder[0].pointPerOrder;
+                        // let pointOrderPrice = getPointPerOrder[0].pointOrderPriceFrom;
+                        // let pointPerOrder = getPointPerOrder[0].pointPerOrder;
 
                         // Check if pointOrderPrice is not 0 to avoid division by zero
-                        if (pointOrderPrice !== 0) {
-                            point = Math.ceil(totalBill / pointOrderPrice) * pointPerOrder;
+                        if (pointOrderPriceFrom !== 0) {
+                            // point = Math.ceil(totalBill / pointOrderPrice) * pointPerOrder;
+                            point = Math.ceil(totalBill / pointOrderPriceFrom) * pointPerOrder;
                         }
                     }
+                    console.log("point : ", point);
 
-                    await pointModel.findOneAndUpdate(
+                    const updateorderpoints = await pointModel.findOneAndUpdate(
                         { orderId: OrderId },
                         { points: point }
                     );
+                    console.log("updatedorderpoints : ", updateorderpoints)
 
 
 
@@ -264,10 +274,12 @@ const returnOrderServices = {
                         { _id: order.customer },
                         { $inc: { points: -orderPoint } }
                     );
+                    console.log("Minus user Points : ", user)
                     let newPoint = await customerModel.findOneAndUpdate(
                         { _id: order.customer },
                         { $inc: { points: +point } }
                     );
+                    console.log("Added user Points : ", newPoint);
                     let points = newPoint.points + point;
                     //update customer membership in case of rturned order order
                     await pointServices.assaignPointMembership(order.customer, points);
@@ -302,7 +314,7 @@ const returnOrderServices = {
             }
         } else {
             //if admint don't approved returned order
-            if (oldOrderStatus === "Returned") {
+            if (oldOrderStatus === "Return") {
                 try {
                     //return order status log by admin
                     // let cancelStatus = await orderStatusServices.orderStatus("Canceled");

@@ -6,60 +6,113 @@ const customerMembershipModel = require("../model/customerMembershipModel");
 const readNotficationModel = require("../model/readNotificationModel");
 const pointManageModel = require("../model/pointManageModel");
 const pointServices = {
-    customerOrderPoints: async (customerId, date) => {
-        var pointDate = new Date(new Date().getTime() - date * 24 * 60 * 60 * 1000).toISOString();
+    // customerOrderPoints: async (customerId, date) => {
+    //     var pointDate = new Date(new Date().getTime() - date * 24 * 60 * 60 * 1000).toISOString();
 
-        // console.log('sdsd', pointDate);
-        let orderDetails = await orderModel
-            .find(
-                { customer: { $in: customerId }, createdAt: { $gte: pointDate } },
-                {
-                    placedOn: 1,
-                    orderId: 1,
-                    channel: 1,
-                    totalAmount: 1,
-                }
-            )
-            .populate({
-                path: "product.productId",
-                select: { thumbnail: 1, name: 1 },
-                match: { 'product.productId': { $exists: true } }
-            })
-            .lean();
-        console.log(orderDetails);
-        if (orderDetails.length != 0) {
-            orderDetails = orderDetails.map((item) => {
-                item.productThumbnail = item.product[0].productId?.thumbnail;
-                item.name = item.product[0].productId?.name;
-                // item.price = item.product[0].productId?.price;
-                delete item.product;
-                return item;
-            });
-            let orderPoint = await pointModel.find(
-                { customer: { $in: customerId }, createdAt: { $gte: pointDate } },
-                { points: 1 }
-            );
-            if (orderPoint.length != 0) {
-                for (var i = 0; i < orderPoint.length; i++) {
-                    var point = orderPoint[i].points;
-                    orderDetails[i].orderPoint = point;
-                }
-            } else {
-                for (var i = 0; i < orderDetails.length; i++) {
-                    orderDetails[i].orderPoint = 0;
-                }
+    //     // console.log('sdsd', pointDate);
+    //     let orderDetails = await orderModel
+    //         .find(
+    //             { customer: { $in: customerId }, createdAt: { $gte: pointDate } },
+    //             {
+    //                 placedOn: 1,
+    //                 orderId: 1,
+    //                 channel: 1,
+    //                 totalAmount: 1,
+    //             }
+    //         )
+    //         .populate({
+    //             path: "product.productId",
+    //             select: { thumbnail: 1, name: 1 },
+    //             match: { 'product.productId': { $exists: true } }
+    //         })
+    //         .lean();
+    //     console.log(orderDetails);
+    //     if (orderDetails.length != 0) {
+    //         orderDetails = orderDetails.map((item) => {
+    //             item.productThumbnail = item.product[0].productId?.thumbnail;
+    //             item.name = item.product[0].productId?.name;
+    //             // item.price = item.product[0].productId?.price;
+    //             delete item.product;
+    //             return item;
+    //         });
+    //         let orderPoint = await pointModel.find(
+    //             { customer: { $in: customerId }, createdAt: { $gte: pointDate } },
+    //             { points: 1 }
+    //         );
+    //         if (orderPoint.length != 0) {
+    //             for (var i = 0; i < orderPoint.length; i++) {
+    //                 var point = orderPoint[i].points;
+    //                 orderDetails[i].orderPoint = point;
+    //             }
+    //         } else {
+    //             for (var i = 0; i < orderDetails.length; i++) {
+    //                 orderDetails[i].orderPoint = 0;
+    //             }
+    //         }
+    //     }
+    //     var totalPoints = await customerModel.findById(
+    //         { _id: customerId },
+    //         { points: 1, _id: 0 }
+    //     );
+
+    //     if (totalPoints) {
+    //         totalPoints = totalPoints.points;
+    //     }
+    //     return { totalPoints, orderDetails };
+    // }
+    customerOrderPoints: async (customerId) => {
+        const getDateRange = (days) => {
+            return new Date(new Date().getTime() - days * 24 * 60 * 60 * 1000).toISOString();
+        };
+
+        const dateRanges = [1, 7, 30];
+        const result = {};
+
+        for (const days of dateRanges) {
+            const pointDate = getDateRange(days);
+
+            const orderDetails = await orderModel
+                .find(
+                    { customer: { $in: customerId }, createdAt: { $gte: pointDate } },
+                    {
+                        placedOn: 1,
+                        orderId: 1,
+                        channel: 1,
+                        totalBill: 1,
+                        product: 1,
+                        points: 1
+                    }
+                )
+                .populate({
+                    path: "product.productId",
+                    select: { thumbnail: 1, name: 1 },
+                    match: { 'product.productId': { $exists: true } }
+                })
+                .lean();
+
+            if (orderDetails.length !== 0) {
+                result[`${days}Days`] = orderDetails.map((item) => {
+                    item.productThumbnail = item.product[0]?.productId?.thumbnail;
+                    item.name = item.product[0]?.productId?.name;
+                    delete item.product;
+
+                    item.orderPoint = item.points || 0;
+
+                    return item;
+                });
             }
         }
-        var totalPoints = await customerModel.findById(
+
+        const totalPoints = await customerModel.findById(
             { _id: customerId },
             { points: 1, _id: 0 }
         );
 
-        if (totalPoints) {
-            totalPoints = totalPoints.points;
-        }
-        return { totalPoints, orderDetails };
-    },
+        return { totalPoints: totalPoints ? totalPoints.points : 0, ...result };
+    }
+
+
+    ,
     orderPoints: async (orderId) => {
         let orderDetails = await orderModel
             .findOne(

@@ -27,7 +27,7 @@ const schema = new Schema(
             default: true,
         },
         couponValue: {
-            type: Number,
+            type: String,
             required: true,
             default: null,
         },

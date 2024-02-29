@@ -82,7 +82,7 @@ categoryRouter.post(
         // if (!thumbnail) {
         //     return res.status(400).json({ msg: "Thumnail image is required!" })
         // }
-        if (!name || !icon || !description || !thumbnail) {
+        if (!name || !icon || !thumbnail) {
             return res.status(400).send({ msg: "Fields Missing." });
         }
         const result = await categoryServices.add(
@@ -103,14 +103,15 @@ categoryRouter.post(
 categoryRouter.patch(
     "/",
     expressAsyncHandler(async (req, res) => {
-        const { categoryId, name, icon, description, thumbnail, isFeatured } = req.body;
+        const { categoryId, name, icon, description, thumbnail, isFeatured, isActive } = req.body;
         const result = await categoryServices.update(
             categoryId,
             name,
             icon,
             description,
             thumbnail,
-            isFeatured
+            isFeatured,
+            isActive
         );
         if (result) {
             return res.status(200).send({ msg: "Category Updated.", data: result });

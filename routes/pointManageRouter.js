@@ -96,7 +96,7 @@ pointManageRouter.get(
         if (result.success) {
             res.status(200).json(result);
         } else {
-            res.status(400).json(result);
+            res.status(200).json(result);
         }
     }));
 

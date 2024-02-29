@@ -48,7 +48,6 @@ orderRouter.post(
             !orderId ||
             //!originCityCode ||
             !orderType ||
-            !description ||
             !packing ||
             !weight
             //!courierType
@@ -387,8 +386,10 @@ orderRouter.get(
     "/orderReport",
     expressAsyncHandler(async (req, res) => {
         const { startDate, endDate } = req.query;
+        console.log(startDate, endDate);
         const result = await orderServices.orderReport(startDate, endDate);
 
+        console.log(result);
         if (result.length !== 0) {
             return res.status(200).send({
                 msg: "Orders Details",
@@ -438,11 +439,12 @@ orderRouter.get(
     expressAsyncHandler(async (req, res, next) => {
         try {
             const currentMonth = new Date().getMonth() + 1;
-            console.log("currentMonth", currentMonth);
+            //console.log("currentMonth", currentMonth);
 
             const result = await orderModel.aggregate([
                 {
                     $match: {
+                        status: "Delivered",
                         // Filter orders placed in the current month
                         createdAt: {
                             $gte: new Date(new Date().getFullYear(), currentMonth - 1, 1),
@@ -495,10 +497,10 @@ orderRouter.get(
                     $limit: 5,
                 },
             ]);
-            console.log("Start Date:", new Date(new Date().getFullYear(), currentMonth - 1, 1));
-            console.log("End Date:", new Date(new Date().getFullYear(), currentMonth, 1));
+            //  console.log("Start Date:", new Date(new Date().getFullYear(), currentMonth - 1, 1));
+            //console.log("End Date:", new Date(new Date().getFullYear(), currentMonth, 1));
 
-            console.log(result);
+            console.log("result", result);
             if (result.length !== 0) {
                 res.status(200).json({
                     success: true,

@@ -69,7 +69,6 @@ const schema = new Schema(
         },
         redeemValue: {
             type: Number,
-            required: true,
         },
         paymentMode: {
             type: String,
@@ -152,6 +151,9 @@ const schema = new Schema(
             }, addressLine: {
                 type: String,
             }
+        },
+        points: {
+            type: String,
         }
     },
     { timestamps: true }

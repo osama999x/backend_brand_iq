@@ -29,7 +29,17 @@ const homeServices = {
             },
             {
                 $addFields: {
-                    productCount: { $size: "$products" },
+                    productCount: {
+                        $size: {
+                            $filter: {
+                                input: "$products",
+                                as: "product",
+                                cond: {
+                                    $eq: ["$$product.isActive", true],
+                                },
+                            },
+                        },
+                    },
                 }
             }, {
                 $sort: {
@@ -158,7 +168,7 @@ const homeServices = {
             {
                 $project: projection.projection
             }
-        ]);
+        ]).sort({ createdAt: -1 });
         //        console.log("campaign", campaign);
         const result = {
             categories: categories,

@@ -19,11 +19,13 @@ const { findOne } = require("../model/dealBuyerLogModel");
 const coupanPolicyServices = require("./couponPolicyServices");
 const { dealProduct } = require("../utils/sendEmailNotficationInfo");
 const promotionModel = require("../model/promotionModel");
+const CustomerModel = require("../model/customerModel");
 const pointServices = require("./pointServices");
 const productLogServices = require("./productLogServices");
 const productsServices = require("./productsServices");
 const courierServices = require("./courierServices");
 const orderLogService = require("../utils/orderLogService");
+
 const orderServices = {
     generateRandomTrackingId: async () => {
         const randomId = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
@@ -128,10 +130,11 @@ const orderServices = {
                 //    const { pointOrderPrice, pointPerOrder } = getPointPerOrder;
                 const { pointOrderPriceFrom, pointPerOrder } = getPointPerOrder;
                 //Have to set As Per new modules Addtions now its Random
-                console.log("totalBill:", totalBill);
-                console.log("pointOrderPriceFrom:", pointOrderPriceFrom);
-                console.log("pointPerOrder:", pointPerOrder);
+                // console.log("totalBill:", totalBill);
+                // console.log("pointOrderPriceFrom:", pointOrderPriceFrom);
+                // console.log("pointPerOrder:", pointPerOrder);
                 const point = Math.ceil(totalBill / pointOrderPriceFrom) * pointPerOrder;
+                console.log("points", point)
 
                 const data = new pointModel({
                     customer: customerId,
@@ -139,6 +142,7 @@ const orderServices = {
                     orderId: secondOrderId,
                 });
                 await data.save();
+                const pointsorder = await orderModel.findOneAndUpdate({ orderId: secondOrderId }, { points: point }, { upsert: true, new: true });
 
                 const updatedPoints = await customerModel.findByIdAndUpdate(
                     customerId,
@@ -302,7 +306,10 @@ const orderServices = {
                     placedOn: 1,
                     firstProduct: 1,
                     status: 1,
-                    trackingId: 1
+                    trackingId: 1,
+                    totalAmount: 1,
+                    totalBill: 1
+
                 },
             },
             {
@@ -325,6 +332,9 @@ const orderServices = {
                     status: 1,
                     isDeliver: 1,
                     thumbnail: "$product_info.thumbnail",
+                    totalAmount: 1,
+                    totalBill: 1
+
                 },
             },
             {
@@ -460,7 +470,7 @@ const orderServices = {
                     $or: [
                         {
                             $and: [
-                                { status: { $ne: "Returned" } },
+                                // { status: { $ne: "Return" } },
                                 { isAdminReturn: { $eq: false } },
                             ],
                         },
@@ -736,8 +746,10 @@ const orderServices = {
                     totalBill: 1,
                     "product.sku": 1,
                     "product.size": 1,
+                    "product.colour": 1,
                     "product.quantity": 1,
                     "product.price": 1,
+                    "shippingAddress": 1
 
                 }
             )
@@ -813,7 +825,9 @@ const orderServices = {
                     AvailableQuantity: Product.variant[0].quantity,
                     sku: Product.variant[0].sku,
                     msg: `Out of Stock`,
+
                 });
+                continue;
                 console.log(2);
                 continue; // Continue to the next product
             }
@@ -878,7 +892,7 @@ const orderServices = {
 
                     throw {
                         message: {
-                            msg: `${Product.name} is in Promotion.`,
+                            msg: `Product is in Promotion.`,
                             productId: productId,
                             discount: promotiondiscount
                         },
@@ -928,7 +942,7 @@ const orderServices = {
 
                     throw {
                         message: {
-                            msg: `${Product.name} Price has been changed, update the Cart!`,
+                            msg: `Product Price has been changed, Update Your Cart!`,
                             Name: Product.name,
                             discount: Product.variant[0].discountedPrice,
                         },
@@ -939,7 +953,7 @@ const orderServices = {
 
                 throw {
                     message: {
-                        msg: `${Product.name} price has been changed, update the Cart!`,
+                        msg: `Product Price has been changed, Update Your Cart!`,
                     },
                 };
             }
@@ -1101,7 +1115,7 @@ const orderServices = {
             var productArr = [];
             var currentDate = new Date(new Date().toLocaleString());
             var productLength = product.length;
-
+            console.log("productLength", productLength);
             for (let i = 0; i < productLength; i++) {
                 const productId = product[i].productId;
                 const quantity = product[i].quantity;
@@ -1125,14 +1139,18 @@ const orderServices = {
                 if (!Product || !Product.variant || Product.variant.length === 0) {
                     continue;
                 }
-
-
-                const variant = Product.variant[0];
+                console.log("index", i)
+                console.log("Product.variant[i]", Product?.variant?.[i]);
+                const variant = Product?.variant?.[i];
                 console.log("variant", variant);
 
-                const variantSize = variant.size || "";
-                const variantColour = variant.colorName || "";
+                let variantSize = variant?.size !== undefined ? variant?.size : "";
 
+
+                // let variantSize = variant.size || "";
+                let variantColour = variant?.colorName !== undefined ? variant?.colorName : "";
+                // console.log("size", variantSize);
+                // console.log("colour", variantColour);
                 const productInfo = {
                     productId: productId,
                     quantity: quantity,
@@ -1141,7 +1159,7 @@ const orderServices = {
                     size: variantSize,
                     colour: variantColour,
                 };
-
+                console.log("productInfo", productInfo);
 
                 productArr.push(productInfo);
             }
@@ -1239,12 +1257,34 @@ const orderServices = {
                 _id: result._id,
                 orderId: result.orderId,
             };
+
+            const CustomerName = await CustomerModel.findOne({ _id: result.customer });
+            if (CustomerName) {
+                var Name = CustomerName.firstName;
+            }
+
             console.log("Result", Result);
             if (result) {
                 let subject = sendEmailNotificationInfo.orderResponse.title;
-                let text =
-                    sendEmailNotificationInfo.orderResponse.body +
-                    `Your Order has been SuccesFully Placed on Msafa and your orderId is :${Result.orderId}`;
+                let html = "";
+                let text = `Dear ${Name},
+    Thank you for shopping with us!
+
+    <strong>Order Details:</strong>
+
+    <ul>
+        <li>Order ID: # ${result.orderId}</li>
+        <li>Order Date: ${currentDate}</li>
+        <li>Billing Address: ${result.billingAddress ? result.billingAddress.addressLine : 'N/A'}</li>
+        <li>Shipping Address: ${result.shippingAddress ? result.shippingAddress.addressLine : 'N/A'}</li>
+        <li>Total Amount: ${result.totalBill}</li>
+    </ul>
+
+    We will keep you updated on the status of your order. If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+
+    Thank you for choosing MSAFA!
+`;
+
                 let userEmail = await customerModel.findOne(
                     { _id: customerId },
                     { email: 1, _id: 0 }
@@ -1307,6 +1347,8 @@ const orderServices = {
         let matchQuery = {
             status: { $in: ["Delivered", "Returned"] },
         };
+        console.log(new Date(startDate));
+        console.log(new Date(endDate));
 
         if (startDate && endDate) {
             matchQuery.placedOn = {
@@ -1319,7 +1361,7 @@ const orderServices = {
                 $lte: endDate ? new Date(endDate) : new Date(),
             };
         }
-
+        console.log(matchQuery)
         let result = await orderModel.aggregate([
             {
                 $match: matchQuery,
@@ -1350,13 +1392,13 @@ const orderServices = {
                     year: new Date().getFullYear(),
                     month: new Date().getMonth() + 1, // Add 1 to represent the actual month
                     status: "Delivered",
-                    totalDelivered: 0,
+                    total: 0,
                 },
                 {
                     year: new Date().getFullYear(),
                     month: new Date().getMonth() + 1, // Add 1 to represent the actual month
                     status: "Returned",
-                    totalReturned: 0,
+                    total: 0,
                 },
             ];
         } else {
@@ -1365,7 +1407,7 @@ const orderServices = {
                 month,
                 status,
                 total: order,
-            }));
+            }))
         }
 
         result.push({
@@ -1488,15 +1530,23 @@ const orderServices = {
                 { new: true }
             );
             const filter = { _id: productId, "variant.sku": sku };
+            const existingProduct = await productModel.findOne(filter);
+
+            if (!existingProduct) {
+                console.log(`Product not found in productModel for productId: ${productId} and sku: ${sku}`);
+
+            }
             const update = { $inc: { "variant.$.quantity": +quantity } };
-            await productModel.findOneAndUpdate(filter, update);
+            const procheck = await productModel.findOneAndUpdate(filter, update);
+            //console.log("procheck", procheck);
+
             productLog = new productLogModel({
                 product: mongoose.Types.ObjectId(productId),
                 description: `return product,PRODUCTID:${productId},SKU:${sku},QUANTITY:${quantity},PRICE:${price},CUSTOMER:${order.customer},Size:${size}`,
             });
             await productLog.save();
         }
-        console.log("totalPrice", totalPrice);
+        //console.log("totalPrice", totalPrice);
         return totalPrice;
     },
     findOrder: async (orderId) => {
