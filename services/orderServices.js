@@ -1259,26 +1259,24 @@ const orderServices = {
             };
 
             const CustomerName = await CustomerModel.findOne({ _id: result.customer });
-            if (CustomerName) {
-                var Name = CustomerName.firstName;
-            }
 
-            console.log("Result", Result);
+            let Name = "";
+            if (CustomerName) {
+                Name = `${CustomerName.firstName} ${CustomerName.lastName}`;
+            }
             if (result) {
                 let subject = sendEmailNotificationInfo.orderResponse.title;
                 let html = "";
                 let text = `Dear ${Name},
-    Thank you for shopping with us!
+        Thank you for shopping with us!
 
-    <strong>Order Details:</strong>
+        Order Details:
 
-    <ul>
-        <li>Order ID: # ${result.orderId}</li>
-        <li>Order Date: ${currentDate}</li>
-        <li>Billing Address: ${result.billingAddress ? result.billingAddress.addressLine : 'N/A'}</li>
-        <li>Shipping Address: ${result.shippingAddress ? result.shippingAddress.addressLine : 'N/A'}</li>
-        <li>Total Amount: ${result.totalBill}</li>
-    </ul>
+        -Order ID: # ${result.orderId}
+        -Order Date: ${currentDate}
+        -Billing Address: ${result.billingAddress ? result.billingAddress.addressLine : 'N/A'}
+        -Shipping Address: ${result.shippingAddress ? result.shippingAddress.addressLine : 'N/A'}
+        -Total Amount: ${result.totalBill}
 
     We will keep you updated on the status of your order. If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
 
@@ -1347,21 +1345,19 @@ const orderServices = {
         let matchQuery = {
             status: { $in: ["Delivered", "Returned"] },
         };
-        console.log(new Date(startDate));
-        console.log(new Date(endDate));
 
-        if (startDate && endDate) {
+        console.log("StartDate", new Date(startDate));
+        console.log("EndDate", new Date(endDate));
+
+        if (startDate) {
             matchQuery.placedOn = {
                 $gte: new Date(startDate),
-                $lt: new Date(endDate),
-            };
-        } else if (startDate) {
-            matchQuery.placedOn = {
-                $gte: new Date(startDate),
-                $lte: endDate ? new Date(endDate) : new Date(),
+                $lt: endDate ? new Date(endDate) : new Date(),
             };
         }
-        console.log(matchQuery)
+
+        console.log(matchQuery);
+
         let result = await orderModel.aggregate([
             {
                 $match: matchQuery,
@@ -1407,7 +1403,7 @@ const orderServices = {
                 month,
                 status,
                 total: order,
-            }))
+            }));
         }
 
         result.push({
@@ -1416,6 +1412,7 @@ const orderServices = {
 
         return result;
     }
+
 
 
     ,

@@ -12,7 +12,7 @@ const schema = new Schema(
             unique: true,
         },
         deliveryCharges: {
-            type: Number,
+            type: String,
             default: 0,
             required: true,
         }
