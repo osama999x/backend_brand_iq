@@ -100,10 +100,24 @@ const pointManageServices = {
                 };
             }
         } else {
-            return {
-                success: false,
-                message: "No matching document found for the given price range.",
-            };
+            const points = await pointManageModel.findOne().sort({ createdAt: -1 });
+            const { ReedemPoints } = points
+            if (ReedemPoints <= customerPoints.points) {
+                return {
+                    success: true,
+                    message: "Document found",
+                    PointsAvailable: customerPoints.points,
+                    Reedem: ReedemPoints
+
+                };
+            } else {
+                return {
+                    success: false,
+                    message: "No matching document found for the given price range.",
+                    PointsAvailable: customerPoints.points
+
+                };
+            }
         }
 
     }

@@ -33,12 +33,12 @@ customerRouter.post(
             cnic,
             reigon,
         } = req.body;
-        let isValidContact = validateMobileNumber(contact);
-        if (!isValidContact) {
-            return res.status(400).send({
-                msg: "Please enter valid mobile number!",
-            });
-        }
+        // let isValidContact = validateMobileNumber(contact);
+        // if (!isValidContact) {
+        //     return res.status(400).send({
+        //         msg: "Please enter valid mobile number!",
+        //     });
+        // }
         if (password !== reEnterPassword) {
             return res.status(400).send({ msg: "Password & Confirm Password Don't Match" });
         }
@@ -102,8 +102,7 @@ customerRouter.post(
             !email ||
             !contact ||
             !address ||
-            !gender ||
-            !cnic
+            !gender
         ) {
             res.status(400).send({
                 msg: "Fields Missing",
