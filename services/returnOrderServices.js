@@ -30,12 +30,13 @@ const returnOrderServices = {
         images
     ) => {
         let imgArr = [];
-        if (images.length != 0) {
+        if (images) {
             var image = await uploadFile(images);
         }
 
         console.log(2);
         const returnDate = new Date(new Date().toLocaleDateString());
+
         const request = new returnOrderModel({
             orderId,
             isOrderReturn,
@@ -46,21 +47,51 @@ const returnOrderServices = {
             images: image,
         });
         const result = await request.save();
+
         if (result) {
-            const time = new Date(new Date().toLocaleDateString());
-            //log order status
-            const data = new orderLogModel({
-                orderStatus: "Return",
-                orderId: mongoose.Types.ObjectId(orderId),
-                time,
-                message: exchangeReason,
-            });
-            await data.save();
-            await orderModel.findOneAndUpdate(
-                { _id: orderId },
-                { status: "Return" },
-                { new: true }
-            );
+            // console.log("orderId", orderId, "PRoductID", returnProduct.productId, returnProduct)
+            if (result.isOrderReturn === true) {
+                const time = new Date(new Date().toLocaleDateString());
+                //log order status
+                const data = new orderLogModel({
+                    orderStatus: "Return",
+                    orderId: mongoose.Types.ObjectId(orderId),
+                    time,
+                    message: exchangeReason,
+                });
+                await data.save();
+                await orderModel.findOneAndUpdate(
+                    { _id: orderId },
+                    { status: "Return", webStatus: "Return" },
+                    { new: true }
+                );
+            } else {
+                const time = new Date(new Date().toLocaleDateString());
+                //log order status
+                const data = new orderLogModel({
+                    orderStatus: "Return",
+                    orderId: mongoose.Types.ObjectId(orderId),
+                    time,
+                    message: exchangeReason,
+                });
+                await data.save();
+                await orderModel.findOneAndUpdate(
+                    {
+                        _id: orderId,
+                        "product.productId": returnProduct?.[0].productId,
+                    },
+                    {
+                        $set: {
+                            status: "Return",
+                            webStatus: "Delivered",
+                            "product.$.returnStatus": true,
+                        },
+                    },
+                    { new: true }
+                );
+
+            }
+
         }
         return result;
     },
@@ -68,11 +99,11 @@ const returnOrderServices = {
         //return order list
         const list = await returnOrderModel.find({}, { returnDate: 1, createdAt: 1 }).populate({
             path: "orderId",
-            select: { _id: 1, status: 1, orderId: 1 },
+            select: { _id: 1, status: 1, orderId: 1, },
             populate: {
                 path: "customer",
                 model: "Customer",
-                select: { _id: 1, firstName: 1, lastName: 1 },
+                select: { _id: 1, firstName: 1, lastName: 1, province: 1, state: 1, zipCode: 1, address: 1 },
             },
         });
         return list;
@@ -109,7 +140,12 @@ const returnOrderServices = {
                     {
                         path: "customer",
                         model: "Customer",
-                        select: { _id: 1, firstName: 1, lastName: 1 },
+                        select: { _id: 1, firstName: 1, lastName: 1, province: 1, state: 1, zipCode: 1, address: 1, region: 1 },
+                        populate: {
+                            path: "reigon",
+                            model: "TaxType",
+                            select: "taxType"
+                        }
                     },
                     {
                         path: "product.productId",

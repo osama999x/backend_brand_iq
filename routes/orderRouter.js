@@ -313,7 +313,6 @@ orderRouter.post(
                                 customerFcm.fcmToken
                             );
                         }
-                        // console.log("orderId///////////////////////////////////////////////", orderResult._id);
                         const history = await paymentHistoryService.new(
                             customer,
                             orderResult._id,
@@ -386,7 +385,7 @@ orderRouter.get(
     "/orderReport",
     expressAsyncHandler(async (req, res) => {
         const { startDate, endDate } = req.query;
-        console.log(startDate, endDate);
+        console.log("startDate", startDate, "EndDate", endDate);
         const result = await orderServices.orderReport(startDate, endDate);
 
         // console.log(result);

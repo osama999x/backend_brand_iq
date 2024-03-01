@@ -118,21 +118,14 @@ const orderServices = {
                     true
                 ),
             ]);
-            //  const getPointPerOrder = await pointManageModel.findOne({ pointOrderPrice: { $lte: totalBill } });
-
-            // const getPointPerOrder = await pointManageModel.findOne();
             const getPointPerOrder = await pointManageModel.findOne({
                 pointOrderPriceTo: { $lte: totalBill },
                 pointOrderPriceFrom: { $gte: totalBill }
             });
             console.log('getPointPerOrder', getPointPerOrder);
             if (getPointPerOrder) {
-                //    const { pointOrderPrice, pointPerOrder } = getPointPerOrder;
                 const { pointOrderPriceFrom, pointPerOrder } = getPointPerOrder;
-                //Have to set As Per new modules Addtions now its Random
-                // console.log("totalBill:", totalBill);
-                // console.log("pointOrderPriceFrom:", pointOrderPriceFrom);
-                // console.log("pointPerOrder:", pointPerOrder);
+
                 const point = Math.ceil(totalBill / pointOrderPriceFrom) * pointPerOrder;
                 console.log("points", point)
 
@@ -273,10 +266,12 @@ const orderServices = {
         courierType,
         isDeliver
     ) => {
+        console.log("orderId111111", orderId);
         const result = await orderModel.findOneAndUpdate(
             { _id: orderId },
             {
                 status,
+                webStatus: "Delivered",
                 trackingId,
                 courierType,
                 isDeliver,
@@ -306,6 +301,7 @@ const orderServices = {
                     placedOn: 1,
                     firstProduct: 1,
                     status: 1,
+                    webStatus: 1,
                     trackingId: 1,
                     totalAmount: 1,
                     totalBill: 1
@@ -330,10 +326,12 @@ const orderServices = {
                     orderId: 1,
                     placedOn: 1,
                     status: 1,
+                    webStatus: 1,
                     isDeliver: 1,
                     thumbnail: "$product_info.thumbnail",
                     totalAmount: 1,
-                    totalBill: 1
+                    totalBill: 1,
+
 
                 },
             },
@@ -531,6 +529,7 @@ const orderServices = {
                     tax: { $first: "$tax" },
                     orderId: { $first: "$orderId" },
                     status: { $first: "$status" },
+                    webStatus: { $first: "$webStatus" },
                     trackingId: { $first: "$trackingId" },
                     placedOn: { $first: "$placedOn" },
                     isDeliver: { $first: "$isDeliver" },
@@ -547,6 +546,7 @@ const orderServices = {
                             productPrice: "$product.price",
                             size: "$product.size",
                             colour: "$product.colour",
+                            returnStatus: "$product.returnStatus"
                         }
                     },
                 },
@@ -755,6 +755,12 @@ const orderServices = {
             )
             .populate({
                 path: "customer",
+                select: { _id: 1, firstName: 1, lastName: 1, email: 1, cnic: 1, province: 1, zipCode: 1, contact: 1 },
+                populate: {
+                    path: "reigon",
+                    model: "TaxType",
+                    select: "taxType"
+                }
             })
             .populate({
                 path: "product.productId",
@@ -1349,10 +1355,12 @@ const orderServices = {
         console.log("StartDate", new Date(startDate));
         console.log("EndDate", new Date(endDate));
 
-        if (startDate) {
+        if (startDate && endDate) {
+            const endOfDay = new Date(endDate);
+            endOfDay.setHours(23, 59, 59, 999);
             matchQuery.placedOn = {
                 $gte: new Date(startDate),
-                $lt: endDate ? new Date(endDate) : new Date(),
+                $lte: endOfDay,
             };
         }
 
@@ -1365,8 +1373,6 @@ const orderServices = {
             {
                 $group: {
                     _id: {
-                        year: { $year: "$placedOn" },
-                        month: { $month: "$placedOn" },
                         status: "$status",
                     },
                     order: { $sum: 1 },
@@ -1374,10 +1380,9 @@ const orderServices = {
             },
             {
                 $project: {
-                    year: "$_id.year",
-                    month: "$_id.month",
                     status: "$_id.status",
-                    order: 1,
+                    total: "$order",
+                    _id: 0,
                 },
             },
         ]);
@@ -1385,25 +1390,22 @@ const orderServices = {
         if (result.length === 0) {
             result = [
                 {
-                    year: new Date().getFullYear(),
-                    month: new Date().getMonth() + 1, // Add 1 to represent the actual month
                     status: "Delivered",
                     total: 0,
                 },
                 {
-                    year: new Date().getFullYear(),
-                    month: new Date().getMonth() + 1, // Add 1 to represent the actual month
                     status: "Returned",
                     total: 0,
                 },
+                {
+                    status: "Pending",
+                    total: 0,
+                },
+                {
+                    status: "Return",
+                    total: 0,
+                },
             ];
-        } else {
-            result = result.map(({ year, month, status, order }) => ({
-                year,
-                month,
-                status,
-                total: order,
-            }));
         }
 
         result.push({
@@ -1411,6 +1413,8 @@ const orderServices = {
         });
 
         return result;
+
+
     }
 
 

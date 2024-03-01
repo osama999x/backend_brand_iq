@@ -58,6 +58,10 @@ const schema = new Schema(
             type: String,
             default: "Pending",
         },
+        webStatus: {
+            type: String,
+            default: "Pending",
+        },
         totalBill: {
             type: Number,
             required: true,
