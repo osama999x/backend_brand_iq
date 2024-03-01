@@ -34,65 +34,132 @@ couponPolicyRouter.post(
         const { couponCode, customerId, orderPriceLimit } = req.body;
 
         if (!couponCode || !customerId || !orderPriceLimit) {
-            res.status(400).send({
+            return res.status(400).send({
                 msg: "Fields Missing.",
             });
         }
 
         const isCoupon = await couponPolicyServices.checkCoupon(couponCode);
         if (!isCoupon) {
-            res.status(400).send({ msg: "Coupon doesn't Exist.", isCoupon: false });
-            return;
+            return res.status(200).send({ msg: "Coupon doesn't Exist.", isCoupon: false });
         }
+
         const inActive = await couponPolicyServices.inActive(couponCode);
         if (inActive) {
-            res.status(409).send({ msg: "Coupon is InActive!" })
+            return res.status(200).send({ msg: "Coupon is InActive!" });
+        }
+        const validCoupon = await couponPolicyServices.getValidCoupon(couponCode);
+        if (!validCoupon) {
+            return res.status(200).send({ msg: "Coupon Has Expired" });
         }
         const orderLimitInfo = await couponPolicyServices.getOrderLimit(couponCode, orderPriceLimit);
         if (!orderLimitInfo.isValid) {
-            res.status(400).send({
+            return res.status(200).send({
                 msg: "Order limit is less than Required.",
                 orderLimitInfo,
             });
-            return;
         }
-        const validCoupon = await couponPolicyServices.getValidCoupon(couponCode);
+
+
+
         const isbuy = await couponPolicyServices.isbuy(couponCode, customerId);
         if (isbuy) {
-            res.status(409).send({ msg: "You have already used this Coupon!" });
+            return res.status(200).send({ msg: "You have already used this Coupon!" });
         }
-        const isUseCoupon = await couponPolicyServices.checkCustomerCoupon(
-            couponCode,
-            customerId
-        );
-        // if (isUseCoupon) {
-        //     res
-        //         .status(400)
-        //         .send({ msg: "You have already Availed this Coupon.", isCoupon: false });
-        //     return;
-        // }
-        // try {
-        // const result = await couponPolicyServices.getCustomerCoupon(
-        //     couponCode,
-        //     customerId
-        // );
-        // console.log(result);
-        const result = await couponPolicyServices.ValidCoupon(customerId, couponCode)
+
+        const isUseCoupon = await couponPolicyServices.checkCustomerCoupon(couponCode, customerId);
+        if (isUseCoupon) {
+            return res.status(200).send({ msg: "This Coupon has already been redeemed." });
+        }
+
+        // Additional commented-out code...
+
+        const result = await couponPolicyServices.ValidCoupon(customerId, couponCode);
         if (result) {
-            res.status(200).send({
+            return res.status(200).send({
                 msg: "Your Coupon Reedemed.",
                 data: result,
                 orderLimitInfo
             });
-            return;
         } else {
-            res.status(400).send({ msg: "Coupon Expire.", isCoupon: false });
+            return res.status(400).send({ msg: "Coupon Expire.", isCoupon: false });
         }
-        // } catch (e) {
-        //   res.status(400).send({ msg: e, isCoupon: false });
-        // }
     })
 );
+
+// couponPolicyRouter.post(
+//     "/customerCoupon",
+//     expressAsyncHandler(async (req, res) => {
+//         const { couponCode, customerId, orderPriceLimit } = req.body;
+
+//         if (!couponCode || !customerId || !orderPriceLimit) {
+//             res.status(400).send({
+//                 msg: "Fields Missing.",
+//             });
+//         }
+
+//         const isCoupon = await couponPolicyServices.checkCoupon(couponCode);
+//         if (!isCoupon) {
+//             res.status(200).send({ msg: "Coupon doesn't Exist.", isCoupon: false });
+//             return;
+//         }
+//         const inActive = await couponPolicyServices.inActive(couponCode);
+//         if (inActive) {
+//             res.status(200).send({ msg: "Coupon is InActive!" })
+//         }
+//         const orderLimitInfo = await couponPolicyServices.getOrderLimit(couponCode, orderPriceLimit);
+//         if (!orderLimitInfo.isValid) {
+//             res.status(200).send({
+//                 msg: "Order limit is less than Required.",
+//                 orderLimitInfo,
+//             });
+//             return;
+//         }
+//         const validCoupon = await couponPolicyServices.getValidCoupon(couponCode)
+//         if (!validCoupon) {
+//             res.status(200).send({ msg: "Coupon Has Expired" });
+//             return;
+//         }
+//         const isbuy = await couponPolicyServices.isbuy(couponCode, customerId);
+//         if (isbuy) {
+//             res.status(200).send({ msg: "You have already used this Coupon!" });
+//         }
+//         const isUseCoupon = await couponPolicyServices.checkCustomerCoupon(
+//             couponCode,
+//             customerId
+//         );
+//         if (!isUseCoupon) {
+
+//             res.status(200).send({ msg: "This Coupon has already been redeemed." });
+//         }
+//         // if (isUseCoupon) {
+//         //     res
+//         //         .status(400)
+//         //         .send({ msg: "You have already Availed this Coupon.", isCoupon: false });
+//         //     return;
+//         // }
+//         // try {
+//         // const result = await couponPolicyServices.getCustomerCoupon(
+//         //     couponCode,
+//         //     customerId
+//         // );
+//         // console.log(result);
+//         const result = await couponPolicyServices.ValidCoupon(customerId, couponCode)
+//         if (result) {
+//             res.status(200).send({
+//                 msg: "Your Coupon Reedemed.",
+//                 data: result,
+//                 orderLimitInfo
+//             });
+//             return;
+//         } else {
+//             res.status(400).send({ msg: "Coupon Expire.", isCoupon: false });
+//         }
+//         // } catch (e) {
+//         //   res.status(400).send({ msg: e, isCoupon: false });
+//         // }
+//     })
+// );
 // couponPolicyRouter.post(
 //   "/consumeCoupon",
 //   expressAsyncHandler(async (req, res) => {

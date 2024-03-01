@@ -17,10 +17,12 @@ returnOrderRouter.post(
             exchangeReason,
             images,
         } = req.body;
-        if (!orderId || !exchangeReason || !shipmentType) {
+        console.log('req.body', req.body)
+        if (!orderId || !exchangeReason || !shipmentType || !images) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
-
+        console.log(1);
+        const Return = await orderModel.findOne({ _id: orderId, status: { $eq: "Return" } }, { placedOn: 1 });
         const delivered = await orderModel.findOne(
             {
                 _id: orderId,
@@ -28,6 +30,9 @@ returnOrderRouter.post(
             },
             { placedOn: 1 }
         );
+        if (Return) {
+            return res.status(200).send({ msg: "You Have Already Made Request for Return" });
+        }
         if (delivered) {
             let date = new Date(new Date().toLocaleDateString());
             let placedOn30DaysPlus = new Date(delivered.placedOn);
@@ -37,7 +42,7 @@ returnOrderRouter.post(
             placedOn30DaysPlus = new Date(placedOn30DaysPlus);
             if (date > placedOn30DaysPlus) {
                 return res
-                    .status(400)
+                    .status(200)
                     .send({ msg: "Order return request applicable under 30 days" });
             } else {
                 const result = await returnOrderServices.exchangeOrder(
@@ -55,12 +60,12 @@ returnOrderRouter.post(
                     });
                 } else {
                     return res
-                        .status(400)
+                        .status(200)
                         .send({ msg: "Order return request not submitted" });
                 }
             }
         } else {
-            return res.status(400).send({
+            return res.status(200).send({
                 msg: "Order return request is Not Applicable",
             });
         }
@@ -94,7 +99,7 @@ returnOrderRouter.post(
     "/dispatchReturnOrder",
     expressAsyncHandler(async (req, res) => {
         const { status, orderId, message } = req.body;
-        console.log("Order ID", orderId, "Status", status);
+        //console.log("Order ID", orderId, "Status", status);
         const result = await returnOrderServices.dispatchReturnOrder(
             status,
             orderId,

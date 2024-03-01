@@ -19,12 +19,18 @@ const { findOne } = require("../model/dealBuyerLogModel");
 const coupanPolicyServices = require("./couponPolicyServices");
 const { dealProduct } = require("../utils/sendEmailNotficationInfo");
 const promotionModel = require("../model/promotionModel");
+const CustomerModel = require("../model/customerModel");
 const pointServices = require("./pointServices");
 const productLogServices = require("./productLogServices");
 const productsServices = require("./productsServices");
 const courierServices = require("./courierServices");
 const orderLogService = require("../utils/orderLogService");
+
 const orderServices = {
+    generateRandomTrackingId: async () => {
+        const randomId = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+        return randomId;
+    },
     orderTracking: async (orderId) => {
         let orderTrack = await orderLogModel.aggregate([
             {
@@ -98,7 +104,8 @@ const orderServices = {
             //     courierType === "POSTEX"
             //         ? deliver.dist.trackingNumber
             //         : deliver.data.data[0].parcelId;
-            const trackingId = '090078601';
+            const trackingId = await orderServices.generateRandomTrackingId();
+            console.log("trackingId", trackingId)
             const courierType = "POSTEX";
             // if (deliver.statusCode === "200" || deliver.status === 200) {
             await Promise.all([
@@ -111,11 +118,16 @@ const orderServices = {
                     true
                 ),
             ]);
-
-            const getPointPerOrder = await pointManageModel.findOne();
+            const getPointPerOrder = await pointManageModel.findOne({
+                pointOrderPriceTo: { $lte: totalBill },
+                pointOrderPriceFrom: { $gte: totalBill }
+            });
+            console.log('getPointPerOrder', getPointPerOrder);
             if (getPointPerOrder) {
-                const { pointOrderPrice, pointPerOrder } = getPointPerOrder;
-                const point = Math.ceil(totalBill / pointOrderPrice) * pointPerOrder;
+                const { pointOrderPriceFrom, pointPerOrder } = getPointPerOrder;
+
+                const point = Math.ceil(totalBill / pointOrderPriceFrom) * pointPerOrder;
+                console.log("points", point)
 
                 const data = new pointModel({
                     customer: customerId,
@@ -123,6 +135,7 @@ const orderServices = {
                     orderId: secondOrderId,
                 });
                 await data.save();
+                const pointsorder = await orderModel.findOneAndUpdate({ orderId: secondOrderId }, { points: point }, { upsert: true, new: true });
 
                 const updatedPoints = await customerModel.findByIdAndUpdate(
                     customerId,
@@ -253,10 +266,12 @@ const orderServices = {
         courierType,
         isDeliver
     ) => {
+        console.log("orderId111111", orderId);
         const result = await orderModel.findOneAndUpdate(
             { _id: orderId },
             {
                 status,
+                webStatus: "Delivered",
                 trackingId,
                 courierType,
                 isDeliver,
@@ -285,6 +300,12 @@ const orderServices = {
                     orderId: 1,
                     placedOn: 1,
                     firstProduct: 1,
+                    status: 1,
+                    webStatus: 1,
+                    trackingId: 1,
+                    totalAmount: 1,
+                    totalBill: 1
+
                 },
             },
             {
@@ -305,16 +326,78 @@ const orderServices = {
                     orderId: 1,
                     placedOn: 1,
                     status: 1,
+                    webStatus: 1,
                     isDeliver: 1,
                     thumbnail: "$product_info.thumbnail",
+                    totalAmount: 1,
+                    totalBill: 1,
+
+
                 },
             },
             {
                 $sort: {
-                    placedOn: -1 // Sort in descending order based on the placedOn field
+                    placedOn: -1
                 },
-            }
+            },
+
         ]);
+
+        // let result1 = await orderModel.aggregate([
+        //     {
+        //         $match: {
+        //             _id: new mongoose.Types.ObjectId(result[0]._id),
+        //             isDeletedByUser: 0,
+        //         },
+        //     },
+        //     {
+        //         $unwind: "$product"
+        //     },
+        //     {
+        //         $lookup: {
+        //             from: "products",
+        //             localField: "product.productId",
+        //             foreignField: "_id",
+        //             as: "productDetails",
+        //         },
+        //     },
+        //     {
+        //         $unwind: "$productDetails"
+        //     },
+        //     {
+        //         $lookup: {
+        //             from: "categories",
+        //             localField: "productDetails.category",
+        //             foreignField: "_id",
+        //             as: "categories",
+        //         },
+        //     },
+        //     {
+        //         $group: {
+        //             _id: "$_id",
+        //             paymentMode: { $first: "$paymentMode" },
+        //             totalBill: { $first: "$totalBill" },
+        //             tax: { $first: "$tax" },
+        //             orderId: { $first: "$orderId" },
+        //             trackingId: { $first: "$trackingId" },
+        //             placedOn: { $first: "$placedOn" },
+        //             isDeliver: { $first: "$isDeliver" },
+        //             productThumbnail: { $first: "$productDetails.thumbnail" },
+        //             products: {
+        //                 $push: {
+        //                     productId: "$productDetails._id",
+        //                     quantity: "$product.quantity",
+        //                     price: "$product.price",
+        //                     sku: "$product.sku",
+        //                     productCategory: { $first: "$categories.name" },
+        //                     productName: "$productDetails.name",
+        //                     productQuantity: "$product.quantity",
+        //                     productPrice: "$product.price",
+        //                 }
+        //             },
+        //         },
+        //     },
+        // ]);
 
         //   .find(
         //     {
@@ -337,6 +420,45 @@ const orderServices = {
         //   });
         // }
 
+        // let result = await orderModel.aggregate([
+        //     {
+        //         $match: {
+        //             customer: new mongoose.Types.ObjectId(customerId),
+        //             isDeletedByUser: 0,
+        //         },
+        //     },
+        //     {
+        //         $lookup: {
+        //             from: "products",
+        //             localField: "product.productId",
+        //             foreignField: "_id",
+        //             as: "products_info",
+        //         },
+        //     },
+        //     {
+        //         $project: {
+        //             customer: 1,
+        //             "product._id": 1,
+        //             "product.quantity": 1,
+        //             "product.price": 1,
+        //             "product.sku": 1,
+        //             "product.size": 1,
+        //             status: 1,
+        //             totalBill: 1,
+        //             totalAmount: 1,
+        //             paymentMode: 1,
+        //             orderId: 1,
+        //             trackingId: 1,
+        //             placedOn: 1,
+        //             "products_info.thumbnail": 1
+        //         },
+        //     },
+        //     {
+        //         $sort: {
+        //             placedOn: -1
+        //         },
+        //     }
+        // ])
         return result;
     },
     getorder: async () => {
@@ -346,7 +468,7 @@ const orderServices = {
                     $or: [
                         {
                             $and: [
-                                { status: { $ne: "Returned" } },
+                                // { status: { $ne: "Return" } },
                                 { isAdminReturn: { $eq: false } },
                             ],
                         },
@@ -378,12 +500,18 @@ const orderServices = {
                 },
             },
             {
+                $unwind: "$product" // Unwind the product array to make it easier to use in $lookup stages
+            },
+            {
                 $lookup: {
                     from: "products",
                     localField: "product.productId",
                     foreignField: "_id",
                     as: "productDetails",
                 },
+            },
+            {
+                $unwind: "$productDetails" // Unwind the productDetails array
             },
             {
                 $lookup: {
@@ -394,57 +522,37 @@ const orderServices = {
                 },
             },
             {
-                $project: {
-                    _id: 1,
-                    paymentMode: 1,
-                    totalBill: 1,
-                    tax: 1,
-                    orderId: 1,
-                    trackingId: 1,
-                    placedOn: 1,
-                    isDeliver: 1,
-                    productThumbnail: {
-                        $arrayElemAt: ["$productDetails.thumbnail", 0],
-                    },
-                    product: {
-                        $map: {
-                            input: {
-                                $zip: {
-                                    inputs: ["$productDetails", "$product", "$categories"],
-                                },
-                            },
-                            as: "item",
-                            in: {
-                                productId: {
-                                    $arrayElemAt: ["$$item.productId", 0],
-                                },
-                                quantity: {
-                                    $arrayElemAt: ["$$item.quantity", 0],
-                                },
-                                price: {
-                                    $arrayElemAt: ["$$item.price", 0],
-                                },
-                                sku: {
-                                    $arrayElemAt: ["$$item.sku", 0],
-                                },
-                                productCategory: {
-                                    $arrayElemAt: ["$$item.name", 1],
-                                },
-                                productName: {
-                                    $arrayElemAt: ["$$item.name", 0],
-                                },
-                                productQuantity: {
-                                    $arrayElemAt: ["$$item.quantity", 0],
-                                },
-                                productPrice: {
-                                    $arrayElemAt: ["$$item.price", 0],
-                                },
-                            },
-                        },
+                $group: {
+                    _id: "$_id",
+                    paymentMode: { $first: "$paymentMode" },
+                    totalBill: { $first: "$totalBill" },
+                    tax: { $first: "$tax" },
+                    orderId: { $first: "$orderId" },
+                    status: { $first: "$status" },
+                    webStatus: { $first: "$webStatus" },
+                    trackingId: { $first: "$trackingId" },
+                    placedOn: { $first: "$placedOn" },
+                    isDeliver: { $first: "$isDeliver" },
+                    productThumbnail: { $first: "$productDetails.thumbnail" },
+                    products: {
+                        $push: {
+                            productId: "$productDetails._id",
+                            quantity: "$product.quantity",
+                            price: "$product.price",
+                            sku: "$product.sku",
+                            productCategory: { $first: "$categories.name" },
+                            productName: "$productDetails.name",
+                            productQuantity: "$product.quantity",
+                            productPrice: "$product.price",
+                            size: "$product.size",
+                            colour: "$product.colour",
+                            returnStatus: "$product.returnStatus"
+                        }
                     },
                 },
             },
         ]);
+
         //   .findById(
         //     { _id },
         //     {
@@ -622,7 +730,7 @@ const orderServices = {
         //   },
         // ]);
 
-        return result[0];
+        return result;
     },
     getOne: async (_id) => {
         const order = await orderModel
@@ -638,13 +746,21 @@ const orderServices = {
                     totalBill: 1,
                     "product.sku": 1,
                     "product.size": 1,
+                    "product.colour": 1,
                     "product.quantity": 1,
                     "product.price": 1,
+                    "shippingAddress": 1
 
                 }
             )
             .populate({
                 path: "customer",
+                select: { _id: 1, firstName: 1, lastName: 1, email: 1, cnic: 1, province: 1, zipCode: 1, contact: 1 },
+                populate: {
+                    path: "reigon",
+                    model: "TaxType",
+                    select: "taxType"
+                }
             })
             .populate({
                 path: "product.productId",
@@ -675,7 +791,8 @@ const orderServices = {
     },
     checkDealProduct: async (customer, product) => {
         const currentDate = new Date(new Date().toLocaleDateString());
-        //check product all possible validity
+        let errorMessages = [];
+
         for (let i = 0; i < product.length; i++) {
             const { productId, quantity, price, sku, size } = product[i];
             const Product = await productModel.findOne(
@@ -686,38 +803,74 @@ const orderServices = {
                     discount: 1,
                     dealExpire: 1,
                     isDeal: 1,
-                    isDiscount: 1,
                 }
             );
 
-            // console.log(Product);
-            //check product availbility
-            if (!Product || !Product.variant.length)
-                throw { message: { msg: `Product doesn't exist` } };
-            //check product quantity meet the requirements
-            if (quantity > Product.variant[0].quantity)
-                throw { message: { msg: `${Product.name} not enough quantity!` } };
+            // if (!Product || !Product.variant.length) {
+            //     console.log(1)
+
+            //     throw { message: { msg: `Product Doesn't Exist` } };
+            // }
+
+            // if (quantity > Product.variant[0].quantity) {
+            //     console.log(2)
+
+            //     throw { message: { msg: `ProductID: ${Product._id} & ${Product.name} has not Enough Quantity! Available Quantity : ${Product.variant[0].quantity}` } };
+            // }
+            if (!Product || !Product.variant.length) {
+                errorMessages.push({ msg: `ProductID: ${productId} & ${Product.name} doesn't exist`, productId: productId, sku: Product.variant[0].sku });
+                console.log(1)
+
+                continue;
+            }
+
+            if (quantity > Product.variant[0].quantity) {
+                errorMessages.push({
+                    productId: productId,
+                    ProductName: Product.name,
+                    AvailableQuantity: Product.variant[0].quantity,
+                    sku: Product.variant[0].sku,
+                    msg: `Out of Stock`,
+
+                });
+                continue;
+                console.log(2);
+                continue; // Continue to the next product
+            }
+
             if (Product.isDeal) {
-                //check deal product all possible valdities
+                console.log(3)
 
                 if (Product.dealExpire >= currentDate) {
-                    if (price !== Product.variant[0].actualPrice - Product.discount)
+                    console.log(4)
+
+                    if (price !== Product.variant[0].actualPrice - Product.discount) {
+                        console.log(5)
+
                         throw {
                             message: {
                                 msg: `${Product.name} price has been changed, update the cart!`,
                             },
                         };
+                    }
+
                     const buy = await dealBuyerLogModel.findOne({
                         customer,
                         product: productId,
                     });
-                    if (buy)
+
+                    if (buy) {
+                        console.log(6)
+
                         throw {
                             message: {
                                 msg: `You already bought this deal product, remove ${Product.name} from the cart!`,
                             },
                         };
+                    }
                 } else {
+                    console.log(7)
+
                     throw {
                         message: {
                             msg: `Deal expired, remove ${Product.name} from the cart!`,
@@ -725,43 +878,99 @@ const orderServices = {
                     };
                 }
             }
-            else if (Product.isDiscount) {
-                console.log({ price, discountedPrice: Product.variant[0].discountedPrice })
-                //check discounted product
-                if (price !== Product.variant[0].discountedPrice)
+            console.log(11)
+
+            const checkPromotion = await promotionModel.findOne({
+                product: { $in: productId },
+                expireDate: { $gte: currentDate },
+                status: "active"
+            });
+
+            if (checkPromotion) {
+                console.log(12)
+                const promotiondiscount = Product.variant[0].actualPrice -
+                    (Product.variant[0].actualPrice * checkPromotion.discount) / 100
+                if (
+                    price !== promotiondiscount
+
+                ) {
+                    console.log(13);
+
                     throw {
                         message: {
-                            msg: `${Product.name} price has been changed, update the cart!`,
-                        },
-                    };
-            }
-            else {
-                const checkPromotion = await promotionModel.findOne({
-                    product: { $in: productId },
-                    expireDate: { $gte: currentDate },
-                });
-                if (checkPromotion) {
-                    //check promotion
-                    if (
-                        price !==
-                        Product.variant[0].actualPrice -
-                        (Product.variant[0].actualPrice * checkPromotion.discount) / 100
-                    )
-                        throw {
-                            message: {
-                                msg: `Promotion expired, update the cart or remove ${Product.name} from it!`,
-                            },
-                        };
-                } else if (price !== Product.variant[0].actualPrice) {
-                    //check actual price
-                    throw {
-                        message: {
-                            msg: `${Product.name} price has been changed, update the cart!`,
+                            msg: `Product is in Promotion.`,
+                            productId: productId,
+                            discount: promotiondiscount
                         },
                     };
                 }
             }
+            // else {
+            //     console.log(14)
+
+            //     // Product is not in promotion
+            //     if (Product.variant[0].isDiscount) {
+            //         // Product variant has a discount
+            //         console.log(15)
+
+            //         if (price !== Product.variant[0].discountedPrice) {
+            //             console.log(16)
+
+            //             throw {
+            //                 message: {
+            //                     msg: `${Product.name} price has been changed, update the cart!`,
+            //                 },
+            //             };
+            //         }
+            //     } else {
+            //         console.log(17)
+
+            //         // Product variant has no discount, check against actual price
+            //         if (price !== Product.variant[0].actualPrice) {
+            //             console.log(18)
+
+            //             throw {
+            //                 message: {
+            //                     msg: `${Product.name} price has been changed, update the cart!`,
+            //                 },
+            //             };
+            //         }
+            //     }
+            // } commented just for now
+            // console.log(Product.variant[0])
+            else if (Product.variant[0].isDiscount || Product.variant[0].discountedPrice) {
+                console.log(8)
+
+                // console.log({ price, discountedPrice: Product.variant[0].discountedPrice });
+
+                if (price !== Product.variant[0].discountedPrice) {
+                    console.log(9)
+
+                    throw {
+                        message: {
+                            msg: `Product Price has been changed, Update Your Cart!`,
+                            Name: Product.name,
+                            discount: Product.variant[0].discountedPrice,
+                        },
+                    };
+                }
+            } else if (price !== Product.variant[0].actualPrice) {
+                console.log(10)
+
+                throw {
+                    message: {
+                        msg: `Product Price has been changed, Update Your Cart!`,
+                    },
+                };
+            }
         }
+        if (errorMessages.length > 0) {
+            // If there are any error messages, throw them as a combined message
+            throw { message: { data: errorMessages } };
+        }
+
+
+
 
         // var currentDate = new Date(new Date().toLocaleDateString());
         // var productLength = product.length;
@@ -901,39 +1110,92 @@ const orderServices = {
         totalBill,
         totalAmount,
         redeemValue,
-        address,
-        city,
-        contact,
         orderId,
         channel,
         couponCode,
-        tax
+        tax,
+        billingAddress,
+        shippingAddress
     ) => {
         try {
+            var productArr = [];
+            var currentDate = new Date(new Date().toLocaleString());
+            var productLength = product.length;
+            console.log("productLength", productLength);
+            for (let i = 0; i < productLength; i++) {
+                const productId = product[i].productId;
+                const quantity = product[i].quantity;
+                const price = product[i].price;
+                const sku = product[i].sku;
+                // const size = product[i].size;
+                // const colour = product[i].colour;
+
+                const Product = await productModel.findOne(
+                    { _id: productId },
+                    {
+                        variant: {
+                            $elemMatch: { sku: sku },
+                            name: 1,
+                            discount: 1,
+
+                        },
+                    }
+                );
+
+                if (!Product || !Product.variant || Product.variant.length === 0) {
+                    continue;
+                }
+                console.log("index", i)
+                console.log("Product.variant[i]", Product?.variant?.[i]);
+                const variant = Product?.variant?.[i];
+                console.log("variant", variant);
+
+                let variantSize = variant?.size !== undefined ? variant?.size : "";
+
+
+                // let variantSize = variant.size || "";
+                let variantColour = variant?.colorName !== undefined ? variant?.colorName : "";
+                // console.log("size", variantSize);
+                // console.log("colour", variantColour);
+                const productInfo = {
+                    productId: productId,
+                    quantity: quantity,
+                    price: price,
+                    sku: sku,
+                    size: variantSize,
+                    colour: variantColour,
+                };
+                console.log("productInfo", productInfo);
+
+                productArr.push(productInfo);
+            }
+
+
             // //check customer already buy deal product or not
             // var productArr = [];
-            var currentDate = new Date(new Date().toLocaleString());
+            // var currentDate = new Date(new Date().toLocaleString());
             // var productLength = product.length;
             // for (let i = 0; i < productLength; i++) {
-            //   productId = product[i].productId;
-            //   quantity = product[i].quantity;
-            //   price = product[i].price;
-            //   sku = product[i].sku;
-            //   size = product[i].size;
-            //   if (price <= 0) {
-            //     return;
-            //   }
-            //   var Product = await productModel.findOne(
-            //     { _id: productId, isDeal: true },
-            //     {
-            //       variant: {
-            //         $elemMatch: { sku: sku },
-            //         name: 1,
-            //         discount: 1,
-            //         dealExpire: 1,
-            //       },
-            //     }
-            //   );
+            //     productId = product[i].productId;
+            //     quantity = product[i].quantity;
+            //     price = product[i].price;
+            //     sku = product[i].sku;
+            //     size = product[i].size;
+            //     //   if (price <= 0) {
+            //     //     return;
+            //     //   }
+            //     var Product = await productModel.findOne(
+            //         { _id: productId, isDeal: true },
+            //         {
+            //             variant: {
+            //                 $elemMatch: { sku: sku },
+            //                 name: 1,
+            //                 discount: 1,
+            //                 dealExpire: 1,
+            //             },
+            //         }
+            //     );
+            // }
             //   if (
             //     Product != null &&
             //     price === Product.variant[0].actualPrice - Product.discount
@@ -979,19 +1241,18 @@ const orderServices = {
             // }
             var order = new orderModel({
                 customer: mongoose.Types.ObjectId(customer),
-                product,
+                product: productArr,
                 paymentMode,
                 totalBill,
                 totalAmount,
                 redeemValue,
-                address,
-                city,
-                contact,
                 orderId,
                 placedOn: currentDate,
                 channel,
                 couponCode,
-                tax
+                tax,
+                billingAddress,
+                shippingAddress
             });
             //ORDER PLACED
             var result = await order.save();
@@ -1002,12 +1263,32 @@ const orderServices = {
                 _id: result._id,
                 orderId: result.orderId,
             };
-            console.log("Result", Result);
+
+            const CustomerName = await CustomerModel.findOne({ _id: result.customer });
+
+            let Name = "";
+            if (CustomerName) {
+                Name = `${CustomerName.firstName} ${CustomerName.lastName}`;
+            }
             if (result) {
                 let subject = sendEmailNotificationInfo.orderResponse.title;
-                let text =
-                    sendEmailNotificationInfo.orderResponse.body +
-                    `. Your order id is ${Result.orderId}`;
+                let html = "";
+                let text = `Dear ${Name},
+        Thank you for shopping with us!
+
+        Order Details:
+
+        -Order ID: # ${result.orderId}
+        -Order Date: ${currentDate}
+        -Billing Address: ${result.billingAddress ? result.billingAddress.addressLine : 'N/A'}
+        -Shipping Address: ${result.shippingAddress ? result.shippingAddress.addressLine : 'N/A'}
+        -Total Amount: ${result.totalBill}
+
+    We will keep you updated on the status of your order. If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+
+    Thank you for choosing MSAFA!
+`;
+
                 let userEmail = await customerModel.findOne(
                     { _id: customerId },
                     { email: 1, _id: 0 }
@@ -1016,7 +1297,7 @@ const orderServices = {
                     await sendNotificationEmail(subject, text, userEmail.email);
                 }
                 //consume Customer Coupon
-                if (result.couponCode !== "00") {
+                if (result.couponCode) {
                     coupanPolicyServices.consumeCoupon(customerId, result.couponCode);
                 }
                 //UPDATE PRODUCT QUANTITY
@@ -1068,16 +1349,22 @@ const orderServices = {
     },
     orderReport: async (startDate, endDate) => {
         let matchQuery = {
-            status: { $in: ["Delivered", "Returned"] },
+            status: { $in: ["Delivered", "Returned", "Pending", "Return"] },
         };
 
-        // If start and end dates are provided, add them to the match query
+        console.log("StartDate", new Date(startDate));
+        console.log("EndDate", new Date(endDate));
+
         if (startDate && endDate) {
+            const endOfDay = new Date(endDate);
+            endOfDay.setHours(23, 59, 59, 999);
             matchQuery.placedOn = {
                 $gte: new Date(startDate),
-                $lt: new Date(endDate),
+                $lte: endOfDay,
             };
         }
+
+        console.log(matchQuery);
 
         let result = await orderModel.aggregate([
             {
@@ -1086,8 +1373,6 @@ const orderServices = {
             {
                 $group: {
                     _id: {
-                        year: { $year: "$placedOn" },
-                        month: { $month: "$placedOn" },
                         status: "$status",
                     },
                     order: { $sum: 1 },
@@ -1095,10 +1380,9 @@ const orderServices = {
             },
             {
                 $project: {
-                    year: "$_id.year",
-                    month: "$_id.month",
                     status: "$_id.status",
-                    order: 1,
+                    total: "$order",
+                    _id: 0,
                 },
             },
         ]);
@@ -1106,25 +1390,22 @@ const orderServices = {
         if (result.length === 0) {
             result = [
                 {
-                    year: new Date().getFullYear(),
-                    month: new Date().getMonth(),
                     status: "Delivered",
-                    totalDelivered: 0,
+                    total: 0,
                 },
                 {
-                    year: new Date().getFullYear(),
-                    month: new Date().getMonth(),
                     status: "Returned",
-                    totalReturned: 0,
+                    total: 0,
+                },
+                {
+                    status: "Pending",
+                    total: 0,
+                },
+                {
+                    status: "Return",
+                    total: 0,
                 },
             ];
-        } else {
-            result = result.map(({ year, month, status, order }) => ({
-                year,
-                month: month - 1,
-                status,
-                total: order,
-            }));
         }
 
         result.push({
@@ -1132,7 +1413,11 @@ const orderServices = {
         });
 
         return result;
+
+
     }
+
+
 
     ,
     orderReportByChannel: async () => {
@@ -1246,14 +1531,23 @@ const orderServices = {
                 { new: true }
             );
             const filter = { _id: productId, "variant.sku": sku };
+            const existingProduct = await productModel.findOne(filter);
+
+            if (!existingProduct) {
+                console.log(`Product not found in productModel for productId: ${productId} and sku: ${sku}`);
+
+            }
             const update = { $inc: { "variant.$.quantity": +quantity } };
-            await productModel.findOneAndUpdate(filter, update);
+            const procheck = await productModel.findOneAndUpdate(filter, update);
+            //console.log("procheck", procheck);
+
             productLog = new productLogModel({
                 product: mongoose.Types.ObjectId(productId),
-                description: `return product,PRODUCTID:${productId},SKU:${sku},QUANTITY:${quantity},PRICE:${price},CUSTOMER:${customerId},Size:${size}`,
+                description: `return product,PRODUCTID:${productId},SKU:${sku},QUANTITY:${quantity},PRICE:${price},CUSTOMER:${order.customer},Size:${size}`,
             });
             await productLog.save();
         }
+        //console.log("totalPrice", totalPrice);
         return totalPrice;
     },
     findOrder: async (orderId) => {

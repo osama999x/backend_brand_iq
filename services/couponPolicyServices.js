@@ -59,9 +59,7 @@ const coupanPolicyServices = {
             couponCode: couponCode,
             isBuy: true
         });
-        if (checkCustomer) {
-            throw "This Coupon has already been redeemed."
-        }
+
         return checkCustomer;
     },
     checkCoupon: async (couponCode) => {
@@ -76,9 +74,9 @@ const coupanPolicyServices = {
 
         const couponPolicy = await couponPolicyModel.findOne({ couponCode: couponCode });
 
-        if (!couponPolicy) {
-            throw new Error('Coupon not found.');
-        }
+        // if (!couponPolicy) {
+        //     throw new Error('Coupon not found.');
+        // }
 
         const isValid = orderPriceLimit >= couponPolicy.orderPriceLimit;
 
@@ -99,8 +97,6 @@ const coupanPolicyServices = {
 
         if (moment(nowTime).isBefore(moment(result.expireDate))) {
             return result;
-        } else {
-            throw new Error('The coupon has expired.');
         }
     }
     ,

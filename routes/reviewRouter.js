@@ -18,13 +18,13 @@ reviewRouter.patch(
     "/approvedReview",
     expressAsyncHandler(async (req, res) => {
         const { reviewId, isApproved } = req.body;
-        let isReviewApproved = await reviewServices.checkApproved(
-            reviewId,
-            isApproved
-        );
-        if (isReviewApproved) {
-            return res.status(400).send({ msg: "Review status already updated!" });
-        }
+        // let isReviewApproved = await reviewServices.checkApproved(
+        //     reviewId,
+        //     isApproved
+        // );
+        // if (isReviewApproved) {
+        //     return res.status(400).send({ msg: "Review status already updated!" });
+        // }
         const result = await reviewServices.approvedReview(reviewId, isApproved);
         if (result) {
             return res.status(200).send({
@@ -106,30 +106,30 @@ reviewRouter.post(
     "/",
     expressAsyncHandler(async (req, res) => {
         const { productId, customerId, rating, comment, images, channel } = req.body;
-        const isPurchase = await orderServices.orderProduct(customerId, productId);
-        if (!isPurchase) {
-            return res.status(400).send({
-                msg: "You can't reviewed this product",
-            });
-        }
+        // const isPurchase = await orderServices.orderProduct(customerId, productId);
+        // if (!isPurchase) {
+        //     return res.status(400).send({
+        //         msg: "You can't reviewed this product",
+        //     });
+        // }
         if (!productId || !customerId) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
         var imgArr = [];
         if (images.length != 0) {
-            var arrayLength = images.length;
-            for (var i = 0; i < arrayLength; i++) {
-                img = await uploadFile(images[i]);
-                imgArr.push(img);
-            }
+            // var arrayLength = images.length;
+            // for (var i = 0; i < arrayLength; i++) {
+            var img = await uploadFile(images)
+            // imgArr.push(img);
         }
+        //   }
 
         const result = await reviewServices.addNewRate(
             productId,
             customerId,
             rating,
             comment,
-            imgArr,
+            img,
             channel
         );
         if (result) {

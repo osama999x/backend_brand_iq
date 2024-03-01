@@ -40,13 +40,13 @@ subscribeRouter.post(
         const check = await SubscribeModel.findOne({ email: email });
         if (check) {
             return res.status(200).send({
-                msg: "You have already Subscribe. Thank You!",
+                msg: "You have already Subscribed. Thank You!",
             });
         } else {
             const result = await subscribeServices.add(email);
             if (result) {
                 return res.status(200).send({
-                    msg: "Subscription added",
+                    msg: "Subscription Added",
                     data: result,
                 });
             } else {

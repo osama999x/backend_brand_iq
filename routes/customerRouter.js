@@ -10,8 +10,11 @@ const validator = require("../utils/passwordValidator");
 const uploadFile = require("../utils/uploadFile");
 const { v4: uuidv4 } = require("uuid");
 const saveOtp = require("../utils/saveOtp");
+const sendNotificationEmail = require("../utils/sendNotificationEmail");
 const jwtService = require("../utils/jwtService");
 const validateMobileNumber = require("../utils/validateMobileNumber");
+const { error } = require("winston");
+
 customerRouter.post(
     "/signup",
     expressAsyncHandler(async (req, res) => {
@@ -20,18 +23,22 @@ customerRouter.post(
             lastName,
             email,
             contact,
+            province,
+            state,
+            zipCode,
             address,
             gender,
             password,
             reEnterPassword,
             cnic,
+            reigon,
         } = req.body;
-        let isValidContact = validateMobileNumber(contact);
-        if (!isValidContact) {
-            return res.status(400).send({
-                msg: "Please enter valid mobile number!",
-            });
-        }
+        // let isValidContact = validateMobileNumber(contact);
+        // if (!isValidContact) {
+        //     return res.status(400).send({
+        //         msg: "Please enter valid mobile number!",
+        //     });
+        // }
         if (password !== reEnterPassword) {
             return res.status(400).send({ msg: "Password & Confirm Password Don't Match" });
         }
@@ -48,10 +55,14 @@ customerRouter.post(
             lastName,
             email,
             contact,
+            province,
+            state,
+            zipCode,
             address,
             gender,
             password,
-            cnic
+            cnic,
+            reigon
         );
         if (result) {
             const uuid = uuidv4();
@@ -91,8 +102,7 @@ customerRouter.post(
             !email ||
             !contact ||
             !address ||
-            !gender ||
-            !cnic
+            !gender
         ) {
             res.status(400).send({
                 msg: "Fields Missing",
@@ -122,6 +132,25 @@ customerRouter.post(
         }
     })
 );
+customerRouter.get(
+    '/byId/:id',
+    expressAsyncHandler(async (req, res) => {
+        let id = req.params.id;
+        if (!id) {
+            res.status(400).send({
+                msg: "Fields Missing",
+            });
+        }
+        const result = await customerServices.getById(id);
+        if (result) {
+            res.status(200).send({ msg: "Fetched", data: result })
+        }
+        else {
+            res.status(200).send({ msg: "Not Found" })
+        }
+
+
+    }))
 customerRouter.patch(
     "/uploadProfileImage",
     expressAsyncHandler(async (req, res) => {
@@ -147,7 +176,7 @@ customerRouter.patch(
 customerRouter.patch(
     "/updateCustomerProfile",
     expressAsyncHandler(async (req, res) => {
-        const { customerID, firstName, lastName, contact, address, gender } =
+        const { customerID, firstName, lastName, contact, address, gender, zipCode, province, reigon } =
             req.body;
         if (
             !customerID ||
@@ -155,7 +184,9 @@ customerRouter.patch(
             !lastName ||
             !contact ||
             !address ||
-            !gender
+            !gender ||
+            !province ||
+            !reigon
         ) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
@@ -166,7 +197,10 @@ customerRouter.patch(
             lastName,
             contact,
             address,
-            gender
+            gender,
+            zipCode,
+            province,
+            reigon
         );
         if (result) {
             return res
@@ -185,6 +219,7 @@ customerRouter.post(
             res.status(400).send({ msg: "Fields Missing" });
         }
         const result = await customerServices.login(email, password, fcmToken);
+        console.log("result", result);
         if (result) {
             const validatePassword = await customerServices.validatePassword(
                 password,
@@ -240,6 +275,10 @@ customerRouter.post(
     "/resetpassword/otp",
     expressAsyncHandler(async (req, res) => {
         const { email } = req.body;
+        const chkk = await customerServices.checkCustomer(email);
+        if (!chkk) {
+            res.status(200).json({ msg: "User is Not Registered" });
+        }
         const result = await customerServices.resetPassword(email);
         if (result) {
             res.status(200).json({ msg: "OTP sent" });
@@ -260,6 +299,9 @@ customerRouter.post(
     "/resetpassword/verify",
     expressAsyncHandler(async (req, res) => {
         const { email, otp } = req.body;
+        if (!email || !otp) {
+            return res.status(400).send("Please provide all Feilds");
+        }
         const expireOtp = await saveOtp.validateOTPExpiryByEmail(email);
         if (!expireOtp) {
             res.status(400).send({
@@ -290,33 +332,35 @@ customerRouter.post(
     "/resetpassword/set",
     expressAsyncHandler(async (req, res) => {
         const { userId, password, reEnterPassword } = req.body;
+        console.log(req.body);
+        console.log("password", password, 'reEnterPassword', reEnterPassword);
         if (password !== reEnterPassword) {
             return res.status(400).send({ msg: "Passwords Don't Match" });
         }
-        if (!validator.schema.validate(password)) {
-            return res.status(400).send({
-                msg: "Password must have at least:1 uppercase letter,1 lowercase letter,1 number and 1 special character",
 
-                //validator.schema.validate(password, { list: true }),
-            });
-        }
-        const result = await customerServices.setNewPassword(userId, password);
-        if (result) {
-            res.status(200).json({ msg: "Password Updated", data: result });
-            const customerFcm = await customerModel.findOne(
-                { _id: userId },
-                { fcmToken: 1 }
-            );
-            await systemNotificationServices.newNotification(
-                notificationInfo.password.body,
-                notificationInfo.password.title,
-                customerFcm.fcmToken
-            );
-        } else {
-            res.status(400).json({ msg: "Password Not Updated" });
+        try {
+            const result = await customerServices.setNewPassword(userId, password);
+            if (result) {
+
+                res.status(200).json({ msg: "Password Updated" });
+                // const customerFcm = await customerModel.findOne(
+                //     { _id: userId },
+                //     { fcmToken: 1 }
+                // );
+                // await systemNotificationServices.newNotification(
+                //     notificationInfo.password.body,
+                //     notificationInfo.password.title,
+                //     customerFcm.fcmToken
+                // );
+            } else {
+                res.status(400).json({ msg: "Password Not Updated" });
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ msg: "Internal Server Error" });
         }
     })
-);
+);;
 customerRouter.post(
     "/resetpassword/forgot",
     expressAsyncHandler(async (req, res) => {
@@ -332,17 +376,28 @@ customerRouter.post(
             });
         }
         const result = await customerServices.setForgotPassword(email, password);
+
         if (result) {
-            res.status(200).json({ msg: "Password Updated" });
-            const customerFcm = await customerModel.findOne(
+            let subject = 'Forgot Password';
+            let text =
+                `Your Password has been Updated Successfully. Your New Password is: ${password}`;
+            let userEmail = await customerModel.findOne(
                 { email: email },
-                { fcmToken: 1 }
+                { email: 1, _id: 0 }
             );
-            await systemNotificationServices.newNotification(
-                notificationInfo.password.body,
-                notificationInfo.password.title,
-                customerFcm.fcmToken
-            );
+            if (userEmail) {
+                await sendNotificationEmail(subject, text, userEmail.email);
+            }
+            res.status(200).json({ msg: "Password Updated" });
+            // const customerFcm = await customerModel.findOne(
+            //     { email: email },
+            //     { fcmToken: 1 }
+            // );
+            // await systemNotificationServices.newNotification(
+            //     notificationInfo.password.body,
+            //     notificationInfo.password.title,
+            //     customerFcm.fcmToken
+            // );
         } else {
             res.status(400).json({ msg: "Password Not Updated" });
         }

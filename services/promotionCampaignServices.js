@@ -14,7 +14,7 @@ const promotionModel = require("../model/promotionModel");
 const promotionCampaignServices = {
     get: async () => {
         const now = new Date();
-        console.log(now);
+        //console.log(now);
         const result = await promotionCampaignModel.find(
             {
                 activeFrom: { $lte: now },
@@ -58,46 +58,79 @@ const promotionCampaignServices = {
             .populate({ path: "subcategory", select: { _id: 1, name: 1 } });
         return result;
     },
-    getPromtionProductDetail: async (campaign) => {
-        console.log(campaign)
+    getPromotionProductDetail: async (campaign) => {
+        // console.log(campaign);
         let currentDate = new Date(new Date().toLocaleDateString());
         let result = await promotionModel.aggregate([
             {
                 $match: {
                     campaignId: new mongoose.Types.ObjectId(campaign),
+                    status: 'active',
                     expireDate: { $gte: currentDate },
                 },
             },
             {
                 $lookup: {
+                    from: "campaigns",
+                    localField: "campaignId",
+                    foreignField: "_id",
+                    as: "campaigns",
+                }
+            },
+            {
+                $lookup: {
                     from: "products",
-                    localField: "product", // field in the orders collection
-                    foreignField: "_id", // field in the items collection
+                    localField: "product",
+                    foreignField: "_id",
                     as: "products",
                 },
             },
-            // { $unwind: "$product" },
             {
-
                 $project: {
+                    campaignId: 1,
+                    'campaigns.campaignName': 1,
+                    'campaigns.description': 1,
                     _id: 1,
                     discount: 1,
-                    campaignId: 1,
                     products: 1,
+
                 },
             },
         ]);
-        console.log(result.length)
-        if (result.length != 0) {
-            discount = result[0].discount;
-            result.products = result[0].products.map((item) => {
-                for (var j of item.variant) {
-                    var price = j.actualPrice;
-                    j.discountedPrice = price - (price / 100) * discount;
-                }
-                return item;
+
+        // console.log(result.length);
+
+        if (result.length !== 0) {
+            result.forEach(promotion => {
+                promotion.products = promotion.products.map((item) => {
+                    let discount = promotion.discount;
+                    // console.log("Discount", discount)
+                    for (var j of item.variant) {
+                        var price = j.actualPrice;
+
+                        if (j.promotionDiscount === undefined) {
+                            j.promotionDiscount = price - (price / 100) * discount;
+                        }
+                    }
+
+                    return item;
+                })
             });
         }
+        // result.products = result.products.map((item) => {
+        //     let discount = result.discount;
+        //     console.log("Discount", discount)
+        //     for (var j of item.variant) {
+        //         var price = j.actualPrice;
+
+        //         if (j.promotionDiscount === undefined) {
+        //             j.promotionDiscount = price - (price / 100) * discount;
+        //         }
+        //     }
+        //     console.log(item)
+        //     return item;
+        // });
+
         //aggregate([
         //   {
         //     $match: {
@@ -154,7 +187,7 @@ const promotionCampaignServices = {
             activeTo,
         });
         var result = await data.save();
-        console.log("description", result.description);
+        // console.log("description", result.description);
         // if (result) {
         //   let subject = sendEmailNotificationInfo.promotion.title;
         //   let text = sendEmailNotificationInfo.promotion.body;

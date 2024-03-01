@@ -48,7 +48,6 @@ orderRouter.post(
             !orderId ||
             //!originCityCode ||
             !orderType ||
-            !description ||
             !packing ||
             !weight
             //!courierType
@@ -155,7 +154,7 @@ orderRouter.get(
             });
         } else {
             return res
-                .status(400)
+                .status(200)
                 .send({ msg: "Customer Order History Not Found", data: result });
         }
     })
@@ -219,7 +218,7 @@ orderRouter.post(
             return res.status(200).send({ validate: true });
         } catch (e) {
             console.log(e.message)
-            return res.status(400).send(e.message);
+            return res.status(200).send(e.message);
         }
     })
 );
@@ -233,25 +232,24 @@ orderRouter.post(
             totalBill,
             totalAmount,
             redeemValue,
-            address,
-            city,
-            contact,
             channel,
             couponCode,
             tax,
+            billingAddress,
+            shippingAddress
         } = req.body;
-        if (!city) {
-            city = "Islamabad";
-        }
+        // if (!city) {
+        //     city = "Islamabad";
+        // }
         if (!customer || !product || !paymentMode || !totalBill) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
-        const isValidContact = validateMobileNumber(contact);
-        if (!isValidContact) {
-            return res.status(400).send({
-                msg: "Please enter valid contact number ",
-            });
-        }
+        // const isValidContact = validateMobileNumber(contact);
+        // if (!isValidContact) {
+        //     return res.status(400).send({
+        //         msg: "Please enter valid contact number ",
+        //     });
+        // }
         try {
             let orderId = Math.floor(Math.random() * 100000 + 100000)
                 .toString()
@@ -315,7 +313,6 @@ orderRouter.post(
                                 customerFcm.fcmToken
                             );
                         }
-                        console.log("orderId///////////////////////////////////////////////", orderResult._id);
                         const history = await paymentHistoryService.new(
                             customer,
                             orderResult._id,
@@ -348,13 +345,12 @@ orderRouter.post(
                     totalBill,
                     totalAmount,
                     redeemValue,
-                    address,
-                    city,
-                    contact,
                     orderId,
                     channel,
                     couponCode,
-                    tax
+                    tax,
+                    billingAddress,
+                    shippingAddress
                 );
 
                 const UseCoupon = await couponPolicyServices.useCoupon(couponCode, customer)
@@ -389,8 +385,10 @@ orderRouter.get(
     "/orderReport",
     expressAsyncHandler(async (req, res) => {
         const { startDate, endDate } = req.query;
+        console.log("startDate", startDate, "EndDate", endDate);
         const result = await orderServices.orderReport(startDate, endDate);
 
+        // console.log(result);
         if (result.length !== 0) {
             return res.status(200).send({
                 msg: "Orders Details",
@@ -440,11 +438,12 @@ orderRouter.get(
     expressAsyncHandler(async (req, res, next) => {
         try {
             const currentMonth = new Date().getMonth() + 1;
-            console.log("currentMonth", currentMonth);
+            //console.log("currentMonth", currentMonth);
 
             const result = await orderModel.aggregate([
                 {
                     $match: {
+                        status: "Delivered",
                         // Filter orders placed in the current month
                         createdAt: {
                             $gte: new Date(new Date().getFullYear(), currentMonth - 1, 1),
@@ -497,10 +496,10 @@ orderRouter.get(
                     $limit: 5,
                 },
             ]);
-            console.log("Start Date:", new Date(new Date().getFullYear(), currentMonth - 1, 1));
-            console.log("End Date:", new Date(new Date().getFullYear(), currentMonth, 1));
+            //  console.log("Start Date:", new Date(new Date().getFullYear(), currentMonth - 1, 1));
+            //console.log("End Date:", new Date(new Date().getFullYear(), currentMonth, 1));
 
-            console.log(result);
+            console.log("result", result);
             if (result.length !== 0) {
                 res.status(200).json({
                     success: true,

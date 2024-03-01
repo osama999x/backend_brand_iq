@@ -26,14 +26,16 @@ pointManageRouter.post(
     "/",
     expressAsyncHandler(async (req, res) => {
 
-        const { initialPoint, pointOrderPrice, pointPerOrder } = req.body;
+        const { initialPoint, pointOrderPriceTo, pointOrderPriceFrom, pointPerOrder, ReedemPoints } = req.body;
         if (!initialPoint || !pointPerOrder) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
         const result = await pointManageServices.addNew(
             initialPoint,
-            pointOrderPrice,
-            pointPerOrder
+            pointOrderPriceTo,
+            pointOrderPriceFrom,
+            pointPerOrder,
+            ReedemPoints
         );
         if (result) {
             return res.status(200).send({ msg: "Point added.", data: result });
@@ -45,16 +47,18 @@ pointManageRouter.post(
 pointManageRouter.patch(
     "/",
     expressAsyncHandler(async (req, res) => {
-        const { pointManageId, initialPoint, pointOrderPrice, pointPerOrder } =
+        const { pointManageId, initialPoint, pointOrderPriceTo, pointOrderPriceFrom, pointPerOrder, ReedemPoints } =
             req.body;
-        if (!pointManageId || !initialPoint || !pointOrderPrice || !pointPerOrder) {
+        if (!pointManageId || !initialPoint || !pointOrderPriceTo || !pointOrderPriceFrom || !pointPerOrder || !ReedemPoints) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
         const result = await pointManageServices.update(
             pointManageId,
             initialPoint,
-            pointOrderPrice,
-            pointPerOrder
+            pointOrderPriceTo,
+            pointOrderPriceFrom,
+            pointPerOrder,
+            ReedemPoints
         );
         if (result) {
             return res.status(200).send({ msg: "Point updated.", data: result });
@@ -81,5 +85,19 @@ pointManageRouter.delete(
         }
     })
 );
+pointManageRouter.get(
+    '/check',
+    expressAsyncHandler(async (req, res) => {
+
+        const { price, pointsCheck, customerId } = req.query;
+
+        const result = await pointManageServices.check(price, pointsCheck, customerId);
+
+        if (result.success) {
+            res.status(200).json(result);
+        } else {
+            res.status(200).json(result);
+        }
+    }));
 
 module.exports = pointManageRouter;

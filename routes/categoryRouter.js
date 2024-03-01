@@ -27,12 +27,13 @@ categoryRouter.get(
         }
     })
 );
+//web
 categoryRouter.get(
     "/subcategories",
     expressAsyncHandler(async (req, res) => {
-        const { categoryId } = req.query;
-        const result = await categoryServices.getSubCategoriesByCategoryId(
-            categoryId
+        const { categoryId, page, pageSize } = req.query;
+        const result = await categoryServices.getSubcategoriesAndProductsByCategoryId(
+            categoryId, page, pageSize
         );
         if (result.length !== 0) {
             res
@@ -43,6 +44,21 @@ categoryRouter.get(
         }
     })
 );
+//portal
+categoryRouter.get(
+    "/subcatgeoriesportal",
+    expressAsyncHandler(async (req, res) => {
+        const { categoryId } = req.query;
+        const categories = await categoryServices.getSubcategories(categoryId);
+        if (categories.length !== 0) {
+            res
+                .status(200)
+                .send({ msg: "Subcategories by Categories.", data: categories });
+        } else {
+            res.status(400).send({ msg: "Not Found." });
+        }
+    })
+)
 categoryRouter.get(
     "/getOne",
     expressAsyncHandler(async (req, res) => {
@@ -66,7 +82,7 @@ categoryRouter.post(
         // if (!thumbnail) {
         //     return res.status(400).json({ msg: "Thumnail image is required!" })
         // }
-        if (!name || !icon || !description || !thumbnail) {
+        if (!name || !icon || !thumbnail) {
             return res.status(400).send({ msg: "Fields Missing." });
         }
         const result = await categoryServices.add(
@@ -87,14 +103,15 @@ categoryRouter.post(
 categoryRouter.patch(
     "/",
     expressAsyncHandler(async (req, res) => {
-        const { categoryId, name, icon, description, thumbnail, isFeatured } = req.body;
+        const { categoryId, name, icon, description, thumbnail, isFeatured, isActive } = req.body;
         const result = await categoryServices.update(
             categoryId,
             name,
             icon,
             description,
             thumbnail,
-            isFeatured
+            isFeatured,
+            isActive
         );
         if (result) {
             return res.status(200).send({ msg: "Category Updated.", data: result });

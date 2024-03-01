@@ -75,6 +75,7 @@ const encryptRequest = require("./middleware/encryptedResponseData");
 const rolePermissionRouter = require("./routes/rolePermissionRouter");
 const courierRouter = require("./routes/courierRouter");
 const citiesRouter = require("./routes/citiesRouter");
+const DeliveryCharges = require("./routes/deliveryChargesRouter.js")
 const { options } = require("./utils/backup");
 const productBulkRouter = require("./routes/productBulkRouter");
 const apiLogs = require("./middleware/apiLogs");
@@ -82,10 +83,10 @@ require("./db/index");
 const port = process.env.PORT;
 //hit routes
 app.use((req, res, next) => {
-  console.log(`Route called: ${req.originalUrl}`);
-  next();
+    console.log(`Route called: ${req.originalUrl}`);
+    next();
 });
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json({ limit: "200mb" }));
 app.use(express.static("public"));
 app.use(express.static(path.join(__dirname, "public")));
 //app.use(decryptData);//Cipher
@@ -95,7 +96,7 @@ app.use(apiLogs);
 //logger
 //app.use(logger);
 var corOptions = {
-  origin: "*",
+    origin: "*",
 };
 //backup
 // new CronJob(
@@ -184,6 +185,7 @@ app.use("/api/v1/rolePermission", rolePermissionRouter);
 app.use("/api/v1/courier", courierRouter);
 app.use("/api/v1/cities", citiesRouter);
 app.use("/api/v1/bulk", productBulkRouter);
+app.use("/api/v1/deliveryCharges", DeliveryCharges)
 
 // const swaggerSpec = swaggerjsdoc(option);
 // app.use(
@@ -195,30 +197,30 @@ swaggerDocs(app, port);
 
 //404 Handler
 app.get("/", (req, res, next) => {
-  res.status(200).send({ msg: "Welcome To MSAFA " });
+    res.status(200).send({ msg: "Welcome To MSAFA " });
 });
 app.use((req, res, next) => {
-  res.status(404).send({ msg: "Route Not found" });
+    res.status(404).send({ msg: "Route Not found" });
 });
 
 //ERROR HANDLER
 app.use((err, req, res, next) => {
-  console.log(err);
-  if (err && err.code === 11000) {
-    let errorKey = Object.keys(err["keyPattern"]).toString();
-    errorKey = uc.upperCaseFirst(errorKey);
-    return res.status(400).send({ msg: errorKey + " already exists" });
-  }
-  if (err.name === "ValidationError") {
-    return res.status(400).send({
-      msg: Object.values(err.errors).map((val) => val.message),
-    });
-  } else {
-    return res.status(400).send({ msg: err.message });
-  }
+    console.log(err);
+    if (err && err.code === 11000) {
+        let errorKey = Object.keys(err["keyPattern"]).toString();
+        errorKey = uc.upperCaseFirst(errorKey);
+        return res.status(400).send({ msg: errorKey + " already exists" });
+    }
+    if (err.name === "ValidationError") {
+        return res.status(400).send({
+            msg: Object.values(err.errors).map((val) => val.message),
+        });
+    } else {
+        return res.status(400).send({ msg: err.message });
+    }
 });
 app.listen(port, () => {
-  console.log(`Server is listening on port ${port}...`);
+    console.log(`Server is listening on port ${port}...`);
 });
 
 console.log(new Date());

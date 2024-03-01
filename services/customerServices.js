@@ -19,14 +19,19 @@ const saveOtp = require("../utils/saveOtp");
 const jwtServices = require("../utils/jwtService");
 const { v4: uuidv4 } = require("uuid");
 const authIdServices = require("./authIdServices");
+const taxHeadServices = require("../services/taxHeadServices")
 
 const customerServices = {
     validatePassword: async (password, realPassword) => {
         const valid = await bcrypt.compare(password, realPassword);
         return valid;
     },
+    getById: async (id) => {
+        const customer = await customerModel.findById(id);
+        return customer;
+    },
     login: async (email) => {
-        const customer = await customerModel.findOne({ email: email });
+        const customer = await customerModel.findOne({ email: email }).lean();
         // if (customer) {
         //   // check customer password with hashed password stored in the database
         //   const validPassword = await bcrypt.compare(password, customer.password);
@@ -73,8 +78,12 @@ const customerServices = {
             // refreshToken = encryptRequest(refreshToken);
             // token = encryptRequest(token);
 
+            const taxx = await taxHeadServices.getEastWestByTaxType();
+            customer.taxx = taxx;
+            // console.log(taxx);
             customer.token = token;
             customer.refreshToken = refreshToken;
+
         }
         return customer;
         //   } else {
@@ -123,43 +132,75 @@ const customerServices = {
         lastName,
         email,
         contact,
+        province,
+        state,
+        zipCode,
         address,
         gender,
         password,
-        cnic
+        cnic,
+        reigon
     ) => {
         const checkCustomer = await customerModel.findOne({ email: email });
         if (checkCustomer) {
-            throw new Error("Email already exist");
-        } else {
-            let getInitialPoint = await pointManageModel.find({});
-            if (getInitialPoint.length != 0) {
-                var initialPoint = getInitialPoint[0].initialPoint;
-            } else {
-                initialPoint = 0;
-            }
-            const salt = await bcrypt.genSalt(10);
-            password = await bcrypt.hash(password, salt);
-            customer = new customerModel({
-                firstName,
-                lastName,
-                email,
-                contact,
-                address,
-                gender,
-                password,
-                cnic,
-                points: initialPoint,
-            });
-            const result = await customer.save();
-            if (result) {
-                id = result._id;
-                points = result.points;
-                await pointServices.assaignPointMembership(id, points);
-            }
-            return result;
+            throw new Error("Email already exists");
         }
-    },
+
+        // Check if cnic is an empty field
+        if (cnic === '') {
+            console.log("CNIC is empty");
+        } else {
+            const checkCnic = await customerModel.findOne({ cnic: cnic });
+
+            // Check if checkCnic is not null (meaning cnic already exists)
+            if (checkCnic) {
+                console.log("Duplicate CNIC found:", checkCnic);
+                throw new Error("Driving License Number already exists");
+            } else {
+                console.log("CNIC is unique");
+            }
+        }
+        // Rest of the code for non-empty cnic
+        let getInitialPoint = await pointManageModel.find({});
+        let initialPoint = 0;
+
+        if (getInitialPoint.length !== 0) {
+            initialPoint = getInitialPoint[0].initialPoint;
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const customer = new customerModel({
+            firstName,
+            lastName,
+            email,
+            contact,
+            province,
+            state,
+            zipCode,
+            address,
+            gender,
+            password: hashedPassword,
+            cnic,
+            points: initialPoint,
+            reigon
+        });
+
+        const result = await customer.save();
+
+        if (result) {
+            const id = result._id;
+            const points = result.points;
+            await pointServices.assaignPointMembership(id, points);
+        }
+
+        return result;
+
+    }
+
+
+    ,
     addNewWeb: async (
         firstName,
         lastName,
@@ -254,15 +295,18 @@ const customerServices = {
             return result;
         }
     },
-    updateDetails: async (_id, firstName, lastName, contact, address, gender) => {
+    updateDetails: async (_id, firstName, lastName, contact, address, gender, zipCode, province, reigon) => {
         result = await customerModel.findOneAndUpdate(
             { _id },
             {
-                firstName,
-                lastName,
-                contact,
-                address,
-                gender,
+                firstName: firstName,
+                lastName: lastName,
+                contact: contact,
+                address: address,
+                gender: gender,
+                zipCode: zipCode,
+                province: province,
+                reigon: reigon
             },
             {
                 new: true,
@@ -278,10 +322,19 @@ const customerServices = {
         );
         return result;
     },
+    checkCustomer: async (email) => {
+        const customer = await customerModel.findOne({
+            email: email,
+        });
+        return customer;
+    },
     resetPassword: async (email) => {
         const customer = await customerModel.findOne({
             email: email,
         });
+        if (!customer) {
+            throw new Error('User is Not Registered', 200);
+        }
         if (customer) {
             result = await sendEmail(email);
             console.log(result);
@@ -317,7 +370,7 @@ const customerServices = {
                 password,
             },
             {
-                new: true,
+                upsert: true,
             }
         );
         return result;
@@ -345,10 +398,17 @@ const customerServices = {
                     lastName: 1,
                     contact: 1,
                     email: 1,
+                    zipCode: 1,
+                    province: 1,
                     address: 1,
                     gender: 1,
+                    reigon: 1
                 }
-            )
+            ).populate({
+                path: 'reigon',
+                model: 'TaxType',
+                select: "taxType"
+            })
             .lean();
         list = list.map((item) => {
             const whiteSpace = " ";

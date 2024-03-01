@@ -48,8 +48,7 @@ productsRouter.get(
         const result = await productsServices.getProductsById(productId);
         if (result) {
             return res.status(200).send({
-                msg: "Products",
-                data: result,
+                result
             });
         } else {
             return res.status(400).send({ msg: "Products Not Found" });
@@ -118,7 +117,6 @@ productsRouter.post(
             images,
             isActive,
             vendor,
-            isTaxable,
             taxHead,
             taxType,
             isPercentage,
@@ -151,7 +149,6 @@ productsRouter.post(
             images,
             isActive,
             vendor,
-            isTaxable,
             taxHead,
             taxType,
             isPercentage,

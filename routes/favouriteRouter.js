@@ -32,7 +32,7 @@ favouriteRouter.post(
         }
         const result = await favouriteServices.add(customerId, productId);
         if (result) {
-            return res.status(200).send({ msg: "Favourite Added.", data: result });
+            return res.status(200).send({ msg: "Added to Wishlist.", data: result });
         } else {
             return res.status(400).send({ msg: "Favourite not Added" });
         }
@@ -45,7 +45,7 @@ favouriteRouter.delete(
         const { favouriteId } = req.body;
         const result = await favouriteServices.delete(favouriteId);
         if (result) {
-            return res.status(200).send({ msg: "Favourite Deleted.", data: result });
+            return res.status(200).send({ msg: "Removed From Wishlist.", data: result });
         } else {
             return res.status(400).send({ msg: "Favourite Not Deleted" });
         }

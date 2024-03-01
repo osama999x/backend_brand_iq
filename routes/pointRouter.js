@@ -18,7 +18,7 @@ pointRouter.post(
 
         const result = await pointServices.customerOrderPoints(customerId, date);
 
-        if (result.orderDetails.length !== 0 || result.totalPoints.length !== 0) {
+        if (result) {
             res.status(200).send({
                 msg: "Points",
                 data: result,
@@ -49,8 +49,8 @@ pointRouter.get(
 pointRouter.get(
     "/customerOrderPoints",
     expressAsyncHandler(async (req, res) => {
-        const { customerId } = req.query;
-        const result = await pointServices.customerTotalPoints(customerId);
+        const { customerId, orderPrice } = req.query;
+        const result = await pointServices.customerTotalPoints(customerId, orderPrice);
         if (result) {
             return res.status(200).send({
                 msg: "Customer Order Points",

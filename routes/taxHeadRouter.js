@@ -49,7 +49,7 @@ taxHeadRouter.post(
     expressAsyncHandler(async (req, res) => {
         const { taxTypeId, taxHead, description } = req.body;
         console.log("req.body", req.body)
-        if (!taxTypeId || !taxHead || !description) {
+        if (!taxTypeId || !taxHead) {
             return res.status(400).send({ msg: "Missing Fields" });
         }
         const result = await taxHeadServices.add(taxTypeId, taxHead, description);
@@ -68,7 +68,7 @@ taxHeadRouter.patch(
     "/",
     expressAsyncHandler(async (req, res) => {
         const { taxHeadId, taxTypeId, taxHead, description } = req.body;
-        if (!taxHeadId || !taxTypeId || !taxHead || !description) {
+        if (!taxHeadId || !taxTypeId || !taxHead) {
             return res.status(400).send({ msg: "Missing Fields" });
         }
         const result = await taxHeadServices.update(

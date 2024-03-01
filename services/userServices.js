@@ -76,6 +76,10 @@ const userServices = {
             // (result.accessToken = accessToken),
             result.refreshToken = refreshToken;
         }
+        const roleeName = await userModel.findOne({ role: result.role }).populate({ path: 'role', model: 'Role', select: 'name' });
+        if (roleeName) {
+            result.roleName = roleeName.role.name;
+        }
         if (result)
             result.modules = result?.modules?.filter((item) => {
                 return item.permissions.length || item.subModules.length
@@ -102,7 +106,7 @@ const userServices = {
     resetPassword: async (email) => {
         const customer = await userModel.findOne({ email: email });
         if (!customer) {
-            throw new Error('User is Not Registered', 404);
+            throw new Error('User is Not Registered', 200);
         }
         if (customer) {
             result = await userSendEmail(email);
