@@ -293,8 +293,7 @@ customerRouter.post(
         }
     })
 );
-// })
-// )};
+
 customerRouter.post(
     "/resetpassword/verify",
     expressAsyncHandler(async (req, res) => {

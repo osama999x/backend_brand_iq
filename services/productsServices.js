@@ -1041,8 +1041,6 @@ const productsServices = {
 
         return updatedDeals;
     }
-
-
     ,
     test: async () => {
         let data = await productsModel.find({});

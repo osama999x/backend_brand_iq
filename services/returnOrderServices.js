@@ -1,8 +1,9 @@
-const returnOrderModel = require("../model/returnOrderModel");
 const mongoose = require("mongoose");
+const returnOrderModel = require("../model/returnOrderModel");
 const projection = require("../config/mongoProjection");
 const uploadFile = require("../utils/uploadFile");
 const orderModel = require("../model/orderModel");
+const productModel = require("../model/productsModel");
 const orderLogModel = require("../model/orderLogModel");
 const orderStatusModel = require("../model/orderStatusModel");
 const pointModel = require("../model/pointModel");
@@ -30,21 +31,70 @@ const returnOrderServices = {
         images
     ) => {
         let imgArr = [];
-        if (images) {
-            var image = await uploadFile(images);
+        if (images && Array.isArray(images)) {
+            for (const image of images) {
+                const result = await uploadFile(image);
+                imgArr.push(result);
+            }
         }
 
-        console.log(2);
+        var productArr = [];
+        var currentDate = new Date(new Date().toLocaleString());
+        var productLength = returnProduct.length;
+        console.log("productLength", productLength);
+        for (let i = 0; i < productLength; i++) {
+            const productId = returnProduct[i].productId;
+            const quantity = returnProduct[i].quantity;
+            const price = returnProduct[i].price;
+            const sku = returnProduct[i].sku;
+
+            const Product = await productModel.findOne(
+                {
+                    _id: productId
+                },
+                {
+                    variant: {
+                        $elemMatch: { sku: sku },
+                        name: 1,
+                        discount: 1,
+                    },
+                }
+            );
+
+            if (!Product || !Product.variant || Product.variant.length === 0) {
+                continue;
+            }
+            console.log("index", i)
+            console.log("Product.variant[i]", Product?.variant?.[i]);
+            const variant = Product?.variant?.[i];
+            console.log("variant", variant);
+
+            let variantSize = variant?.size !== undefined ? variant?.size : "";
+            let variantColour = variant?.colorName !== undefined ? variant?.colorName : "";
+
+            const productInfo = {
+                productId: productId,
+                quantity: quantity,
+                price: price,
+                sku: sku,
+                size: variantSize,
+                colour: variantColour,
+            };
+            console.log("productInfo", productInfo);
+
+            productArr.push(productInfo);
+        }
+        //console.log(2);
         const returnDate = new Date(new Date().toLocaleDateString());
 
         const request = new returnOrderModel({
             orderId,
             isOrderReturn,
             shipmentType,
-            returnProduct,
+            returnProduct: productArr,
             returnDate,
             exchangeReason,
-            images: image,
+            images: imgArr,
         });
         const result = await request.save();
 
@@ -96,7 +146,7 @@ const returnOrderServices = {
         return result;
     },
     returnOrderList: async () => {
-        //return order list
+
         const list = await returnOrderModel.find({}, { returnDate: 1, createdAt: 1 }).populate({
             path: "orderId",
             select: { _id: 1, status: 1, orderId: 1, },
@@ -105,7 +155,7 @@ const returnOrderServices = {
                 model: "Customer",
                 select: { _id: 1, firstName: 1, lastName: 1, province: 1, state: 1, zipCode: 1, address: 1 },
             },
-        });
+        }).sort({ createdAt: -1 });
         return list;
     },
     returnOrderDetails: async (orderId) => {
@@ -118,7 +168,7 @@ const returnOrderServices = {
                     images: 1,
                     shipmentType: 1,
                     isOrderReturn: 1,
-                    returnProduct: 1, // Include the returnProduct field
+                    returnProduct: 1,
                 }
             )
             .populate({

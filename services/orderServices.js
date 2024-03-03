@@ -1415,11 +1415,7 @@ const orderServices = {
         return result;
 
 
-    }
-
-
-
-    ,
+    },
     orderReportByChannel: async () => {
         let result = await orderModel.aggregate([
             {
@@ -1505,13 +1501,7 @@ const orderServices = {
         result.push(total);
 
         return result;
-    }
-    ,
-    // delete: async (_id) => {
-    //   var _id = mongoose.Types.ObjectId(_id);
-    //   const result = await orderModel.deleteOne({ _id });
-    //   return result;
-    // },
+    },
     popReturnProduct: async (orderId, returnProduct) => {
         var totalPrice = 0;
         var returnProductLength = returnProduct.length;

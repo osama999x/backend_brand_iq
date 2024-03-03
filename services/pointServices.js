@@ -109,10 +109,7 @@ const pointServices = {
         );
 
         return { totalPoints: totalPoints ? totalPoints.points : 0, ...result };
-    }
-
-
-    ,
+    },
     orderPoints: async (orderId) => {
         let orderDetails = await orderModel
             .findOne(

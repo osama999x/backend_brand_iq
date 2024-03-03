@@ -4,49 +4,52 @@ const uuid = require("uuid");
 const { generateLongLowercaseUuid, generateShortUuid } = require("custom-uuid");
 
 const schema = new Schema(
-  {
-    orderId: {
-      type: Schema.Types.ObjectId,
-      ref: "Order",
-      unique: true,
-    },
-    isOrderReturn: {
-      type: Boolean,
-      default: false,
-    },
-    shipmentType: {
-      type: String,
-      enum: ["pickup", "dropOff"],
-    },
-    returnProduct: [
-      {
-        productId: {
-          type: Schema.Types.ObjectId,
-          ref: "Product",
+    {
+        orderId: {
+            type: Schema.Types.ObjectId,
+            ref: "Order",
+            unique: true,
         },
-        quantity: {
-          type: Number,
+        isOrderReturn: {
+            type: Boolean,
+            default: false,
         },
-        price: {
-          type: Number,
+        shipmentType: {
+            type: String,
+            enum: ["pickup", "dropOff"],
         },
-        sku: {
-          type: String,
+        returnProduct: [
+            {
+                productId: {
+                    type: Schema.Types.ObjectId,
+                    ref: "Product",
+                },
+                quantity: {
+                    type: Number,
+                },
+                price: {
+                    type: Number,
+                },
+                sku: {
+                    type: String,
+                },
+                size: {
+                    type: String,
+                },
+                colour: {
+                    type: String
+                }
+            },
+        ],
+        returnDate: {
+            type: Date,
         },
-        size: {
-          type: String,
+        exchangeReason: {
+            type: String,
         },
-      },
-    ],
-    returnDate: {
-      type: Date,
+        images: [String],
     },
-    exchangeReason: {
-      type: String,
-    },
-    images: [String],
-  },
-  { timestamps: true }
+    { timestamps: true }
 );
 
 const returnOrderModel = new mongoose.model("returnOrder", schema);
