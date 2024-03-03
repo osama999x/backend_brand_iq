@@ -89,14 +89,7 @@ const rolePermissionServices = {
             console.error("Error in addNew:", error);
             throw error;
         }
-    }
-
-
-
-
-
-
-    ,
+    },
     getRolePermissions: async (roleId) => {
         const rolePermission = await rolePermissionModel.findOneAndDelete({ role: roleId });
         return rolePermission;
