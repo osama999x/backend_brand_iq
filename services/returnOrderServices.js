@@ -38,52 +38,52 @@ const returnOrderServices = {
             }
         }
 
-        var productArr = [];
-        var currentDate = new Date(new Date().toLocaleString());
-        var productLength = returnProduct.length;
-        console.log("productLength", productLength);
-        for (let i = 0; i < productLength; i++) {
-            const productId = returnProduct[i].productId;
-            const quantity = returnProduct[i].quantity;
-            const price = returnProduct[i].price;
-            const sku = returnProduct[i].sku;
+        // var productArr = [];
+        // var currentDate = new Date(new Date().toLocaleString());
+        // var productLength = returnProduct.length;
+        // //console.log("productLength", productLength);
+        // for (let i = 0; i < productLength; i++) {
+        //     const productId = returnProduct[i].productId;
+        //     const quantity = returnProduct[i].quantity;
+        //     const price = returnProduct[i].price;
+        //     const sku = returnProduct[i].sku;
 
-            const Product = await productModel.findOne(
-                {
-                    _id: productId
-                },
-                {
-                    variant: {
-                        $elemMatch: { sku: sku },
-                        name: 1,
-                        discount: 1,
-                    },
-                }
-            );
+        //     const Product = await productModel.findOne(
+        //         {
+        //             _id: productId
+        //         },
+        //         {
+        //             variant: {
+        //                 $elemMatch: { sku: sku },
+        //                 name: 1,
+        //                 discount: 1,
+        //             },
+        //         }
+        //     );
 
-            if (!Product || !Product.variant || Product.variant.length === 0) {
-                continue;
-            }
-            console.log("index", i)
-            console.log("Product.variant[i]", Product?.variant?.[i]);
-            const variant = Product?.variant?.[i];
-            console.log("variant", variant);
+        //     if (!Product || !Product.variant || Product.variant.length === 0) {
+        //         continue;
+        //     }
+        //     console.log("index", i)
+        //     console.log("Product.variant[i]", Product?.variant?.[i]);
+        //     const variant = Product?.variant?.[i];
+        //     console.log("variant", variant);
 
-            let variantSize = variant?.size !== undefined ? variant?.size : "";
-            let variantColour = variant?.colorName !== undefined ? variant?.colorName : "";
+        //     let variantSize = variant?.size !== undefined ? variant?.size : "";
+        //     let variantColour = variant?.colorName !== undefined ? variant?.colorName : "";
 
-            const productInfo = {
-                productId: productId,
-                quantity: quantity,
-                price: price,
-                sku: sku,
-                size: variantSize,
-                colour: variantColour,
-            };
-            console.log("productInfo", productInfo);
+        //     const productInfo = {
+        //         productId: productId,
+        //         quantity: quantity,
+        //         price: price,
+        //         sku: sku,
+        //         size: variantSize,
+        //         colour: variantColour,
+        //     };
+        //     console.log("productInfo", productInfo);
 
-            productArr.push(productInfo);
-        }
+        //     productArr.push(productInfo);
+        // }
         //console.log(2);
         const returnDate = new Date(new Date().toLocaleDateString());
 
@@ -91,7 +91,7 @@ const returnOrderServices = {
             orderId,
             isOrderReturn,
             shipmentType,
-            returnProduct: productArr,
+            returnProduct: returnProduct,
             returnDate,
             exchangeReason,
             images: imgArr,
@@ -460,7 +460,7 @@ const returnOrderServices = {
                         message,
                     });
                     await data.save();
-                    await orderModel.findOneAndUpdate(
+                    const updated = await orderModel.findOneAndUpdate(
                         { _id: orderId },
                         { status: "Delivered" },
                         { new: true }
@@ -469,10 +469,23 @@ const returnOrderServices = {
                         { _id: customerId },
                         { email: 1 }
                     );
+                    let Name = "";
+                    if (user) {
+                        Name = `${user.firstName} ${user.lastName}`;
+                    }
                     email = user.email;
-                    let subject = sendEmailNotificationInfo.orderResponse.title;
+                    let subject = "Return Request Rejected";
+                    text = `Dear ${Name},
+    Your Product Return Request for Order ID #${updated.orderId} has been rejected.
+
+    -Rejection Reason:
+    ${message}
+
+    If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+
+    Thank you for choosing MSAFA!`;
                     // let text = `your order ${orderId} return product approved successfully`;
-                    await sendNotificationEmail(subject, message, email);
+                    await sendNotificationEmail(subject, text, email);
                     await returnOrderModel.deleteOne({ orderId: orderId });
                     return true;
                 } catch (e) {

@@ -147,9 +147,10 @@ const customerServices = {
         }
 
         // Check if cnic is an empty field
-        if (cnic === '') {
+        if (cnic === null || cnic === '' || cnic === undefined) {
             console.log("CNIC is empty");
-        } else {
+        }
+        else {
             const checkCnic = await customerModel.findOne({ cnic: cnic });
 
             // Check if checkCnic is not null (meaning cnic already exists)

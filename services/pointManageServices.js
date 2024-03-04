@@ -101,14 +101,15 @@ const pointManageServices = {
             }
         } else {
             const points = await pointManageModel.findOne().sort({ createdAt: -1 });
-            const { ReedemPoints } = points
+            const { ReedemPoints, pointOrderPriceTo, pointOrderPriceFrom } = points
             if (ReedemPoints <= customerPoints.points) {
                 return {
                     success: true,
-                    message: "Document found",
-                    PointsAvailable: customerPoints.points,
-                    Reedem: ReedemPoints
-
+                    message: "Price falls within the specified range.",
+                    pointOrderPriceTo,
+                    pointOrderPriceFrom,
+                    MaximumPointsToRedeem: ReedemPoints,
+                    PointsProvidedToAvail: pointsCheck
                 };
             } else {
                 return {
