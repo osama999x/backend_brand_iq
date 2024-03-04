@@ -149,6 +149,8 @@ const schema = new Schema(
             },
             province: {
                 type: String
+            }, billingRegion: {
+                type: String
             }
         }, shippingAddress: {
             firstName: {
@@ -170,6 +172,8 @@ const schema = new Schema(
                 type: String
             },
             province: {
+                type: String
+            }, Shippingregion: {
                 type: String
             }
         },
