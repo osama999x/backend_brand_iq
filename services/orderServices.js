@@ -1322,7 +1322,7 @@ const orderServices = {
                   - ZipCode: ${result.shippingAddress ? result.shippingAddress.zipCode : 'N/A'}
                   - Province: ${result.shippingAddress ? result.shippingAddress.province : 'N/A'}
 
-                - Total Amount: ${result.totalBill}
+                - Total Amount: ${result.totalBill.toFixed(2)}
 
                 We will keep you updated on the status of your order. If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
 

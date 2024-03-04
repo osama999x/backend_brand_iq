@@ -282,7 +282,7 @@ const returnOrderServices = {
 
                     -Order ID: # ${order.orderId}
                     -Approved Date: ${currentDate}
-                    -Total Amount: ${order.totalBill}
+                    -Total Amount: ${order.totalBill.toFixed(2)}
 
                     If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
 
@@ -385,11 +385,6 @@ const returnOrderServices = {
                     if (user) {
                         Name = `${user.firstName} ${user.lastName}`;
                     }
-
-
-
-
-
                     console.log("Minus user Points : ", user)
                     let newPoint = await customerModel.findOneAndUpdate(
                         { _id: order.customer },
@@ -409,7 +404,7 @@ const returnOrderServices = {
 
                     -Order ID: # ${updatedtotalBill.orderId}
                     -Approved Date: ${currentDate}
-                    -Total Amount: ${updatedtotalBill.totalBill}
+                    -Total Amount: ${updatedtotalBill.totalBill.toFixed(2)}
 
                     If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
 
@@ -467,7 +462,7 @@ const returnOrderServices = {
                     );
                     let user = await customerModel.findById(
                         { _id: customerId },
-                        { email: 1 }
+                        { email: 1, firstName: 1, lastName: 1 }
                     );
                     let Name = "";
                     if (user) {
