@@ -1155,36 +1155,28 @@ const orderServices = {
                 const quantity = product[i].quantity;
                 const price = product[i].price;
                 const sku = product[i].sku;
-                // const size = product[i].size;
-                // const colour = product[i].colour;
 
                 const Product = await productModel.findOne(
-                    { _id: productId },
                     {
-                        variant: {
-                            $elemMatch: { sku: sku },
-                            name: 1,
-                            discount: 1,
-
-                        },
+                        _id: productId,
+                        "variant.sku": sku,
+                    },
+                    {
+                        "variant.$": 1,
+                        name: 1,
+                        discount: 1,
                     }
                 );
 
                 if (!Product || !Product.variant || Product.variant.length === 0) {
                     continue;
                 }
-                console.log("index", i)
-                console.log("Product.variant[i]", Product?.variant?.[i]);
-                const variant = Product?.variant?.[i];
-                console.log("variant", variant);
 
+                const variant = Product.variant[0];
+                console.log("variant", variant)
                 let variantSize = variant?.size !== undefined ? variant?.size : "";
-
-
-                // let variantSize = variant.size || "";
                 let variantColour = variant?.colorName !== undefined ? variant?.colorName : "";
-                // console.log("size", variantSize);
-                // console.log("colour", variantColour);
+
                 const productInfo = {
                     productId: productId,
                     quantity: quantity,
@@ -1197,6 +1189,7 @@ const orderServices = {
 
                 productArr.push(productInfo);
             }
+
 
 
             // //check customer already buy deal product or not
@@ -1322,7 +1315,7 @@ const orderServices = {
                   - ZipCode: ${result.shippingAddress ? result.shippingAddress.zipCode : 'N/A'}
                   - Province: ${result.shippingAddress ? result.shippingAddress.province : 'N/A'}
 
-                - Total Amount: ${result.totalBill.toFixed(2)}
+                - Total Amount:CA$ ${result.totalBill.toFixed(2)}
 
                 We will keep you updated on the status of your order. If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
 

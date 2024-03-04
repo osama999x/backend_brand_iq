@@ -241,6 +241,7 @@ orderRouter.post(
         // if (!city) {
         //     city = "Islamabad";
         // }
+        //console.log("req.body", req.body);
         if (!customer || !product || !paymentMode || !totalBill) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
