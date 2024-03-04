@@ -122,11 +122,39 @@ const orderServices = {
                 pointOrderPriceTo: { $lte: totalBill },
                 pointOrderPriceFrom: { $gte: totalBill }
             });
+
             console.log('getPointPerOrder', getPointPerOrder);
             if (getPointPerOrder) {
                 const { pointOrderPriceFrom, pointPerOrder } = getPointPerOrder;
 
                 const point = Math.ceil(totalBill / pointOrderPriceFrom) * pointPerOrder;
+                console.log("points", point)
+
+                const data = new pointModel({
+                    customer: customerId,
+                    points: point,
+                    orderId: secondOrderId,
+                });
+                await data.save();
+                const pointsorder = await orderModel.findOneAndUpdate({ orderId: secondOrderId }, { points: point }, { upsert: true, new: true });
+
+                const updatedPoints = await customerModel.findByIdAndUpdate(
+                    customerId,
+                    { $inc: { points: point } },
+                    { new: true }
+                );
+
+                if (updatedPoints) {
+                    await pointServices.assaignPointMembership(
+                        customerId,
+                        updatedPoints.points + point
+                    );
+                }
+            } else {
+                const points = await pointManageModel.findOne().sort({ createdAt: -1 });
+                const { pointOrderPriceFrom, pointPerOrder } = points;
+
+                const point = pointPerOrder;
                 console.log("points", point)
 
                 const data = new pointModel({
@@ -1274,20 +1302,32 @@ const orderServices = {
                 let subject = sendEmailNotificationInfo.orderResponse.title;
                 let html = "";
                 let text = `Dear ${Name},
-        Thank you for shopping with us!
 
-        Order Details:
+                Thank you for shopping with us! Here are the details of your order:
 
-        -Order ID: # ${result.orderId}
-        -Order Date: ${currentDate}
-        -Billing Address: ${result.billingAddress ? result.billingAddress.addressLine : 'N/A'}
-        -Shipping Address: ${result.shippingAddress ? result.shippingAddress.addressLine : 'N/A'}
-        -Total Amount: ${result.totalBill}
+                Order Details:
+                - Order ID: # ${result.orderId}
+                - Order Date: ${currentDate}
+                - Billing Address:
+                  - Address: ${result.billingAddress ? result.billingAddress.addressLine : 'N/A'}
+                  - Contact: ${result.billingAddress ? result.billingAddress.contact : 'N/A'}
+                  - Email: ${result.billingAddress ? result.billingAddress.email : 'N/A'}
+                  - ZipCode: ${result.billingAddress ? result.billingAddress.zipCode : 'N/A'}
+                  - Province: ${result.billingAddress ? result.billingAddress.province : 'N/A'}
 
-    We will keep you updated on the status of your order. If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+                - Shipping Address:
+                  - Address: ${result.shippingAddress ? result.shippingAddress.addressLine : 'N/A'}
+                  - Contact: ${result.shippingAddress ? result.shippingAddress.contact : 'N/A'}
+                  - Email: ${result.shippingAddress ? result.shippingAddress.email : 'N/A'}
+                  - ZipCode: ${result.shippingAddress ? result.shippingAddress.zipCode : 'N/A'}
+                  - Province: ${result.shippingAddress ? result.shippingAddress.province : 'N/A'}
 
-    Thank you for choosing MSAFA!
-`;
+                - Total Amount: ${result.totalBill}
+
+                We will keep you updated on the status of your order. If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+
+                Thank you for choosing MSAFA!
+                `;
 
                 let userEmail = await customerModel.findOne(
                     { _id: customerId },
@@ -1495,13 +1535,21 @@ const orderServices = {
             }
         }
 
+
+        const customOrder = ["Pending", "Delivered", "Return", "Returned"];
+
+        result.sort((a, b) => {
+            return customOrder.indexOf(a.status) - customOrder.indexOf(b.status);
+        });
         const total = {
             totalOrder: totalOrder,
         };
         result.push(total);
 
+
         return result;
     },
+
     popReturnProduct: async (orderId, returnProduct) => {
         var totalPrice = 0;
         var returnProductLength = returnProduct.length;

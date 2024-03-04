@@ -143,6 +143,12 @@ const schema = new Schema(
                 type: String,
             }, addressLine: {
                 type: String,
+            },
+            zipCode: {
+                type: String
+            },
+            province: {
+                type: String
             }
         }, shippingAddress: {
             firstName: {
@@ -156,8 +162,15 @@ const schema = new Schema(
             },
             contact: {
                 type: String,
-            }, addressLine: {
+            },
+            addressLine: {
                 type: String,
+            },
+            zipCode: {
+                type: String
+            },
+            province: {
+                type: String
             }
         },
         points: {
