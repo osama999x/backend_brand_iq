@@ -50,6 +50,9 @@ const userServices = {
             { email: email },
             { createdAt: 0, updatedAt: 0, __v: 0, isLogin: 0 }
         ).lean();
+        if (!result) {
+            throw new Error("Email is not Registered")
+        }
         if (result) {
             const role_permission = await rolePermissionServices.getRolePermission(
                 result.role
