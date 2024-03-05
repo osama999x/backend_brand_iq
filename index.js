@@ -79,6 +79,12 @@ const DeliveryCharges = require("./routes/deliveryChargesRouter.js")
 const { options } = require("./utils/backup");
 const productBulkRouter = require("./routes/productBulkRouter");
 const apiLogs = require("./middleware/apiLogs");
+app.use((req, res, next) => {
+    console.log(req.body)
+    next();
+})
+app.use(express.static("public"));
+app.use(express.json({ limit: "100mb" }));
 require("./db/index");
 const port = process.env.PORT;
 //hit routes
@@ -86,9 +92,6 @@ app.use((req, res, next) => {
     console.log(`Route called: ${req.originalUrl}`);
     next();
 });
-app.use(express.json({ limit: "200mb" }));
-app.use(express.static("public"));
-app.use(express.static(path.join(__dirname, "public")));
 //app.use(decryptData);//Cipher
 //app.use(limiter); //Limit IP Requests
 app.use(morgan("dev"));
