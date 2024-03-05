@@ -31,10 +31,13 @@ const returnOrderServices = {
         images
     ) => {
         let imgArr = [];
-        if (images && Array.isArray(images)) {
-            for (const image of images) {
-                const result = await uploadFile(image);
-                imgArr.push(result);
+        if (images) {
+
+            if (images && Array.isArray(images)) {
+                for (const image of images) {
+                    const result = await uploadFile(image);
+                    imgArr.push(result);
+                }
             }
         }
 
