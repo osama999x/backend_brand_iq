@@ -178,7 +178,7 @@ const schema = new Schema(
             }
         },
         points: {
-            type: String,
+            type: Number,
         }
     },
     { timestamps: true }
