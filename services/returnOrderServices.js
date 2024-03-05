@@ -32,8 +32,8 @@ const returnOrderServices = {
     ) => {
         let imgArr = [];
         if (images) {
-
-            var img = await uploadFile(images);
+            var uploadedImages = await uploadFile(images);
+            console.log(uploadedImages);
 
 
         }
@@ -94,7 +94,7 @@ const returnOrderServices = {
             returnProduct: returnProduct,
             returnDate,
             exchangeReason,
-            images: img,
+            images: uploadedImages,
         });
         const result = await request.save();
 
@@ -235,8 +235,7 @@ const returnOrderServices = {
         } = order;
         var currentDate = new Date(new Date().toLocaleString());
 
-        console.log('this is order somethig', order)
-        console.log("Product Log", product)
+
         if (status === "Returned" && oldOrderStatus === "Return") {
 
             let returnOrder = await returnOrderModel.findOne(
@@ -313,6 +312,7 @@ const returnOrderServices = {
                     await productsServices.updateLogDealProduct(order.customer, product);
                     await returnOrderModel.deleteOne({ orderId: orderId });
                     console.log(orderId);
+
                     await orderModel.findOneAndUpdate(
                         { _id: orderId },
                         { status: "Returned", isDeliver: false, isAdminReturn: true },
@@ -383,25 +383,30 @@ const returnOrderServices = {
                     // );
                     // console.log("updatedorderpoints : ", updateorderpoints)
 
+                    console.log("111")
                     const updatedtotalBill = await orderModel.findOneAndUpdate(
                         { _id: orderId },
                         { $inc: { totalBill: -totalPrice } },
                         { upsert: true, new: true }
-                    );;
+                    );
 
-                    let user = await customerModel.findOneAndUpdate(
-                        { _id: order.customer },
+
+                    console.log("@@#2222")
+
+                    let user = await customerModel.findOne(
+                        { _id: order.customer }, { firstName: 1, lastName: 1, email: 1 }
                         //  { $inc: { points: -orderPoint } }
                     );
+
                     let Name = "";
                     if (user) {
                         Name = `${user.firstName} ${user.lastName}`;
                     }
                     console.log("Minus user Points : ", user)
-                    let newPoint = await customerModel.findOneAndUpdate(
-                        { _id: order.customer },
-                        //  { $inc: { points: +point } }
-                    );
+                    // let newPoint = await customerModel.findOneAndUpdate(
+                    //     { _id: order.customer },
+                    //     //  { $inc: { points: +point } }
+                    // );
                     //console.log("Added user Points : ", newPoint);
                     console.log("UpdatedTotalBill", updatedtotalBill.totalBill)
                     //let points = newPoint.points + point;
