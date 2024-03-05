@@ -256,15 +256,28 @@ const returnOrderServices = {
 
 
 
-            //if return order reject or canceled then update inventory status
             if (isOrderReturn === true) {
                 try {
                     //update customer points
                     // const customerIds = order.map(product => product.productID);
-                    let user = await customerModel.findOneAndUpdate(
+                    let user = await customerModel.findOne(
                         { _id: order.customer },
-                        { $inc: { points: -orderPoint } }
+                        { points: 1, email: 1 }
                     );
+
+                    if (user.points - orderPoint <= 0) {
+                        user.points = 0;
+                    } else {
+                        user.points -= orderPoint;
+                    }
+
+                    // Save the updated user object back to the database
+                    await user.save();
+
+                    // let user = await customerModel.findOneAndUpdate(
+                    //     { _id: order.customer },
+                    //     { $inc: { points: -orderPoint } }
+                    // );
                     let points = user.points - orderPoint;
                     const orderpoint = await orderModel.findOneAndUpdate(
                         { _id: order._id },
