@@ -33,12 +33,9 @@ const returnOrderServices = {
         let imgArr = [];
         if (images) {
 
-            if (images && Array.isArray(images)) {
-                for (const image of images) {
-                    const result = await uploadFile(image);
-                    imgArr.push(result);
-                }
-            }
+            var img = await uploadFile(images);
+
+
         }
 
         // var productArr = [];
@@ -97,7 +94,7 @@ const returnOrderServices = {
             returnProduct: returnProduct,
             returnDate,
             exchangeReason,
-            images: imgArr,
+            images: img,
         });
         const result = await request.save();
 
@@ -270,8 +267,17 @@ const returnOrderServices = {
                         { $inc: { points: -orderPoint } }
                     );
                     let points = user.points - orderPoint;
+                    const orderpoint = await orderModel.findOneAndUpdate(
+                        { _id: order._id },
+                        { points: -orderPoint }
+                    );
+
                     //update customer membership in case of rturned order order
                     await pointServices.assaignPointMembership(order.customer, points);
+                    const formattedTotalAmount = new Intl.NumberFormat('en-CA', {
+                        style: 'currency',
+                        currency: 'CAD'
+                    }).format(order.totalBill)
                     let Name = "";
                     if (user) {
                         Name = `${user.firstName} ${user.lastName}`;
@@ -285,7 +291,7 @@ const returnOrderServices = {
 
                     -Order ID: # ${order.orderId}
                     -Approved Date: ${currentDate}
-                    -Total Amount:CA$ ${order.totalBill.toFixed(2)}
+                    -Total Amount:CA$ ${formattedTotalAmount}
 
                     If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
 
@@ -326,9 +332,7 @@ const returnOrderServices = {
                     console.log(1);
                     totalPrice = returnOrderProduct;
                     console.log("totalPrice", totalPrice);
-                    const updatedtotalBill = await orderModel.findOneAndUpdate({ _id: orderId }, {
-                        totalBill: totalBill - totalPrice
-                    }, { upsert: true })
+
 
                     // let getPointPerOrder = await pointManageModel.find({
                     //     pointOrderPriceFrom: { $lte: totalPrice }
@@ -355,7 +359,7 @@ const returnOrderServices = {
 
                     const { pointOrderPriceFrom, pointPerOrder } = getPointPerOrder;
 
-                    totalBill = totalBill - totalPrice;
+                    //totalBill = totalBill - totalPrice;
                     console.log("totalBill", totalBill);
 
                     let point = 0;
@@ -370,19 +374,23 @@ const returnOrderServices = {
                             point = Math.ceil(totalBill / pointOrderPriceFrom) * pointPerOrder;
                         }
                     }
-                    console.log("point : ", point);
+                    //console.log("point : ", point);
 
-                    const updateorderpoints = await pointModel.findOneAndUpdate(
-                        { orderId: OrderId },
-                        { points: point }
-                    );
-                    console.log("updatedorderpoints : ", updateorderpoints)
+                    // const updateorderpoints = await pointModel.findOneAndUpdate(
+                    //     { orderId: OrderId },
+                    //     { points: point }
+                    // );
+                    // console.log("updatedorderpoints : ", updateorderpoints)
 
-
+                    const updatedtotalBill = await orderModel.findOneAndUpdate(
+                        { _id: orderId },
+                        { $inc: { totalBill: -totalPrice } },
+                        { upsert: true, new: true }
+                    );;
 
                     let user = await customerModel.findOneAndUpdate(
                         { _id: order.customer },
-                        { $inc: { points: -orderPoint } }
+                        //  { $inc: { points: -orderPoint } }
                     );
                     let Name = "";
                     if (user) {
@@ -391,13 +399,18 @@ const returnOrderServices = {
                     console.log("Minus user Points : ", user)
                     let newPoint = await customerModel.findOneAndUpdate(
                         { _id: order.customer },
-                        { $inc: { points: +point } }
+                        //  { $inc: { points: +point } }
                     );
-                    console.log("Added user Points : ", newPoint);
-                    let points = newPoint.points + point;
-
+                    //console.log("Added user Points : ", newPoint);
+                    console.log("UpdatedTotalBill", updatedtotalBill.totalBill)
+                    //let points = newPoint.points + point;
+                    const formattedTotalAmount = new Intl.NumberFormat('en-CA', {
+                        style: 'currency',
+                        currency: 'CAD'
+                    }).format(updatedtotalBill.totalBill)
                     //update customer membership in case of rturned order order
-                    await pointServices.assaignPointMembership(order.customer, points);
+                    //await pointServices.assaignPointMembership(order.customer, points);
+
                     email = user.email;
                     let subject = `Product Return Request`;
                     let text = `Dear ${Name},
@@ -407,7 +420,7 @@ const returnOrderServices = {
 
                     -Order ID: # ${updatedtotalBill.orderId}
                     -Approved Date: ${currentDate}
-                    -Total Amount:CA$ ${updatedtotalBill.totalBill.toFixed(2)}
+                    -Total Amount:CA ${formattedTotalAmount}
 
                     If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
 

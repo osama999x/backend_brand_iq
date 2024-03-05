@@ -5,7 +5,19 @@ const returnOrderServices = require("../services/returnOrderServices");
 const orderModel = require("../model/orderModel");
 const { Stats } = require("fs");
 const returnOrderRouter = express.Router();
+const multer = require("multer");
+const XLSX = require("xlsx");
 
+// Multer configuration for file upload
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, "public/images");
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname);
+    },
+});
+const upload = multer({ storage });
 returnOrderRouter.post(
     "/",
     expressAsyncHandler(async (req, res) => {

@@ -47,7 +47,9 @@ const schema = new Schema(
         exchangeReason: {
             type: String,
         },
-        images: [String],
+        images: {
+            type: String,
+        },
     },
     { timestamps: true }
 );
