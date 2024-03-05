@@ -18,7 +18,7 @@ returnOrderRouter.post(
             images,
         } = req.body;
         console.log('req.body', req.body)
-        if (!orderId || !exchangeReason || !shipmentType || !images) {
+        if (!orderId || !exchangeReason || !shipmentType) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
         console.log(1);
