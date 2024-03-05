@@ -1292,6 +1292,11 @@ const orderServices = {
                 Name = `${CustomerName.firstName} ${CustomerName.lastName}`;
             }
             if (result) {
+                const formattedTotalAmount = new Intl.NumberFormat('en-CA', {
+                    style: 'currency',
+                    currency: 'CAD'
+                }).format(result.totalBill);
+
                 let subject = sendEmailNotificationInfo.orderResponse.title;
                 let html = "";
                 let text = `Dear ${Name},
@@ -1307,6 +1312,7 @@ const orderServices = {
                   - Email: ${result.billingAddress ? result.billingAddress.email : 'N/A'}
                   - ZipCode: ${result.billingAddress ? result.billingAddress.zipCode : 'N/A'}
                   - Province: ${result.billingAddress ? result.billingAddress.province : 'N/A'}
+                  - Region: ${result.billingAddress ? result.billingAddress.billingRegion : 'N/A'}
 
                 - Shipping Address:
                   - Address: ${result.shippingAddress ? result.shippingAddress.addressLine : 'N/A'}
@@ -1314,8 +1320,9 @@ const orderServices = {
                   - Email: ${result.shippingAddress ? result.shippingAddress.email : 'N/A'}
                   - ZipCode: ${result.shippingAddress ? result.shippingAddress.zipCode : 'N/A'}
                   - Province: ${result.shippingAddress ? result.shippingAddress.province : 'N/A'}
+                  - Region: ${result.shippingAddress ? result.shippingAddress.Shippingregion : 'N/A'}
 
-                - Total Amount:CA$ ${result.totalBill.toFixed(2)}
+                - Total Amount:CA ${formattedTotalAmount}
 
                 We will keep you updated on the status of your order. If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
 

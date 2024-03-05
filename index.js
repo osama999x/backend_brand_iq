@@ -15,10 +15,12 @@ var Cron = require("./utils/backup.js");
 // var CryptoJS = require("crypto-js");
 //process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const app = express();
+app.use(express.json({ limit: "100mb" }));
+
 dotenv.config();
 // in latest body-parser use like below.
 //app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 const userRouter = require("./routes/userRouter");
 const roleRouter = require("./routes/roleRouter");
 const taxTypeRouter = require("./routes/taxTypeRouter");
@@ -83,8 +85,8 @@ app.use((req, res, next) => {
     console.log(req.body)
     next();
 })
+
 app.use(express.static("public"));
-app.use(express.json({ limit: "100mb" }));
 require("./db/index");
 const port = process.env.PORT;
 //hit routes
