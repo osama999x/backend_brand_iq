@@ -269,8 +269,9 @@ const returnOrderServices = {
                     let points = user.points - orderPoint;
                     const orderpoint = await orderModel.findOneAndUpdate(
                         { _id: order._id },
-                        { points: -orderPoint }
+                        { points: 0 }
                     );
+
 
                     //update customer membership in case of rturned order order
                     await pointServices.assaignPointMembership(order.customer, points);
