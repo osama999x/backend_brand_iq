@@ -292,7 +292,7 @@ const returnOrderServices = {
 
                     -Order ID: # ${order.orderId}
                     -Approved Date: ${currentDate}
-                    -Total Amount:CA$ ${formattedTotalAmount}
+                    -Total Amount: CA$ ${formattedTotalAmount}
 
                     If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
 
@@ -421,7 +421,6 @@ const returnOrderServices = {
 
                     -Order ID: # ${updatedtotalBill.orderId}
                     -Approved Date: ${currentDate}
-                    -Total Amount:CA ${formattedTotalAmount}
 
                     If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
 
