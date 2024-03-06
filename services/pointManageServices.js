@@ -54,7 +54,7 @@ const pointManageServices = {
     },
     check: async (price, pointsCheck, customerId) => {
 
-        const customerPoints = await customerModel.findById(customerId, { points: 1 });
+        const customerPoints = await customerModel.findOne({ _id: customerId }, { points: 1 });
 
         if (!customerPoints) {
             return {
@@ -102,7 +102,7 @@ const pointManageServices = {
         } else {
             const points = await pointManageModel.findOne().sort({ createdAt: -1 });
             const { ReedemPoints, pointOrderPriceTo, pointOrderPriceFrom } = points
-            if (ReedemPoints <= customerPoints.points) {
+            if (customerPoints.points != 0) {
                 return {
                     success: true,
                     message: "Price falls within the specified range.",
