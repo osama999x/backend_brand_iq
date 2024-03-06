@@ -1522,7 +1522,7 @@ const orderServices = {
             });
         }
 
-        const statusList = ["Pending", "Delivered", "Returned"];
+        const statusList = ["Pending", "Delivered", "Returned", "Return"];
 
         // Add missing status with count 0
         for (const status of statusList) {
