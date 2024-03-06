@@ -1,8 +1,9 @@
-const returnOrderModel = require("../model/returnOrderModel");
 const mongoose = require("mongoose");
+const returnOrderModel = require("../model/returnOrderModel");
 const projection = require("../config/mongoProjection");
-const uploadFile = require("../utils/uploadFile");
+const uploadFile = require("../utils/uploadd");
 const orderModel = require("../model/orderModel");
+const productModel = require("../model/productsModel");
 const orderLogModel = require("../model/orderLogModel");
 const orderStatusModel = require("../model/orderStatusModel");
 const pointModel = require("../model/pointModel");
@@ -31,20 +32,69 @@ const returnOrderServices = {
     ) => {
         let imgArr = [];
         if (images) {
-            var image = await uploadFile(images);
+            var uploadedImages = await uploadFile(images);
+            console.log(uploadedImages);
+
+
         }
 
-        console.log(2);
+        // var productArr = [];
+        // var currentDate = new Date(new Date().toLocaleString());
+        // var productLength = returnProduct.length;
+        // //console.log("productLength", productLength);
+        // for (let i = 0; i < productLength; i++) {
+        //     const productId = returnProduct[i].productId;
+        //     const quantity = returnProduct[i].quantity;
+        //     const price = returnProduct[i].price;
+        //     const sku = returnProduct[i].sku;
+
+        //     const Product = await productModel.findOne(
+        //         {
+        //             _id: productId
+        //         },
+        //         {
+        //             variant: {
+        //                 $elemMatch: { sku: sku },
+        //                 name: 1,
+        //                 discount: 1,
+        //             },
+        //         }
+        //     );
+
+        //     if (!Product || !Product.variant || Product.variant.length === 0) {
+        //         continue;
+        //     }
+        //     console.log("index", i)
+        //     console.log("Product.variant[i]", Product?.variant?.[i]);
+        //     const variant = Product?.variant?.[i];
+        //     console.log("variant", variant);
+
+        //     let variantSize = variant?.size !== undefined ? variant?.size : "";
+        //     let variantColour = variant?.colorName !== undefined ? variant?.colorName : "";
+
+        //     const productInfo = {
+        //         productId: productId,
+        //         quantity: quantity,
+        //         price: price,
+        //         sku: sku,
+        //         size: variantSize,
+        //         colour: variantColour,
+        //     };
+        //     console.log("productInfo", productInfo);
+
+        //     productArr.push(productInfo);
+        // }
+        //console.log(2);
         const returnDate = new Date(new Date().toLocaleDateString());
 
         const request = new returnOrderModel({
             orderId,
             isOrderReturn,
             shipmentType,
-            returnProduct,
+            returnProduct: returnProduct,
             returnDate,
             exchangeReason,
-            images: image,
+            images: uploadedImages,
         });
         const result = await request.save();
 
@@ -96,7 +146,7 @@ const returnOrderServices = {
         return result;
     },
     returnOrderList: async () => {
-        //return order list
+
         const list = await returnOrderModel.find({}, { returnDate: 1, createdAt: 1 }).populate({
             path: "orderId",
             select: { _id: 1, status: 1, orderId: 1, },
@@ -105,7 +155,7 @@ const returnOrderServices = {
                 model: "Customer",
                 select: { _id: 1, firstName: 1, lastName: 1, province: 1, state: 1, zipCode: 1, address: 1 },
             },
-        });
+        }).sort({ createdAt: -1 });
         return list;
     },
     returnOrderDetails: async (orderId) => {
@@ -118,7 +168,7 @@ const returnOrderServices = {
                     images: 1,
                     shipmentType: 1,
                     isOrderReturn: 1,
-                    returnProduct: 1, // Include the returnProduct field
+                    returnProduct: 1,
                 }
             )
             .populate({
@@ -185,8 +235,7 @@ const returnOrderServices = {
         } = order;
         var currentDate = new Date(new Date().toLocaleString());
 
-        console.log('this is order somethig', order)
-        console.log("Product Log", product)
+
         if (status === "Returned" && oldOrderStatus === "Return") {
 
             let returnOrder = await returnOrderModel.findOne(
@@ -207,18 +256,41 @@ const returnOrderServices = {
 
 
 
-            //if return order reject or canceled then update inventory status
             if (isOrderReturn === true) {
                 try {
                     //update customer points
                     // const customerIds = order.map(product => product.productID);
-                    let user = await customerModel.findOneAndUpdate(
+                    let user = await customerModel.findOne(
                         { _id: order.customer },
-                        { $inc: { points: -orderPoint } }
+                        { points: 1, email: 1 }
                     );
+
+                    if (user.points - orderPoint <= 0) {
+                        user.points = 0;
+                    } else {
+                        user.points -= orderPoint;
+                    }
+
+                    // Save the updated user object back to the database
+                    await user.save();
+
+                    // let user = await customerModel.findOneAndUpdate(
+                    //     { _id: order.customer },
+                    //     { $inc: { points: -orderPoint } }
+                    // );
                     let points = user.points - orderPoint;
+                    const orderpoint = await orderModel.findOneAndUpdate(
+                        { _id: order._id },
+                        { points: 0 }
+                    );
+
+
                     //update customer membership in case of rturned order order
                     await pointServices.assaignPointMembership(order.customer, points);
+                    const formattedTotalAmount = new Intl.NumberFormat('en-CA', {
+                        style: 'currency',
+                        currency: 'CAD'
+                    }).format(order.totalBill)
                     let Name = "";
                     if (user) {
                         Name = `${user.firstName} ${user.lastName}`;
@@ -232,7 +304,7 @@ const returnOrderServices = {
 
                     -Order ID: # ${order.orderId}
                     -Approved Date: ${currentDate}
-                    -Total Amount: ${order.totalBill}
+                    -Total Amount: CA$ ${formattedTotalAmount}
 
                     If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
 
@@ -253,6 +325,7 @@ const returnOrderServices = {
                     await productsServices.updateLogDealProduct(order.customer, product);
                     await returnOrderModel.deleteOne({ orderId: orderId });
                     console.log(orderId);
+
                     await orderModel.findOneAndUpdate(
                         { _id: orderId },
                         { status: "Returned", isDeliver: false, isAdminReturn: true },
@@ -273,9 +346,7 @@ const returnOrderServices = {
                     console.log(1);
                     totalPrice = returnOrderProduct;
                     console.log("totalPrice", totalPrice);
-                    const updatedtotalBill = await orderModel.findOneAndUpdate({ _id: orderId }, {
-                        totalBill: totalBill - totalPrice
-                    }, { upsert: true })
+
 
                     // let getPointPerOrder = await pointManageModel.find({
                     //     pointOrderPriceFrom: { $lte: totalPrice }
@@ -302,7 +373,7 @@ const returnOrderServices = {
 
                     const { pointOrderPriceFrom, pointPerOrder } = getPointPerOrder;
 
-                    totalBill = totalBill - totalPrice;
+                    //totalBill = totalBill - totalPrice;
                     console.log("totalBill", totalBill);
 
                     let point = 0;
@@ -317,39 +388,48 @@ const returnOrderServices = {
                             point = Math.ceil(totalBill / pointOrderPriceFrom) * pointPerOrder;
                         }
                     }
-                    console.log("point : ", point);
+                    //console.log("point : ", point);
 
-                    const updateorderpoints = await pointModel.findOneAndUpdate(
-                        { orderId: OrderId },
-                        { points: point }
+                    // const updateorderpoints = await pointModel.findOneAndUpdate(
+                    //     { orderId: OrderId },
+                    //     { points: point }
+                    // );
+                    // console.log("updatedorderpoints : ", updateorderpoints)
+
+                    console.log("111")
+                    const updatedtotalBill = await orderModel.findOneAndUpdate(
+                        { _id: orderId },
+                        { $inc: { totalBill: -totalPrice } },
+                        { upsert: true, new: true }
                     );
-                    console.log("updatedorderpoints : ", updateorderpoints)
 
 
+                    console.log("@@#2222")
 
-                    let user = await customerModel.findOneAndUpdate(
-                        { _id: order.customer },
-                        { $inc: { points: -orderPoint } }
+                    let user = await customerModel.findOne(
+                        { _id: order.customer }, { firstName: 1, lastName: 1, email: 1 }
+                        //  { $inc: { points: -orderPoint } }
                     );
+
                     let Name = "";
                     if (user) {
                         Name = `${user.firstName} ${user.lastName}`;
                     }
-
-
-
-
-
                     console.log("Minus user Points : ", user)
-                    let newPoint = await customerModel.findOneAndUpdate(
-                        { _id: order.customer },
-                        { $inc: { points: +point } }
-                    );
-                    console.log("Added user Points : ", newPoint);
-                    let points = newPoint.points + point;
-
+                    // let newPoint = await customerModel.findOneAndUpdate(
+                    //     { _id: order.customer },
+                    //     //  { $inc: { points: +point } }
+                    // );
+                    //console.log("Added user Points : ", newPoint);
+                    console.log("UpdatedTotalBill", updatedtotalBill.totalBill)
+                    //let points = newPoint.points + point;
+                    const formattedTotalAmount = new Intl.NumberFormat('en-CA', {
+                        style: 'currency',
+                        currency: 'CAD'
+                    }).format(updatedtotalBill.totalBill)
                     //update customer membership in case of rturned order order
-                    await pointServices.assaignPointMembership(order.customer, points);
+                    //await pointServices.assaignPointMembership(order.customer, points);
+
                     email = user.email;
                     let subject = `Product Return Request`;
                     let text = `Dear ${Name},
@@ -359,7 +439,6 @@ const returnOrderServices = {
 
                     -Order ID: # ${updatedtotalBill.orderId}
                     -Approved Date: ${currentDate}
-                    -Total Amount: ${updatedtotalBill.totalBill}
 
                     If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
 
@@ -410,19 +489,32 @@ const returnOrderServices = {
                         message,
                     });
                     await data.save();
-                    await orderModel.findOneAndUpdate(
+                    const updated = await orderModel.findOneAndUpdate(
                         { _id: orderId },
                         { status: "Delivered" },
                         { new: true }
                     );
                     let user = await customerModel.findById(
                         { _id: customerId },
-                        { email: 1 }
+                        { email: 1, firstName: 1, lastName: 1 }
                     );
+                    let Name = "";
+                    if (user) {
+                        Name = `${user.firstName} ${user.lastName}`;
+                    }
                     email = user.email;
-                    let subject = sendEmailNotificationInfo.orderResponse.title;
+                    let subject = "Return Request Rejected";
+                    text = `Dear ${Name},
+    Your Product Return Request for Order ID #${updated.orderId} has been rejected.
+
+    -Rejection Reason:
+    ${message}
+
+    If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+
+    Thank you for choosing MSAFA!`;
                     // let text = `your order ${orderId} return product approved successfully`;
-                    await sendNotificationEmail(subject, message, email);
+                    await sendNotificationEmail(subject, text, email);
                     await returnOrderModel.deleteOne({ orderId: orderId });
                     return true;
                 } catch (e) {

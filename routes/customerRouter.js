@@ -33,6 +33,7 @@ customerRouter.post(
             cnic,
             reigon,
         } = req.body;
+        console.log(req.body);
         // let isValidContact = validateMobileNumber(contact);
         // if (!isValidContact) {
         //     return res.status(400).send({
@@ -49,7 +50,6 @@ customerRouter.post(
                 //validator.schema.validate(password, { list: true }),
             });
         }
-        console.log(contact);
         const result = await customerServices.addNew(
             firstName,
             lastName,
@@ -293,8 +293,7 @@ customerRouter.post(
         }
     })
 );
-// })
-// )};
+
 customerRouter.post(
     "/resetpassword/verify",
     expressAsyncHandler(async (req, res) => {

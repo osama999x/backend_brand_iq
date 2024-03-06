@@ -241,9 +241,19 @@ orderRouter.post(
         // if (!city) {
         //     city = "Islamabad";
         // }
+        //console.log("req.body", req.body);
         if (!customer || !product || !paymentMode || !totalBill) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
+        // Convert totalBill and totalAmount to numbers
+        totalBill = parseFloat(totalBill.replace(/,/g, ''));
+        totalAmount = parseFloat(totalAmount.replace(/,/g, ''));
+
+        // Check if the conversion was successful
+        if (isNaN(totalBill) || isNaN(totalAmount)) {
+            return res.status(400).send({ msg: "Invalid totalBill or totalAmount format" });
+        }
+
         // const isValidContact = validateMobileNumber(contact);
         // if (!isValidContact) {
         //     return res.status(400).send({

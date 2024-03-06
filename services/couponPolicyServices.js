@@ -21,7 +21,7 @@ const { text } = require("body-parser");
 
 const coupanPolicyServices = {
     get: async () => {
-        var result = await couponPolicyModel.find({}, projection.projection);
+        var result = await couponPolicyModel.find({}, projection.projection).sort({ createdAt: -1 });
         return result;
     },
     getValidCoupon: async (customerId) => {

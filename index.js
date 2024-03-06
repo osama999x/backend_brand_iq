@@ -15,10 +15,12 @@ var Cron = require("./utils/backup.js");
 // var CryptoJS = require("crypto-js");
 //process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const app = express();
+app.use(express.json({ limit: "100mb" }));
+
 dotenv.config();
 // in latest body-parser use like below.
 //app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 const userRouter = require("./routes/userRouter");
 const roleRouter = require("./routes/roleRouter");
 const taxTypeRouter = require("./routes/taxTypeRouter");
@@ -79,6 +81,12 @@ const DeliveryCharges = require("./routes/deliveryChargesRouter.js")
 const { options } = require("./utils/backup");
 const productBulkRouter = require("./routes/productBulkRouter");
 const apiLogs = require("./middleware/apiLogs");
+app.use((req, res, next) => {
+    console.log(req.body)
+    next();
+})
+
+app.use(express.static("public"));
 require("./db/index");
 const port = process.env.PORT;
 //hit routes
@@ -86,9 +94,6 @@ app.use((req, res, next) => {
     console.log(`Route called: ${req.originalUrl}`);
     next();
 });
-app.use(express.json({ limit: "200mb" }));
-app.use(express.static("public"));
-app.use(express.static(path.join(__dirname, "public")));
 //app.use(decryptData);//Cipher
 //app.use(limiter); //Limit IP Requests
 app.use(morgan("dev"));

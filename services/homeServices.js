@@ -90,14 +90,7 @@ const homeServices = {
             ).limit(10)
             .sort({ $natural: -1 })
             .lean()
-        // if (products.length != 0) {
-        //     products = products.map((item) => {
-        //         item.actualPrice = item.variant[0].actualPrice;
-        //         item.discountedPrice = item.variant[0].discountedPrice;
-        //         delete item.variant;
-        //         return item;
-        //     });
-        // }
+
         if (products.length !== 0) {
             const currentDate = new Date();
             const promotions = await promotionModel
@@ -371,9 +364,7 @@ const homeServices = {
         }
 
         return products;
-    }
-    ,
-
+    },
     // getRecentProduct: async () => {
     //     let products = await productModel
     //         .find(

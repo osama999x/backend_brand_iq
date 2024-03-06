@@ -80,7 +80,7 @@ promotionCampaignRouter.post(
     "/",
     expressAsyncHandler(async (req, res) => {
         let { campaignName, description, banner, activeFrom, activeTo } = req.body;
-        if (!campaignName || !banner || !description || !activeFrom || !activeTo) {
+        if (!campaignName || !banner || !activeFrom || !activeTo) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
         if (banner) {
