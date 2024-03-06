@@ -58,13 +58,13 @@ const promotionCampaignServices = {
             .populate({ path: "subcategory", select: { _id: 1, name: 1 } });
         return result;
     },
-    getPromotionProductDetail: async (campaign) => {
+    getPromotionProductDetail: async (campaignId) => {
         // console.log(campaign);
-        let currentDate = new Date(new Date().toLocaleDateString());
+        let currentDate = new Date();
         let result = await promotionModel.aggregate([
             {
                 $match: {
-                    campaignId: new mongoose.Types.ObjectId(campaign),
+                    campaignId: new mongoose.Types.ObjectId(campaignId),
                     status: 'active',
                     expireDate: { $gte: currentDate },
                 },
