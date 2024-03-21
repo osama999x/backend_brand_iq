@@ -294,7 +294,6 @@ const orderServices = {
         courierType,
         isDeliver
     ) => {
-        console.log("orderId111111", orderId);
         const result = await orderModel.findOneAndUpdate(
             { _id: orderId },
             {
@@ -1611,6 +1610,19 @@ const orderServices = {
         });
         return result
     },
+    update: async (orderId, paymentMode, payment) => {
+        const order = await orderModel.findOneAndUpdate(
+            { orderId: orderId },
+            {
+                paymentMode: paymentMode,
+                payment: payment
+            }, { upsert: true })
+        if (order) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 };
 
 module.exports = orderServices;

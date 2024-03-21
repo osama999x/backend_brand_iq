@@ -445,6 +445,7 @@ orderRouter.get(
     })
 );
 
+
 //ok
 orderRouter.get(
     '/hotSellingProducts',
@@ -534,28 +535,25 @@ orderRouter.get(
 
 //End
 
-
-
-// orderRouter.patch(
-//   "/",
-//   expressAsyncHandler(async (req, res) => {
-//     const { orderId, customer, product, paymentMode } = req.body;
-//     if (!orderId || !customer || !product || !paymentMode) {
-//       return res.status(400).send({ msg: "Fields Missing" });
-//     }
-//     const result = await orderServices.update(
-//       orderId,
-//       customer,
-//       product,
-//       paymentMode
-//     );
-//     if (result) {
-//       return res.status(200).send({ msg: "order updated.", data: result });
-//     } else {
-//       return res.status(400).send({ msg: "order not updated" });
-//     }
-//   })
-// );
+orderRouter.patch(
+    "/",
+    expressAsyncHandler(async (req, res) => {
+        const { orderId, paymentMode, payment } = req.body;
+        if (!orderId || !paymentMode || !payment) {
+            return res.status(400).send({ msg: "Fields Missing" });
+        }
+        const result = await orderServices.update(
+            orderId,
+            paymentMode,
+            payment
+        );
+        if (result) {
+            return res.status(200).send({ msg: "order updated.", data: result });
+        } else {
+            return res.status(400).send({ msg: "order not updated" });
+        }
+    })
+);
 // orderRouter.delete(
 //   "/",
 //   expressAsyncHandler(async (req, res) => {
