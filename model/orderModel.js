@@ -35,6 +35,10 @@ const schema = new Schema(
                 },
                 colour: {
                     type: String,
+                },
+                returnStatus: {
+                    type: Boolean,
+                    default: false,
                 }
             },
         ],
@@ -51,6 +55,10 @@ const schema = new Schema(
         //     required: true,
         // },
         status: {
+            type: String,
+            default: "Pending",
+        },
+        webStatus: {
             type: String,
             default: "Pending",
         },
@@ -135,6 +143,14 @@ const schema = new Schema(
                 type: String,
             }, addressLine: {
                 type: String,
+            },
+            zipCode: {
+                type: String
+            },
+            province: {
+                type: String
+            }, billingRegion: {
+                type: String
             }
         }, shippingAddress: {
             firstName: {
@@ -148,12 +164,21 @@ const schema = new Schema(
             },
             contact: {
                 type: String,
-            }, addressLine: {
+            },
+            addressLine: {
                 type: String,
+            },
+            zipCode: {
+                type: String
+            },
+            province: {
+                type: String
+            }, Shippingregion: {
+                type: String
             }
         },
         points: {
-            type: String,
+            type: Number,
         }
     },
     { timestamps: true }

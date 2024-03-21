@@ -147,15 +147,18 @@ const customerServices = {
         }
 
         // Check if cnic is an empty field
-        if (cnic === "") {
-            // Continue with the rest of the code or handle it as needed
+        if (cnic === null || cnic === '' || cnic === undefined) {
             console.log("CNIC is empty");
-        } else {
+        }
+        else {
             const checkCnic = await customerModel.findOne({ cnic: cnic });
 
             // Check if checkCnic is not null (meaning cnic already exists)
             if (checkCnic) {
+                console.log("Duplicate CNIC found:", checkCnic);
                 throw new Error("Driving License Number already exists");
+            } else {
+                console.log("CNIC is unique");
             }
         }
         // Rest of the code for non-empty cnic

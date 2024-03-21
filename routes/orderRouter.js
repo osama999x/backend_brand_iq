@@ -229,6 +229,7 @@ orderRouter.post(
             customer,
             product,
             paymentMode,
+            payment,
             totalBill,
             totalAmount,
             redeemValue,
@@ -241,9 +242,19 @@ orderRouter.post(
         // if (!city) {
         //     city = "Islamabad";
         // }
+        //console.log("req.body", req.body);
         if (!customer || !product || !paymentMode || !totalBill) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
+        // Convert totalBill and totalAmount to numbers
+        totalBill = parseFloat(totalBill.replace(/,/g, ''));
+        totalAmount = parseFloat(totalAmount.replace(/,/g, ''));
+
+        // Check if the conversion was successful
+        if (isNaN(totalBill) || isNaN(totalAmount)) {
+            return res.status(400).send({ msg: "Invalid totalBill or totalAmount format" });
+        }
+
         // const isValidContact = validateMobileNumber(contact);
         // if (!isValidContact) {
         //     return res.status(400).send({
@@ -290,6 +301,7 @@ orderRouter.post(
                         customer,
                         product,
                         paymentMode,
+                        payment,
                         totalBill,
                         totalAmount,
                         redeemValue,
@@ -313,7 +325,6 @@ orderRouter.post(
                                 customerFcm.fcmToken
                             );
                         }
-                        // console.log("orderId///////////////////////////////////////////////", orderResult._id);
                         const history = await paymentHistoryService.new(
                             customer,
                             orderResult._id,
@@ -343,6 +354,7 @@ orderRouter.post(
                     customer,
                     product,
                     paymentMode,
+                    payment,
                     totalBill,
                     totalAmount,
                     redeemValue,
@@ -386,10 +398,10 @@ orderRouter.get(
     "/orderReport",
     expressAsyncHandler(async (req, res) => {
         const { startDate, endDate } = req.query;
-        console.log(startDate, endDate);
+        console.log("startDate", startDate, "EndDate", endDate);
         const result = await orderServices.orderReport(startDate, endDate);
 
-        console.log(result);
+        // console.log(result);
         if (result.length !== 0) {
             return res.status(200).send({
                 msg: "Orders Details",

@@ -118,22 +118,43 @@ const orderServices = {
                     true
                 ),
             ]);
-            //  const getPointPerOrder = await pointManageModel.findOne({ pointOrderPrice: { $lte: totalBill } });
-
-            // const getPointPerOrder = await pointManageModel.findOne();
             const getPointPerOrder = await pointManageModel.findOne({
                 pointOrderPriceTo: { $lte: totalBill },
                 pointOrderPriceFrom: { $gte: totalBill }
             });
+
             console.log('getPointPerOrder', getPointPerOrder);
             if (getPointPerOrder) {
-                //    const { pointOrderPrice, pointPerOrder } = getPointPerOrder;
                 const { pointOrderPriceFrom, pointPerOrder } = getPointPerOrder;
-                //Have to set As Per new modules Addtions now its Random
-                // console.log("totalBill:", totalBill);
-                // console.log("pointOrderPriceFrom:", pointOrderPriceFrom);
-                // console.log("pointPerOrder:", pointPerOrder);
+
                 const point = Math.ceil(totalBill / pointOrderPriceFrom) * pointPerOrder;
+                console.log("points", point)
+
+                const data = new pointModel({
+                    customer: customerId,
+                    points: point,
+                    orderId: secondOrderId,
+                });
+                await data.save();
+                const pointsorder = await orderModel.findOneAndUpdate({ orderId: secondOrderId }, { points: point }, { upsert: true, new: true });
+
+                const updatedPoints = await customerModel.findByIdAndUpdate(
+                    customerId,
+                    { $inc: { points: point } },
+                    { new: true }
+                );
+
+                if (updatedPoints) {
+                    await pointServices.assaignPointMembership(
+                        customerId,
+                        updatedPoints.points + point
+                    );
+                }
+            } else {
+                const points = await pointManageModel.findOne().sort({ createdAt: -1 });
+                const { pointOrderPriceFrom, pointPerOrder } = points;
+
+                const point = pointPerOrder;
                 console.log("points", point)
 
                 const data = new pointModel({
@@ -273,10 +294,12 @@ const orderServices = {
         courierType,
         isDeliver
     ) => {
+        console.log("orderId111111", orderId);
         const result = await orderModel.findOneAndUpdate(
             { _id: orderId },
             {
                 status,
+                webStatus: "Delivered",
                 trackingId,
                 courierType,
                 isDeliver,
@@ -306,6 +329,7 @@ const orderServices = {
                     placedOn: 1,
                     firstProduct: 1,
                     status: 1,
+                    webStatus: 1,
                     trackingId: 1,
                     totalAmount: 1,
                     totalBill: 1
@@ -330,10 +354,12 @@ const orderServices = {
                     orderId: 1,
                     placedOn: 1,
                     status: 1,
+                    webStatus: 1,
                     isDeliver: 1,
                     thumbnail: "$product_info.thumbnail",
                     totalAmount: 1,
-                    totalBill: 1
+                    totalBill: 1,
+
 
                 },
             },
@@ -531,6 +557,7 @@ const orderServices = {
                     tax: { $first: "$tax" },
                     orderId: { $first: "$orderId" },
                     status: { $first: "$status" },
+                    webStatus: { $first: "$webStatus" },
                     trackingId: { $first: "$trackingId" },
                     placedOn: { $first: "$placedOn" },
                     isDeliver: { $first: "$isDeliver" },
@@ -547,6 +574,7 @@ const orderServices = {
                             productPrice: "$product.price",
                             size: "$product.size",
                             colour: "$product.colour",
+                            returnStatus: "$product.returnStatus"
                         }
                     },
                 },
@@ -743,7 +771,9 @@ const orderServices = {
                     trackingId: 1,
                     city: 1,
                     status: 1,
+                    paymentMode: 1,
                     totalBill: 1,
+                    payment: 1,
                     "product.sku": 1,
                     "product.size": 1,
                     "product.colour": 1,
@@ -755,6 +785,12 @@ const orderServices = {
             )
             .populate({
                 path: "customer",
+                select: { _id: 1, firstName: 1, lastName: 1, email: 1, cnic: 1, province: 1, zipCode: 1, contact: 1 },
+                populate: {
+                    path: "reigon",
+                    model: "TaxType",
+                    select: "taxType"
+                }
             })
             .populate({
                 path: "product.productId",
@@ -1101,6 +1137,7 @@ const orderServices = {
         customer,
         product,
         paymentMode,
+        payment,
         totalBill,
         totalAmount,
         redeemValue,
@@ -1121,36 +1158,28 @@ const orderServices = {
                 const quantity = product[i].quantity;
                 const price = product[i].price;
                 const sku = product[i].sku;
-                // const size = product[i].size;
-                // const colour = product[i].colour;
 
                 const Product = await productModel.findOne(
-                    { _id: productId },
                     {
-                        variant: {
-                            $elemMatch: { sku: sku },
-                            name: 1,
-                            discount: 1,
-
-                        },
+                        _id: productId,
+                        "variant.sku": sku,
+                    },
+                    {
+                        "variant.$": 1,
+                        name: 1,
+                        discount: 1,
                     }
                 );
 
                 if (!Product || !Product.variant || Product.variant.length === 0) {
                     continue;
                 }
-                console.log("index", i)
-                console.log("Product.variant[i]", Product?.variant?.[i]);
-                const variant = Product?.variant?.[i];
-                console.log("variant", variant);
 
+                const variant = Product.variant[0];
+                console.log("variant", variant)
                 let variantSize = variant?.size !== undefined ? variant?.size : "";
-
-
-                // let variantSize = variant.size || "";
                 let variantColour = variant?.colorName !== undefined ? variant?.colorName : "";
-                // console.log("size", variantSize);
-                // console.log("colour", variantColour);
+
                 const productInfo = {
                     productId: productId,
                     quantity: quantity,
@@ -1163,6 +1192,7 @@ const orderServices = {
 
                 productArr.push(productInfo);
             }
+
 
 
             // //check customer already buy deal product or not
@@ -1237,6 +1267,7 @@ const orderServices = {
                 customer: mongoose.Types.ObjectId(customer),
                 product: productArr,
                 paymentMode,
+                payment,
                 totalBill,
                 totalAmount,
                 redeemValue,
@@ -1259,31 +1290,48 @@ const orderServices = {
             };
 
             const CustomerName = await CustomerModel.findOne({ _id: result.customer });
-            if (CustomerName) {
-                var Name = CustomerName.firstName;
-            }
 
-            console.log("Result", Result);
+            let Name = "";
+            if (CustomerName) {
+                Name = `${CustomerName.firstName} ${CustomerName.lastName}`;
+            }
             if (result) {
+                const formattedTotalAmount = new Intl.NumberFormat('en-CA', {
+                    style: 'currency',
+                    currency: 'CAD'
+                }).format(result.totalBill);
+
                 let subject = sendEmailNotificationInfo.orderResponse.title;
                 let html = "";
                 let text = `Dear ${Name},
-    Thank you for shopping with us!
 
-    <strong>Order Details:</strong>
+                Thank you for shopping with us! Here are the details of your order:
 
-    <ul>
-        <li>Order ID: # ${result.orderId}</li>
-        <li>Order Date: ${currentDate}</li>
-        <li>Billing Address: ${result.billingAddress ? result.billingAddress.addressLine : 'N/A'}</li>
-        <li>Shipping Address: ${result.shippingAddress ? result.shippingAddress.addressLine : 'N/A'}</li>
-        <li>Total Amount: ${result.totalBill}</li>
-    </ul>
+                Order Details:
+                - Order ID: # ${result.orderId}
+                - Order Date: ${currentDate}
+                - Billing Address:
+                  - Address: ${result.billingAddress ? result.billingAddress.addressLine : 'N/A'}
+                  - Contact: ${result.billingAddress ? result.billingAddress.contact : 'N/A'}
+                  - Email: ${result.billingAddress ? result.billingAddress.email : 'N/A'}
+                  - ZipCode: ${result.billingAddress ? result.billingAddress.zipCode : 'N/A'}
+                  - Province: ${result.billingAddress ? result.billingAddress.province : 'N/A'}
+                  - Region: ${result.billingAddress ? result.billingAddress.billingRegion : 'N/A'}
 
-    We will keep you updated on the status of your order. If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+                - Shipping Address:
+                  - Address: ${result.shippingAddress ? result.shippingAddress.addressLine : 'N/A'}
+                  - Contact: ${result.shippingAddress ? result.shippingAddress.contact : 'N/A'}
+                  - Email: ${result.shippingAddress ? result.shippingAddress.email : 'N/A'}
+                  - ZipCode: ${result.shippingAddress ? result.shippingAddress.zipCode : 'N/A'}
+                  - Province: ${result.shippingAddress ? result.shippingAddress.province : 'N/A'}
+                  - Region: ${result.shippingAddress ? result.shippingAddress.Shippingregion : 'N/A'}
 
-    Thank you for choosing MSAFA!
-`;
+                - Total Amount:CA ${formattedTotalAmount}
+
+                We will keep you updated on the status of your order. If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+
+                Thank you for choosing MSAFA!
+                `;
 
                 let userEmail = await customerModel.findOne(
                     { _id: customerId },
@@ -1345,23 +1393,23 @@ const orderServices = {
     },
     orderReport: async (startDate, endDate) => {
         let matchQuery = {
-            status: { $in: ["Delivered", "Returned"] },
+            status: { $in: ["Delivered", "Returned", "Pending", "Return"] },
         };
-        console.log(new Date(startDate));
-        console.log(new Date(endDate));
+
+        console.log("StartDate", new Date(startDate));
+        console.log("EndDate", new Date(endDate));
 
         if (startDate && endDate) {
+            const endOfDay = new Date(endDate);
+            endOfDay.setHours(23, 59, 59, 999);
             matchQuery.placedOn = {
                 $gte: new Date(startDate),
-                $lt: new Date(endDate),
-            };
-        } else if (startDate) {
-            matchQuery.placedOn = {
-                $gte: new Date(startDate),
-                $lte: endDate ? new Date(endDate) : new Date(),
+                $lte: endOfDay,
             };
         }
-        console.log(matchQuery)
+
+        console.log(matchQuery);
+
         let result = await orderModel.aggregate([
             {
                 $match: matchQuery,
@@ -1369,8 +1417,6 @@ const orderServices = {
             {
                 $group: {
                     _id: {
-                        year: { $year: "$placedOn" },
-                        month: { $month: "$placedOn" },
                         status: "$status",
                     },
                     order: { $sum: 1 },
@@ -1378,10 +1424,9 @@ const orderServices = {
             },
             {
                 $project: {
-                    year: "$_id.year",
-                    month: "$_id.month",
                     status: "$_id.status",
-                    order: 1,
+                    total: "$order",
+                    _id: 0,
                 },
             },
         ]);
@@ -1389,25 +1434,22 @@ const orderServices = {
         if (result.length === 0) {
             result = [
                 {
-                    year: new Date().getFullYear(),
-                    month: new Date().getMonth() + 1, // Add 1 to represent the actual month
                     status: "Delivered",
                     total: 0,
                 },
                 {
-                    year: new Date().getFullYear(),
-                    month: new Date().getMonth() + 1, // Add 1 to represent the actual month
                     status: "Returned",
                     total: 0,
                 },
+                {
+                    status: "Pending",
+                    total: 0,
+                },
+                {
+                    status: "Return",
+                    total: 0,
+                },
             ];
-        } else {
-            result = result.map(({ year, month, status, order }) => ({
-                year,
-                month,
-                status,
-                total: order,
-            }))
         }
 
         result.push({
@@ -1415,10 +1457,9 @@ const orderServices = {
         });
 
         return result;
-    }
 
 
-    ,
+    },
     orderReportByChannel: async () => {
         let result = await orderModel.aggregate([
             {
@@ -1485,7 +1526,7 @@ const orderServices = {
             });
         }
 
-        const statusList = ["Pending", "Delivered", "Returned"];
+        const statusList = ["Pending", "Delivered", "Returned", "Return"];
 
         // Add missing status with count 0
         for (const status of statusList) {
@@ -1498,19 +1539,21 @@ const orderServices = {
             }
         }
 
+
+        const customOrder = ["Pending", "Delivered", "Return", "Returned"];
+
+        result.sort((a, b) => {
+            return customOrder.indexOf(a.status) - customOrder.indexOf(b.status);
+        });
         const total = {
             totalOrder: totalOrder,
         };
         result.push(total);
 
+
         return result;
-    }
-    ,
-    // delete: async (_id) => {
-    //   var _id = mongoose.Types.ObjectId(_id);
-    //   const result = await orderModel.deleteOne({ _id });
-    //   return result;
-    // },
+    },
+
     popReturnProduct: async (orderId, returnProduct) => {
         var totalPrice = 0;
         var returnProductLength = returnProduct.length;

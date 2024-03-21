@@ -88,7 +88,7 @@ const pointServices = {
                     select: { thumbnail: 1, name: 1 },
                     match: { 'product.productId': { $exists: true } }
                 })
-                .lean();
+                .lean().sort({ createdAt: -1 });
 
             if (orderDetails.length !== 0) {
                 result[`${days}Days`] = orderDetails.map((item) => {
@@ -109,10 +109,7 @@ const pointServices = {
         );
 
         return { totalPoints: totalPoints ? totalPoints.points : 0, ...result };
-    }
-
-
-    ,
+    },
     orderPoints: async (orderId) => {
         let orderDetails = await orderModel
             .findOne(

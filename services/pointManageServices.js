@@ -54,7 +54,7 @@ const pointManageServices = {
     },
     check: async (price, pointsCheck, customerId) => {
 
-        const customerPoints = await customerModel.findById(customerId, { points: 1 });
+        const customerPoints = await customerModel.findOne({ _id: customerId }, { points: 1 });
 
         if (!customerPoints) {
             return {
@@ -100,10 +100,25 @@ const pointManageServices = {
                 };
             }
         } else {
-            return {
-                success: false,
-                message: "No matching document found for the given price range.",
-            };
+            const points = await pointManageModel.findOne().sort({ createdAt: -1 });
+            const { ReedemPoints, pointOrderPriceTo, pointOrderPriceFrom } = points
+            if (customerPoints.points != 0) {
+                return {
+                    success: true,
+                    message: "Price falls within the specified range.",
+                    pointOrderPriceTo,
+                    pointOrderPriceFrom,
+                    MaximumPointsToRedeem: ReedemPoints,
+                    PointsProvidedToAvail: pointsCheck
+                };
+            } else {
+                return {
+                    success: false,
+                    message: "No matching document found for the given price range.",
+                    PointsAvailable: customerPoints.points
+
+                };
+            }
         }
 
     }
