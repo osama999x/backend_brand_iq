@@ -294,7 +294,6 @@ const orderServices = {
         courierType,
         isDeliver
     ) => {
-        console.log("orderId111111", orderId);
         const result = await orderModel.findOneAndUpdate(
             { _id: orderId },
             {
@@ -771,7 +770,9 @@ const orderServices = {
                     trackingId: 1,
                     city: 1,
                     status: 1,
+                    paymentMode: 1,
                     totalBill: 1,
+                    payment: 1,
                     "product.sku": 1,
                     "product.size": 1,
                     "product.colour": 1,
@@ -1135,6 +1136,7 @@ const orderServices = {
         customer,
         product,
         paymentMode,
+        payment,
         totalBill,
         totalAmount,
         redeemValue,
@@ -1264,6 +1266,7 @@ const orderServices = {
                 customer: mongoose.Types.ObjectId(customer),
                 product: productArr,
                 paymentMode,
+                payment,
                 totalBill,
                 totalAmount,
                 redeemValue,
@@ -1607,6 +1610,19 @@ const orderServices = {
         });
         return result
     },
+    update: async (orderId, paymentMode, payment) => {
+        const order = await orderModel.findOneAndUpdate(
+            { orderId: orderId },
+            {
+                paymentMode: paymentMode,
+                payment: payment
+            }, { upsert: true })
+        if (order) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 };
 
 module.exports = orderServices;

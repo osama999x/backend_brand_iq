@@ -9,7 +9,8 @@ const taxHeadServices = {
             select: { _id: 1, taxType: 1 },
         }).sort({ createdAt: -1 });
         return result;
-    }, getByTaxType: async (taxTypeId) => {
+    },
+    getByTaxType: async (taxTypeId) => {
         const result = await taxHeadModel
             .findOne({ taxType: taxTypeId }).select("taxHead")
             .populate({

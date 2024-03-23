@@ -82,7 +82,7 @@ const { options } = require("./utils/backup");
 const productBulkRouter = require("./routes/productBulkRouter");
 const apiLogs = require("./middleware/apiLogs");
 app.use((req, res, next) => {
-    console.log(req.body)
+    //console.log(req.body)
     next();
 })
 
