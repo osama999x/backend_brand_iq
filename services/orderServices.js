@@ -1327,9 +1327,9 @@ const orderServices = {
 
                 - Total Amount:CA ${formattedTotalAmount}
 
-                We will keep you updated on the status of your order. If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+                We will keep you updated on the status of your order. If you have any questions or concerns, feel free to reach out to our customer support team at Shopeez Customer Support.
 
-                Thank you for choosing MSAFA!
+                Thank you for choosing Shopeez!
                 `;
 
                 let userEmail = await customerModel.findOne(

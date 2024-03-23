@@ -270,7 +270,7 @@ orderRouter.post(
             // let trackingId = Math.floor(Math.random() * 100000 + 100000)
             //   .toString()
             //   .substring(1);
-            // trackingId = `MSAFA-${trackingId}`;
+            // trackingId = `Shopeez-${trackingId}`;
             if (paymentMode === "zindigi") {
                 const user = await customerModel.findOne({ _id: customer });
 

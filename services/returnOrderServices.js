@@ -306,9 +306,9 @@ const returnOrderServices = {
                     -Approved Date: ${currentDate}
                     -Total Amount: CA$ ${formattedTotalAmount}
 
-                    If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+                    If you have any questions or concerns, feel free to reach out to our customer support team at Shopeez Customer Support.
 
-                    ThankYou for choosing MSAFA!`;
+                    ThankYou for choosing Shopeez!`;
                     //return order status log by admin
                     let returnStatus = await orderStatusServices.orderStatus("Returned");
                     console.log(returnStatus);
@@ -440,9 +440,9 @@ const returnOrderServices = {
                     -Order ID: # ${updatedtotalBill.orderId}
                     -Approved Date: ${currentDate}
 
-                    If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+                    If you have any questions or concerns, feel free to reach out to our customer support team at Shopeez Customer Support.
 
-                    ThankYou for choosing MSAFA!`;
+                    ThankYou for choosing Shopeez!`;
                     await sendNotificationEmail(subject, text, email);
                     //return order log status by admin
                     const returnOrderLog = new returnOrderStatusLogModel({
@@ -510,9 +510,9 @@ const returnOrderServices = {
     -Rejection Reason:
     ${message}
 
-    If you have any questions or concerns, feel free to reach out to our customer support team at MSAFA Customer Support.
+    If you have any questions or concerns, feel free to reach out to our customer support team at Shopeez Customer Support.
 
-    Thank you for choosing MSAFA!`;
+    Thank you for choosing Shopeez!`;
                     // let text = `your order ${orderId} return product approved successfully`;
                     await sendNotificationEmail(subject, text, email);
                     await returnOrderModel.deleteOne({ orderId: orderId });

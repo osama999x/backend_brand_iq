@@ -19,12 +19,12 @@ const sendEmail = async (email) => {
 
 
     var mailOptions = {
-        from: `MSAFA ${process.env.MAIL}`,
+        from: `Shopeez ${process.env.MAIL}`,
         to: email,
-        subject: "MSAFA OTP",
+        subject: "Shopeez OTP",
         text: `Dear User,
 
-        Thank you for registering with MSAFA.
+        Thank you for registering with Shopeez.
 
         Your OTP for Email verification is as below.
         To ensure the security of your Account, we have generated a One-Time Password (OTP) for your authentication.
@@ -34,7 +34,7 @@ const sendEmail = async (email) => {
 
         If you did not request this code, please ignore this email.
 
-        For any assistance or concerns, please contact our support team at MSAFA. `
+        For any assistance or concerns, please contact our support team at Shopeez. `
     };
     let user = await saveOtp.otpById(email, Otp);
     //If email is sent

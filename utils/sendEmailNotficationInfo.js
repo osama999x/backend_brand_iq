@@ -5,10 +5,10 @@ const sendEmailNotificationInfo = {
         title: "Your order has been placed!",
     },
     returnOrder: {
-        title: "MSAFA Order ",
+        title: "Shopeez Order ",
     },
     login: {
-        title: "MSAFA login alert",
+        title: "Shopeez login alert",
         body: "You are successfully Logged in!",
     },
     otpSend: {
@@ -28,20 +28,20 @@ const sendEmailNotificationInfo = {
         body: "Your password has been updated!",
     },
     coupon: {
-        title: "MSAFA Coupon Alert",
-        body: "MSAFA offering  a new coupon. Open coupon and get spacial discount on order ",
+        title: "Shopeez Coupon Alert",
+        body: "Shopeez offering  a new coupon. Open coupon and get spacial discount on order ",
     },
     promotion: {
-        title: "MSAFA Promotion Alert",
-        body: "MSAFA offering promotion discount to customer. You can get benefits on promotion discount",
+        title: "Shopeez Promotion Alert",
+        body: "Shopeez offering promotion discount to customer. You can get benefits on promotion discount",
     },
     dealProduct: {
-        title: "MSAFA Deal Offer Alert",
-        body: "MSAFA offering spacial deal on spacial product. please visit MSAFA and get discount on deal",
+        title: "Shopeez Deal Offer Alert",
+        body: "Shopeez offering spacial deal on spacial product. please visit Shopeez and get discount on deal",
     },
     product: {
-        title: "MSAFA New Product Alert",
-        body: "MSAFA add  a new ",
+        title: "Shopeez New Product Alert",
+        body: "Shopeez add  a new ",
     },
 };
 module.exports = sendEmailNotificationInfo;
