@@ -371,16 +371,16 @@ orderRouter.post(
                     res
                         .status(200)
                         .send({ msg: "Order Placed Successfully.", data: result });
-                    const customerFcm = await customerModel.findOne(
-                        { _id: customer },
-                        { fcmToken: 1 }
-                    );
+                    // const customerFcm = await customerModel.findOne(
+                    //     { _id: customer },
+                    //     { fcmToken: 1 }
+                    // );
 
-                    await systemNotificationServices.newNotification(
-                        notificationInfo.orderResponse.body,
-                        notificationInfo.orderResponse.title,
-                        customerFcm.fcmToken
-                    );
+                    // await systemNotificationServices.newNotification(
+                    //     notificationInfo.orderResponse.body,
+                    //     notificationInfo.orderResponse.title,
+                    //     customerFcm.fcmToken
+                    // );
                 } else {
                     return res.status(400).send({ msg: "Order Not Placed" });
                 }
