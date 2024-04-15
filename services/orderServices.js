@@ -1336,10 +1336,10 @@ const orderServices = {
                     { _id: customerId },
                     { email: 1, _id: 0 }
                 );
-                if (userEmail) {
-                    console.log(userEmail.email);
-                    await sendNotificationEmail(subject, text, userEmail.email);
-                }
+                // if (userEmail) {
+                //     console.log(userEmail.email);
+                //     await sendNotificationEmail(subject, text, userEmail.email);
+                // }
                 //consume Customer Coupon
                 if (result.couponCode) {
                     coupanPolicyServices.consumeCoupon(customerId, result.couponCode);
