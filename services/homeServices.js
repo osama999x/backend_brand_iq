@@ -49,9 +49,20 @@ const homeServices = {
             {
                 $lookup: {
                     from: "subcategories",
-                    localField: "_id",
-                    foreignField: "category",
-                    as: "subCategory",
+                    let: { categoryId: "$_id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$category", "$$categoryId"] },
+                                        { $eq: ["$isActive", true] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    as: "subCategory"
                 },
             },
             {
@@ -74,7 +85,6 @@ const homeServices = {
             },
 
         ]);
-
         let products = await productModel
             .find(
                 {
