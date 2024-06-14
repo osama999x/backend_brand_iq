@@ -33,7 +33,7 @@ customerRouter.post(
             cnic,
             reigon,
         } = req.body;
-        console.log(req.body);
+        // console.log(req.body);
         // let isValidContact = validateMobileNumber(contact);
         // if (!isValidContact) {
         //     return res.status(400).send({
@@ -83,6 +83,70 @@ customerRouter.post(
         }
     })
 );
+customerRouter.post(
+    "/getDetailByOpenId",
+    expressAsyncHandler(async (req, res) => {
+        const {
+            openId,
+            firstName,
+            lastName,
+            email,
+            contact,
+            province,
+            state,
+            zipCode,
+            address,
+            gender,
+            password,
+            cnic,
+            reigon,
+        } = req.body;
+
+        console.log(req.body);
+        if (!openId) {
+            return res.status(200).send({
+                msg: "Please Provide openId",
+            });
+        }
+        const result = await customerServices.handleOpenId({
+            openId,
+            firstName,
+            lastName,
+            email,
+            contact,
+            province,
+            state,
+            zipCode,
+            address,
+            gender,
+            password,
+            cnic,
+            reigon,
+        });
+
+        if (result && result.status === 400) {
+            return res.status(400).send(result.data);
+        } else if (result) {
+            const uuid = uuidv4();
+            const refreshToken = jwtService.create({ uuid, type: "user" });
+            const accessToken = jwtService.create(
+                { userId: result.result?._id || result.existingCustomer?._id, type: "user" },
+                "5m"
+            );
+
+            authIdServices.add(result.result?._id || result.existingCustomer?._id, uuid);
+            return res.status(200).send({
+                msg: result.message,
+                data: result.result || result.existingCustomer,
+                accessToken,
+                refreshToken,
+            });
+        } else {
+            return res.status(400).send({ msg: "Not Registered" });
+        }
+    })
+)
+
 customerRouter.post(
     "/webSignup",
     expressAsyncHandler(async (req, res) => {
@@ -254,6 +318,34 @@ customerRouter.post(
         //     fcmToken
         //   );
         // }
+    })
+);
+customerRouter.post(
+    "/loginByOpenId",
+    expressAsyncHandler(async (req, res) => {
+        const { openId, fcmToken } = req.body;
+        if (!openId || !fcmToken) {
+            return res.status(400).send({ msg: "Fields Missing" });
+        }
+
+        const result = await customerServices.loginOpenId(openId, fcmToken);
+
+        if (result) {
+            await customerModel.findOneAndUpdate({ openId }, { fcmToken: fcmToken });
+            await systemNotificationServices.newNotification(
+                notificationInfo.login.body,
+                notificationInfo.login.title,
+                fcmToken
+            );
+            return res.status(200).send({
+                msg: "Logged in Successfully",
+                data: result,
+            });
+        } else {
+            return res.status(400).send({
+                msg: "User doesn't exist!",
+            });
+        }
     })
 );
 customerRouter.post(

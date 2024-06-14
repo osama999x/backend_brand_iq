@@ -26,6 +26,106 @@ const customerServices = {
         const valid = await bcrypt.compare(password, realPassword);
         return valid;
     },
+    handleOpenId: async ({
+        openId,
+        firstName,
+        lastName,
+        email,
+        contact,
+        province,
+        state,
+        zipCode,
+        address,
+        gender,
+        password,
+        cnic,
+        reigon,
+    }) => {
+        const existingCustomer = await customerModel.findOne({ openId: openId });
+        if (existingCustomer) {
+            console.log("existingCustomer", existingCustomer.email);
+
+            const uuid = uuidv4();
+            const refreshToken = jwtServices.create({ uuid, type: "user" });
+            const token = jwtServices.create(
+                { userId: existingCustomer._id, type: "user" },
+                "5m"
+            );
+            await authIdServices.add(existingCustomer._id, uuid);
+            await customerModel.findOneAndUpdate(
+                { _id: existingCustomer._id },
+                { token },
+                { new: true }
+            );
+
+            const taxx = await taxHeadServices.getEastWestByTaxType();
+            existingCustomer.taxx = taxx;
+            existingCustomer.token = token;
+            existingCustomer.refreshToken = refreshToken;
+            if (existingCustomer.contact !== null && existingCustomer.contact != undefined) {
+                return { existingCustomer, message: "Successfully Retrived" }
+            }
+            return { existingCustomer, message: "Registered Successfully" };
+        } else {
+            console.log("email", email);
+            // Check if email is provided and validate
+            if (email) {
+                const checkCustomer = await customerModel.findOne({ email });
+                if (checkCustomer) {
+                    return { status: 400, data: { msg: "Email already exists" } };
+                }
+            }
+
+            // Check if cnic is provided and validate
+            if (cnic) {
+                const checkCnic = await customerModel.findOne({ cnic });
+                if (checkCnic) {
+                    return { status: 400, data: { msg: "CNIC already exists" } };
+                }
+            }
+
+            let getInitialPoint = await pointManageModel.find({});
+            let initialPoint = 0;
+            if (getInitialPoint.length !== 0) {
+                initialPoint = getInitialPoint[0].initialPoint;
+            }
+
+            // Hash password if provided
+            if (password) {
+                const salt = await bcrypt.genSalt(10);
+                password = await bcrypt.hash(password, salt);
+            }
+
+            // Create new customer instance
+            const customer = new customerModel({
+                openId,
+                firstName,
+                lastName,
+                email,
+                contact,
+                province,
+                state,
+                zipCode,
+                address,
+                gender,
+                password,
+                cnic,
+                points: initialPoint,
+                reigon,
+            });
+
+            // Save customer to database
+            const result = await customer.save();
+
+            if (result) {
+                const id = result._id;
+                const points = result.points;
+                await pointServices.assaignPointMembership(id, points);
+                return { result, message: "Registered Successfully" }
+            }
+        }
+    }
+    ,
     getById: async (id) => {
         const customer = await customerModel.findById(id);
         return customer;
@@ -92,6 +192,33 @@ const customerServices = {
         // } else {
         //   throw "Customer doesn't exists";
         // }
+    },
+    loginOpenId: async (openId, fcmToken) => {
+        const customer = await customerModel.findOne({ openId }).lean();
+
+        if (customer) {
+            const uuid = uuidv4();
+            const refreshToken = jwtServices.create({ uuid, type: "user" });
+            const token = jwtServices.create(
+                { userId: customer._id, type: "user" },
+                "5m"
+            );
+            await authIdServices.add(customer._id, uuid);
+            await customerModel.findOneAndUpdate(
+                { _id: customer._id },
+                { token },
+                { new: true }
+            );
+
+            const taxx = await taxHeadServices.getEastWestByTaxType();
+            customer.taxx = taxx;
+            customer.token = token;
+            customer.refreshToken = refreshToken;
+
+            return customer;
+        }
+
+        return null;
     },
     customerDetails: async (_id) => {
         var _id = mongoose.Types.ObjectId(_id);

@@ -5,15 +5,13 @@ const schema = new Schema(
     {
         firstName: {
             type: String,
-            required: true,
+
         },
         lastName: {
             type: String,
-            required: true,
         },
         email: {
             type: String,
-            required: true,
             trim: true,
             lowercase: true,
             unique: true,
@@ -38,7 +36,6 @@ const schema = new Schema(
         },
         contact: {
             type: String,
-            required: true,
 
         },
         province: {
@@ -52,11 +49,10 @@ const schema = new Schema(
         },
         address: {
             type: String,
-            required: true,
+
         },
         gender: {
             type: String,
-            required: true,
         },
         image: {
             type: String,
@@ -83,6 +79,12 @@ const schema = new Schema(
             type: String,
             default: null,
         },
+        openId: {
+            type: String,
+            unique: true,
+            required: true
+
+        },
         zindigiWallet: {
             zindigiWalletNumber: {
                 type: String,
@@ -97,7 +99,6 @@ const schema = new Schema(
         reigon: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "TaxType",
-            required: true
         }
     },
     { timestamps: true }
