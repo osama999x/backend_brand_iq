@@ -26,9 +26,17 @@ const customerServices = {
         const valid = await bcrypt.compare(password, realPassword);
         return valid;
     },
+    authCode: async ({
+        openId,
+        authCode
+
+    }) => {
+        const saveAuth = await customerModel.findOneAndUpdate({ openId: openId }, { authCode: authCode }, { new: true })
+        return saveAuth
+    },
     handleOpenId: async ({
         openId,
-        firstName,
+        userName,
         lastName,
         email,
         contact,
@@ -42,8 +50,9 @@ const customerServices = {
         reigon,
     }) => {
         const existingCustomer = await customerModel.findOne({ openId: openId });
+
         if (existingCustomer) {
-            console.log("existingCustomer", existingCustomer.email);
+            console.log("existingCustomer1", existingCustomer.firstName);
 
             const uuid = uuidv4();
             const refreshToken = jwtServices.create({ uuid, type: "user" });
@@ -62,12 +71,12 @@ const customerServices = {
             existingCustomer.taxx = taxx;
             existingCustomer.token = token;
             existingCustomer.refreshToken = refreshToken;
-            if (existingCustomer.contact !== null && existingCustomer.contact != undefined) {
-                return { existingCustomer, message: "Successfully Retrived" }
+            if (existingCustomer.userName !== null && existingCustomer.userName !== undefined) {
+                return { existingCustomer, message: "Logged in Successfully" }
             }
             return { existingCustomer, message: "Registered Successfully" };
         } else {
-            console.log("email", email);
+            console.log("email");
             // Check if email is provided and validate
             if (email) {
                 const checkCustomer = await customerModel.findOne({ email });
@@ -99,17 +108,17 @@ const customerServices = {
             // Create new customer instance
             const customer = new customerModel({
                 openId,
-                firstName,
-                lastName,
+                firstName: userName,
+                lastName: '',
                 email,
-                contact,
-                province,
-                state,
-                zipCode,
-                address,
-                gender,
+                contact: '',
+                province: '',
+                state: '',
+                zipCode: '',
+                address: '',
+                gender: '',
                 password,
-                cnic,
+                cnic: '',
                 points: initialPoint,
                 reigon,
             });
@@ -193,8 +202,8 @@ const customerServices = {
         //   throw "Customer doesn't exists";
         // }
     },
-    loginOpenId: async (openId, fcmToken) => {
-        const customer = await customerModel.findOne({ openId }).lean();
+    loginOpenId: async (openId, contact, userName) => {
+        const customer = await customerModel.findOneAndUpdate({ openId: openId }, { firstName: userName, contact: contact }, { new: true }).lean();
 
         if (customer) {
             const uuid = uuidv4();

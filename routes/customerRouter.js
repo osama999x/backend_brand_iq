@@ -88,7 +88,7 @@ customerRouter.post(
     expressAsyncHandler(async (req, res) => {
         const {
             openId,
-            firstName,
+            userName,
             lastName,
             email,
             contact,
@@ -110,7 +110,7 @@ customerRouter.post(
         }
         const result = await customerServices.handleOpenId({
             openId,
-            firstName,
+            userName,
             lastName,
             email,
             contact,
@@ -135,6 +135,7 @@ customerRouter.post(
             );
 
             authIdServices.add(result.result?._id || result.existingCustomer?._id, uuid);
+            console.log(result.message, result.result || result.existingCustomer, accessToken, refreshToken)
             return res.status(200).send({
                 msg: result.message,
                 data: result.result || result.existingCustomer,
@@ -146,6 +147,64 @@ customerRouter.post(
         }
     })
 )
+customerRouter.post(
+    "/loginByOpenId",
+    expressAsyncHandler(async (req, res) => {
+        const { openId, contact, userName } = req.body;
+        if (!openId) {
+            res.status(400).send({ msg: "Fields Missing" });
+        }
+        const result = await customerServices.loginOpenId(openId, contact, userName);
+        console.log("result", result);
+        if (result) {
+
+            res.status(200).send({
+                msg: "Logged in Successfully",
+                data: result,
+            });
+
+        } else {
+            res.status(400).send({
+                msg: "User doesn't exist!",
+            });
+        }
+        // res.status(200).json({ msg: "Logged In Successfully", data: result });
+        // if (result) {
+        //   await systemNotificationServices.newNotification(
+        //     notificationInfo.login.body,
+        //     notificationInfo.login.title,
+        //     fcmToken
+        //   );
+        // }
+    })
+);
+customerRouter.post(
+    "/authByOpenId",
+    expressAsyncHandler(async (req, res) => {
+        const {
+            openId,
+            authCode
+        } = req.body;
+
+        console.log(req.body);
+        if (!openId) {
+            return res.status(200).send({
+                msg: "Please Provide openId",
+            });
+        }
+        const result = await customerServices.authCode({
+            openId,
+            authCode
+        });
+
+        if (result) {
+            return res.status(200).send({ msg: "Updated Auth Code " });
+        } else {
+            return res.status(400).send({ msg: "Not Updated" })
+        }
+    })
+)
+
 
 customerRouter.post(
     "/webSignup",
@@ -323,20 +382,23 @@ customerRouter.post(
 customerRouter.post(
     "/loginByOpenId",
     expressAsyncHandler(async (req, res) => {
-        const { openId, fcmToken } = req.body;
-        if (!openId || !fcmToken) {
+        const { openId, userName, fcmToken } = req.body;
+        if (!openId) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
 
-        const result = await customerServices.loginOpenId(openId, fcmToken);
+        const result = await customerServices.loginOpenId(openId, userName, fcmToken);
 
         if (result) {
-            await customerModel.findOneAndUpdate({ openId }, { fcmToken: fcmToken });
-            await systemNotificationServices.newNotification(
-                notificationInfo.login.body,
-                notificationInfo.login.title,
-                fcmToken
-            );
+            if (fcmToken) {
+
+                await customerModel.findOneAndUpdate({ openId }, { fcmToken: fcmToken });
+                await systemNotificationServices.newNotification(
+                    notificationInfo.login.body,
+                    notificationInfo.login.title,
+                    fcmToken
+                );
+            }
             return res.status(200).send({
                 msg: "Logged in Successfully",
                 data: result,
@@ -451,7 +513,7 @@ customerRouter.post(
             res.status(500).json({ msg: "Internal Server Error" });
         }
     })
-);;
+);
 customerRouter.post(
     "/resetpassword/forgot",
     expressAsyncHandler(async (req, res) => {
@@ -519,6 +581,7 @@ customerRouter.get(
         }
     })
 );
+customerRouter.get('customerDetaikls')
 customerRouter.get(
     "/membership",
     expressAsyncHandler(async (req, res) => {
