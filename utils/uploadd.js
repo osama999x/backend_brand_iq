@@ -1,3 +1,5 @@
+const fs = require("fs");
+
 const uploadFile = async (files) => {
     try {
         // Check if files is an array

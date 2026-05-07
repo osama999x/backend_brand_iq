@@ -6,13 +6,17 @@ const schema = new Schema(
     customerId: {
       type: Schema.Types.ObjectId,
       ref: "Customer",
-      required: true,
+      default: null,
+    },
+    customerEmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: "",
     },
     channel: {
-      type: Number,
-      min: 0,
-      max: 1,
-      required: true,
+      type: String,
+      default: "",
     },
     rating: {
       type: Number,
@@ -26,6 +30,10 @@ const schema = new Schema(
   },
   { timestamps: true }
 );
+
+// Ensure one feedback per identified customer (either by customerId or by email for guests)
+schema.index({ customerId: 1 }, { unique: true, sparse: true });
+schema.index({ customerEmail: 1 }, { unique: true, sparse: true });
 
 const feedbackModel = new mongoose.model("FeedBack", schema);
 module.exports = feedbackModel;

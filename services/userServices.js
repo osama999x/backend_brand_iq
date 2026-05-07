@@ -83,10 +83,9 @@ const userServices = {
         if (roleeName) {
             result.roleName = roleeName.role.name;
         }
-        if (result)
-            result.modules = result?.modules?.filter((item) => {
-                return item.permissions.length || item.subModules.length
-            })
+        // Do not filter modules here; the role-permission document already represents
+        // what the portal assigned. Filtering can hide modules that are meant to appear
+        // (e.g. module containers relying on submodules).
         return result;
     },
     addNew: async (role, name, email, password, contact) => {

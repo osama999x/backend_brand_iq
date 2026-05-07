@@ -30,17 +30,39 @@ const schema = new Schema(
             required: true,
             default: "",
         },
+        sizeGuide: {
+            type: String,
+            default: "",
+        },
+        sizeFit: {
+            type: String,
+            default: "",
+        },
+        deliveryReturns: {
+            type: String,
+            default: "",
+        },
         variant: [
             {
                 colorName: { type: String, default: "", trim: true },
                 colorHex: { type: String, default: "" },
-                actualPrice: { type: Number, required: true, min: 0, default: 0 },
+                // Flat price/quantity kept for backward compatibility with older records.
+                // For products using per-size pricing, leave these at 0 and use the size array instead.
+                actualPrice: { type: Number, min: 0, default: 0 },
                 discountedPrice: { type: Number, min: 0, default: 0 },
-                quantity: { type: Number, required: true, min: 0, default: 0 },
+                quantity: { type: Number, min: 0, default: 0 },
                 sku: { type: String, required: true, unique: true },
-                size: { type: String, default: "", trim: true },
+                // Each entry represents one size with its own stock and price.
+                size: [
+                    {
+                        name: { type: String, default: "", trim: true },
+                        actualPrice: { type: Number, min: 0, default: 0 },
+                        discountedPrice: { type: Number, min: 0, default: 0 },
+                        quantity: { type: Number, min: 0, default: 0 },
+                    },
+                ],
                 image: { type: String },
-                isDiscount: { type: Boolean, default: false, required: true, }
+                isDiscount: { type: Boolean, default: false, required: true },
             },
         ],
         thumbnail: {
@@ -149,6 +171,13 @@ const schema = new Schema(
     },
     { timestamps: true }
 );
+// Create a compound text index for search
+schema.index({
+    name: "text",
+    title: "text",
+    description: "text",
+    tags: "text"
+});
 schema.index({ "variant.sku": 1 }, { unique: true });
 // Pre-save hook to check uniqueness of `sku` within `variant` array
 schema.pre("save", async function (next) {

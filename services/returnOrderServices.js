@@ -31,11 +31,10 @@ const returnOrderServices = {
         images
     ) => {
         let imgArr = [];
+        let uploadedImages = [];
         if (images) {
-            var uploadedImages = await uploadFile(images);
-            console.log(uploadedImages);
-
-
+            uploadedImages = await uploadFile(images);
+            if (!uploadedImages) uploadedImages = [];
         }
 
         // var productArr = [];

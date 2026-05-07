@@ -30,21 +30,28 @@ feedbackRouter.get(
 feedbackRouter.post(
   "/",
   expressAsyncHandler(async (req, res) => {
-    const { customerId, channel, rating, comments } = req.body;
-    if (!customerId || !rating) {
-      return res.status(400).send({ msg: "Fields Missing" });
+    const { customerId, email, channel, rating, comments } = req.body;
+    const normalizedEmail = (email || "").toString().trim().toLowerCase();
+
+    if (!rating) {
+      return res.status(400).send({ msg: "rating is required" });
+    }
+    // allow feedback without customerId (guest). Email is required when customerId not provided.
+    if (!customerId && !normalizedEmail) {
+      return res.status(400).send({ msg: "email is required" });
     }
     // if(channel===1){
     //  var mobile="Mobile App"
     // }else{
     //   var web="Web App"
     // }
-    const result = await feedbackServices.addNew(
+    const result = await feedbackServices.addNew({
       customerId,
+      email: normalizedEmail,
       channel,
       rating,
-      comments
-    );
+      comments,
+    });
     if (result) {
       return res.status(200).send({ msg: "FeedBack added.", data: result });
     } else {

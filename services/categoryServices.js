@@ -10,9 +10,10 @@ const promotionModel = require("../model/promotionModel")
 
 
 const categoryServices = {
-    get: async () => {
+    get: async (gender) => {
+        const filter = gender ? { gender } : {};
         const list = await categoryModel
-            .find({}, projection.projection)
+            .find(filter, projection.projection)
             .sort({ name: 1 });
         return list;
     },
@@ -642,7 +643,7 @@ const categoryServices = {
         dict = { category: category, subcategories: subcategories };
         return dict;
     },
-    add: async (name, icon, thumbnail, description, isFeatured) => {
+    add: async (name, icon, thumbnail, description, isFeatured, gender) => {
         icon = await uploadFile(icon);
         thumbnail = await uploadFile(thumbnail);
         if (!icon) {
@@ -657,11 +658,12 @@ const categoryServices = {
             thumbnail,
             description,
             isFeatured,
+            gender,
         });
         const result = await category.save();
         return result;
     },
-    update: async (_id, name, icon, description, thumbnail, isFeatured, isActive) => {
+    update: async (_id, name, icon, description, thumbnail, isFeatured, isActive, gender) => {
         try {
             let uploadedIcon, uploadedThumbnail;
 
@@ -674,16 +676,19 @@ const categoryServices = {
             }
 
             const objectId = mongoose.Types.ObjectId(_id);
+            const updatePayload = {
+                name,
+                description,
+                isFeatured,
+                icon: uploadedIcon,
+                thumbnail: uploadedThumbnail,
+                isActive,
+            };
+            if (gender !== undefined) updatePayload.gender = gender;
+
             const result = await categoryModel.findOneAndUpdate(
                 { _id: objectId },
-                {
-                    name: name,
-                    description: description,
-                    isFeatured: isFeatured,
-                    icon: uploadedIcon,
-                    thumbnail: uploadedThumbnail,
-                    isActive
-                },
+                updatePayload,
                 { upsert: true }
             );
 

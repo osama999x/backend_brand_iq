@@ -25,7 +25,12 @@ const schema = new Schema(
         },
         isActive: {
             type: Boolean,
-            default: true
+            default: true,
+        },
+        gender: {
+            type: String,
+            enum: ["men", "women", "juniors", "unisex"],
+            default: "unisex",
         },
     },
     { timestamps: true }

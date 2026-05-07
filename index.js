@@ -5,6 +5,7 @@ var fs = require("fs");
 var path = require("path");
 var multer = require("multer");
 var morgan = require("morgan");
+const punycode = require("punycode")
 var cors = require("cors");
 const var_dump = require("var_dump");
 const uc = require("upper-case-first");
@@ -18,6 +19,9 @@ const app = express();
 app.use(express.json({ limit: "100mb" }));
 
 dotenv.config();
+
+// CORS: allow all origins
+app.use(cors({ origin: "*" }));
 // in latest body-parser use like below.
 //app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.urlencoded({ extended: true, limit: "100mb" }));
@@ -51,6 +55,7 @@ const pointRouter = require("./routes/pointRouter");
 const webSignupLogRouter = require("./routes/webSignupLogRouter");
 const pointManageRouter = require("./routes/pointManageRouter");
 const bannerRouter = require("./routes/bannerRouter");
+const homeHeroRouter = require("./routes/homeHeroRouter");
 const notificatinoRouter = require("./routes/notificationRouter");
 const membershipBenifitRouter = require("./routes/membershipBenifitRouter");
 const couponPolicyRouter = require("./routes/couponPolicyRouter");
@@ -86,7 +91,7 @@ app.use((req, res, next) => {
     next();
 })
 
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 require("./db/index");
 const port = process.env.PORT;
 //hit routes
@@ -95,14 +100,11 @@ app.use((req, res, next) => {
     next();
 });
 //app.use(decryptData);//Cipher
-//app.use(limiter); //Limit IP Requests
+app.use(limiter); //Limit IP Requests
 app.use(morgan("dev"));
 app.use(apiLogs);
 //logger
 //app.use(logger);
-var corOptions = {
-    origin: "*",
-};
 //backup
 // new CronJob(
 //   "5 * * * *",
@@ -129,8 +131,6 @@ var corOptions = {
 
 // Call the function after a delay
 //setTimeout(startCronJob, 2 * 60 * 1000); // 2 minutes in milliseconds
-//cors
-app.use(cors(corOptions));
 //backup(options);
 //test Router
 //app.use(authentication);
@@ -147,7 +147,7 @@ app.use("/api/v1/category", categoryRouter);
 app.use("/api/v1/subcategory", subCategoryRouter);
 app.use("/api/v1/products", productsRouter);
 app.use("/api/v1/order", orderRouter);
-app.use("/api/v1/home", homeRouter);
+app.use("/api/home", homeRouter);
 app.use("/api/v1/favourites", favouriteRouter);
 app.use("/api/v1/review", reviewRouter);
 app.use("/api/v1/registeredUser", registeredUserRouter);
@@ -174,6 +174,7 @@ app.use("/api/v1/pointManage", pointManageRouter);
 app.use("/api/v1/point", pointRouter);
 app.use("/api/v1/webLog", webSignupLogRouter);
 app.use("/api/v1/banner", bannerRouter);
+app.use("/api/v1/homeHero", homeHeroRouter);
 app.use("/api/v1/notification", notificatinoRouter);
 app.use("/api/v1/membershipBenifit", membershipBenifitRouter);
 app.use("/api/v1/dealsProduct", dealRouter);

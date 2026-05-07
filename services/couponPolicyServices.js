@@ -110,6 +110,9 @@ const coupanPolicyServices = {
     },
 
     useCoupon: async (couponCode, customerId) => {
+        if (!couponCode || String(couponCode).trim() === "") {
+            return null;
+        }
         const usingCoupon = await couponPolicyModel.findOneAndUpdate({ couponCode: couponCode }, { isActive: true }, { upsert: true })
         let newCouponStatus = await couponStatusModel.findOneAndUpdate({
             couponCode: couponCode,
@@ -177,6 +180,9 @@ const coupanPolicyServices = {
         // return consumeCoupon;
     },
     consumeCoupon: async (customerId, couponCode) => {
+        if (!couponCode || String(couponCode).trim() === "") {
+            return;
+        }
         let data = await couponStatusModel.findOneAndUpdate(
             {
                 couponCode: couponCode,

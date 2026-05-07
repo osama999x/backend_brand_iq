@@ -16,20 +16,40 @@ const zindigiWalletPayment = require("../utils/zindigiWalletPayment");
 const validateMobileNumber = require("../utils/validateMobileNumber");
 const { log } = require("winston");
 const couponPolicyServices = require("../services/couponPolicyServices");
+const customerServices = require("../services/customerServices");
+const {
+    normalizeOrderEmail,
+    isValidOrderEmail,
+    isDisposableEmailDomain,
+} = require("../utils/orderEmailValidation");
+
+function parseAddressPayload(addr) {
+    if (addr == null) return null;
+    if (typeof addr === "string") {
+        try {
+            return JSON.parse(addr);
+        } catch {
+            return null;
+        }
+    }
+    return addr;
+}
 
 orderRouter.get(
     "/orderTracking",
     expressAsyncHandler(async (req, res) => {
         const { orderId } = req.query;
-        const result = await orderServices.orderTracking(orderId);
-        if (result.length != 0) {
-            return res.status(200).send({
-                msg: "Orders Track History",
-                data: result,
-            });
-        } else {
-            return res.status(400).send({ msg: "Order Not Track" });
+        if (!orderId || !String(orderId).trim()) {
+            return res.status(400).send({ msg: "orderId is required" });
         }
+        const result = await orderServices.orderTracking(String(orderId).trim());
+        if (!result) {
+            return res.status(404).send({ msg: "Order Not Found" });
+        }
+        return res.status(200).send({
+            msg: "Orders Track History",
+            data: result,
+        });
     })
 );
 orderRouter.post(
@@ -239,21 +259,46 @@ orderRouter.post(
             billingAddress,
             shippingAddress
         } = req.body;
-        // if (!city) {
-        //     city = "Islamabad";
-        // }
-        //console.log("req.body", req.body);
-        if (!customer || !product || !paymentMode || !totalBill) {
+        billingAddress = parseAddressPayload(billingAddress);
+        shippingAddress = parseAddressPayload(shippingAddress);
+
+        if (!product || !paymentMode || !totalBill) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
-        // Convert totalBill and totalAmount to numbers
-        totalBill = parseFloat(totalBill.replace(/,/g, ''));
-        totalAmount = parseFloat(totalAmount.replace(/,/g, ''));
 
-        // Check if the conversion was successful
+        const rawEmail =
+            billingAddress?.email ?? shippingAddress?.email ?? "";
+        const checkoutEmail = normalizeOrderEmail(rawEmail);
+        if (
+            !isValidOrderEmail(checkoutEmail) ||
+            isDisposableEmailDomain(checkoutEmail)
+        ) {
+            return res.status(400).send({ msg: "Invalid email" });
+        }
+
+        // Convert totalBill and totalAmount to numbers before customer resolution
+        totalBill = parseFloat(String(totalBill).replace(/,/g, ""));
+        totalAmount =
+            totalAmount != null && totalAmount !== ""
+                ? parseFloat(String(totalAmount).replace(/,/g, ""))
+                : totalBill;
+
         if (isNaN(totalBill) || isNaN(totalAmount)) {
             return res.status(400).send({ msg: "Invalid totalBill or totalAmount format" });
         }
+
+        let resolvedCustomerId;
+        try {
+            resolvedCustomerId = await customerServices.resolveCustomerForOrder(
+                customer,
+                checkoutEmail,
+                billingAddress
+            );
+        } catch (err) {
+            console.error(err);
+            return res.status(400).send({ msg: "Could not resolve customer" });
+        }
+        customer = resolvedCustomerId;
 
         // const isValidContact = validateMobileNumber(contact);
         // if (!isValidContact) {
@@ -275,9 +320,14 @@ orderRouter.post(
                 const user = await customerModel.findOne({ _id: customer });
 
                 if (!user) {
-                    res.status(400).send({ msg: "User Not Found!" });
+                    return res.status(400).send({ msg: "User Not Found!" });
                 }
-                let mobileNo = contact;
+                let mobileNo =
+                    user.contact ||
+                    billingAddress?.contact ||
+                    billingAddress?.phone ||
+                    shippingAddress?.contact ||
+                    shippingAddress?.phone;
                 // let mobileNo = convertMobileFormate(user.contact);
                 let dateTime = convertDate(new Date(new Date().toLocaleString()));
                 console.log("date", dateTime);
@@ -305,20 +355,19 @@ orderRouter.post(
                         totalBill,
                         totalAmount,
                         redeemValue,
-                        address,
-                        city,
-                        contact,
                         orderId,
                         channel,
                         couponCode,
-                        tax
+                        tax,
+                        billingAddress,
+                        shippingAddress
                     );
                     if (orderResult) {
                         let customerFcm = await customerModel.findOne(
                             { _id: customer },
                             { fcmToken: 1 }
                         );
-                        if (customerFcm.fcmToken !== null) {
+                        if (customerFcm && customerFcm.fcmToken !== null) {
                             await systemNotificationServices.newNotification(
                                 notificationInfo.orderResponse.body,
                                 notificationInfo.orderResponse.title,
@@ -366,7 +415,12 @@ orderRouter.post(
                     shippingAddress
                 );
 
-                const UseCoupon = await couponPolicyServices.useCoupon(couponCode, customer)
+                if (couponCode != null && String(couponCode).trim() !== "") {
+                    await couponPolicyServices.useCoupon(
+                        String(couponCode).trim(),
+                        customer
+                    );
+                }
                 if (result) {
                     res
                         .status(200)

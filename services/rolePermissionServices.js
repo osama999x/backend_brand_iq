@@ -98,7 +98,7 @@ const rolePermissionServices = {
     getByRole: async (roleId) => {
         const roleDetails = await rolePermissionModel
             .findOne(
-                { role: { $in: roleId } },
+                { role: mongoose.Types.ObjectId(roleId) },
                 {
                     createdAt: 0,
                     updatedAt: 0,
@@ -154,18 +154,18 @@ const rolePermissionServices = {
             });
 
         if (roleDetails) {
-            // Sort modules array based on createdAt field
-            roleDetails.modules.sort((a, b) => a.module.createdAt - b.module.createdAt);
-
-            roleDetails.modules = roleDetails.modules.filter((module) => {
-                return (module.permissions && module.permissions.length) || (module.subModules && module.subModules.length);
+            // Sort modules by configured orderPosition when present
+            roleDetails.modules.sort((a, b) => {
+                const ao = a && a.module && a.module.orderPosition != null ? a.module.orderPosition : 9999;
+                const bo = b && b.module && b.module.orderPosition != null ? b.module.orderPosition : 9999;
+                if (ao !== bo) return ao - bo;
+                const al = a && a.module && a.module.label ? a.module.label : "";
+                const bl = b && b.module && b.module.label ? b.module.label : "";
+                return al.localeCompare(bl);
             });
 
-            roleDetails.modules.forEach((module) => {
-                module.subModules = module.subModules.filter((subModule) => {
-                    return subModule.permissions && subModule.permissions.length;
-                });
-            });
+            // Keep all assigned modules; only drop dangling refs.
+            roleDetails.modules = roleDetails.modules.filter((m) => m && m.module);
 
             return roleDetails;
         }

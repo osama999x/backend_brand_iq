@@ -53,6 +53,7 @@
     "pino-pretty": "^9.1.1",
     "pm2": "^5.2.0",
     "post-npm": "^1.0.5",
+    "punycode": "^2.3.1",
     "read-excel-file": "^5.5.3",
     "remove-duplicate": "^1.0.4",
     "search-array": "^1.6.0",

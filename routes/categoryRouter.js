@@ -7,10 +7,16 @@ const productsServices = require("../services/productsServices");
 const subCategoryServices = require("../services/subCategoryServices");
 const categoryRouter = express.Router();
 
+const GENDER_VALUES = ["men", "women", "juniors", "unisex"];
+
 categoryRouter.get(
     "/all",
     expressAsyncHandler(async (req, res) => {
-        const result = await categoryServices.get();
+        const { gender } = req.query;
+        if (gender && !GENDER_VALUES.includes(gender)) {
+            return res.status(400).json({ msg: `gender must be one of: ${GENDER_VALUES.join(", ")}` });
+        }
+        const result = await categoryServices.get(gender);
         res.status(200).send({ msg: "Categories.", data: result });
     })
 );
@@ -75,22 +81,20 @@ categoryRouter.get(
 categoryRouter.post(
     "/",
     expressAsyncHandler(async (req, res) => {
-        const { name, icon, thumbnail, description, isFeatured } = req.body;
-        // if (!icon) {
-        //     return res.status(400).json({ msg: "Main Image is required!" })
-        // }
-        // if (!thumbnail) {
-        //     return res.status(400).json({ msg: "Thumnail image is required!" })
-        // }
+        const { name, icon, thumbnail, description, isFeatured, gender } = req.body;
         if (!name || !icon || !thumbnail) {
             return res.status(400).send({ msg: "Fields Missing." });
+        }
+        if (gender && !GENDER_VALUES.includes(gender)) {
+            return res.status(400).json({ msg: `gender must be one of: ${GENDER_VALUES.join(", ")}` });
         }
         const result = await categoryServices.add(
             name,
             icon,
             thumbnail,
             description,
-            isFeatured
+            isFeatured,
+            gender
         );
         if (result) {
             return res.status(200).send({ msg: "Category Added.", data: result });
@@ -103,7 +107,10 @@ categoryRouter.post(
 categoryRouter.patch(
     "/",
     expressAsyncHandler(async (req, res) => {
-        const { categoryId, name, icon, description, thumbnail, isFeatured, isActive } = req.body;
+        const { categoryId, name, icon, description, thumbnail, isFeatured, isActive, gender } = req.body;
+        if (gender && !GENDER_VALUES.includes(gender)) {
+            return res.status(400).json({ msg: `gender must be one of: ${GENDER_VALUES.join(", ")}` });
+        }
         const result = await categoryServices.update(
             categoryId,
             name,
@@ -111,7 +118,8 @@ categoryRouter.patch(
             description,
             thumbnail,
             isFeatured,
-            isActive
+            isActive,
+            gender
         );
         if (result) {
             return res.status(200).send({ msg: "Category Updated.", data: result });

@@ -52,7 +52,7 @@ const customerServices = {
         const existingCustomer = await customerModel.findOne({ openId: openId });
 
         if (existingCustomer) {
-            console.log("existingCustomer1", existingCustomer.firstName);
+
 
             const uuid = uuidv4();
             const refreshToken = jwtServices.create({ uuid, type: "user" });
@@ -71,7 +71,7 @@ const customerServices = {
             existingCustomer.taxx = taxx;
             existingCustomer.token = token;
             existingCustomer.refreshToken = refreshToken;
-            if (existingCustomer.userName !== null && existingCustomer.userName !== undefined) {
+            if (existingCustomer.firstName !== null && existingCustomer.firstName !== undefined) {
                 return { existingCustomer, message: "Logged in Successfully" }
             }
             return { existingCustomer, message: "Registered Successfully" };
@@ -109,16 +109,16 @@ const customerServices = {
             const customer = new customerModel({
                 openId,
                 firstName: userName,
-                lastName: 'n',
-                email: "abc@email.com",
+                lastName: 'n/a',
+                email: "n/a",
                 contact: '',
-                province: 'Punjab',
-                state: 'Punjab',
-                zipCode: '44400',
-                address: 'abc',
-                gender: 'Male',
+                province: 'n/a',
+                state: 'n/a',
+                zipCode: 'n/a',
+                address: 'n/a',
+                gender: 'n/a',
                 password,
-                cnic: '6110120905845',
+                cnic: 'n/a',
                 points: initialPoint,
                 reigon,
             });
@@ -203,7 +203,11 @@ const customerServices = {
         // }
     },
     loginOpenId: async (openId, contact, userName) => {
-        const customer = await customerModel.findOneAndUpdate({ openId: openId }, { firstName: userName, contact: contact }, { new: true }).lean();
+
+        const [firstName, ...lastNameParts] = userName.split(' ');
+        const lastName = lastNameParts.join(' ');
+
+        const customer = await customerModel.findOneAndUpdate({ openId: openId }, { firstName: firstName, lastName: lastName, contact: contact }, { new: true }).lean();
 
         if (customer) {
             const uuid = uuidv4();
@@ -696,6 +700,64 @@ const customerServices = {
             )
             .lean();
         return result;
+    },
+
+    /**
+     * Resolve Mongo customer id for checkout: optional logged-in id, else match by email, else create guest.
+     * @param {string|null|undefined} optionalCustomerId
+     * @param {string} normalizedEmail lowercase trimmed
+     * @param {object|null|undefined} billingAddress
+     */
+    resolveCustomerForOrder: async (optionalCustomerId, normalizedEmail, billingAddress) => {
+        if (optionalCustomerId && mongoose.Types.ObjectId.isValid(optionalCustomerId)) {
+            const byId = await customerModel.findById(optionalCustomerId);
+            if (byId) return byId._id;
+        }
+
+        const byEmail = await customerModel.findOne({ email: normalizedEmail });
+        if (byEmail) return byEmail._id;
+
+        let getInitialPoint = await pointManageModel.find({});
+        let initialPoint = 0;
+        if (getInitialPoint.length !== 0) {
+            initialPoint = getInitialPoint[0].initialPoint;
+        }
+
+        const contact =
+            billingAddress?.contact ??
+            billingAddress?.phone ??
+            billingAddress?.mobile ??
+            "";
+        const address =
+            billingAddress?.addressLine ?? billingAddress?.address ?? "n/a";
+
+        const doc = new customerModel({
+            openId: `guest_${uuidv4()}`,
+            firstName: billingAddress?.firstName || "Guest",
+            lastName: billingAddress?.lastName || "User",
+            email: normalizedEmail,
+            contact: contact || "",
+            address,
+            province: billingAddress?.province || "n/a",
+            state: billingAddress?.state || "n/a",
+            zipCode: billingAddress?.zipCode || "n/a",
+            gender: "n/a",
+            cnic: "n/a",
+            points: initialPoint,
+        });
+        try {
+            const saved = await doc.save();
+            if (saved) {
+                await pointServices.assaignPointMembership(saved._id, saved.points);
+            }
+            return saved._id;
+        } catch (e) {
+            if (e && e.code === 11000) {
+                const race = await customerModel.findOne({ email: normalizedEmail });
+                if (race) return race._id;
+            }
+            throw e;
+        }
     },
 };
 

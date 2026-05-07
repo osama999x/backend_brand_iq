@@ -2,6 +2,7 @@ const feedbackModel = require("../model/feedbackModel");
 const productsModel = require("../model/productsModel");
 const projection = require("../config/mongoProjection");
 const mongoose = require("mongoose");
+const customerModel = require("../model/customerModel");
 // const productsImagesModel = require("../model/productsImagesModel");
 
 const feedbackServices = {
@@ -33,29 +34,37 @@ const feedbackServices = {
       });
     return result;
   },
-  addNew: async (customerId, channel, rating, comments) => {
-    const findFeedBack = await feedbackModel.findOne({ customerId });
-    if (findFeedBack) {
-      const result = await feedbackModel.findOneAndUpdate(
-        { customerId },
-        {
-          channel,
-          rating,
-          comments,
-        },
-        { new: true }
-      );
-      return result;
-    } else {
-      const data = new feedbackModel({
-        customerId: mongoose.Types.ObjectId(customerId),
-        channel,
-        rating,
-        comments,
-      });
-      const result = await data.save();
-      return result;
+  addNew: async ({ customerId, email, channel, rating, comments }) => {
+    const normalizedEmail = (email || "").toString().trim().toLowerCase();
+
+    // If email is provided, try to resolve customerId (works even without frontend knowing it)
+    let resolvedCustomerId = customerId ? mongoose.Types.ObjectId(customerId) : null;
+    if (!resolvedCustomerId && normalizedEmail) {
+      const customer = await customerModel.findOne({ email: normalizedEmail }, { _id: 1 }).lean();
+      if (customer) resolvedCustomerId = customer._id;
     }
+
+    // Upsert rule:
+    // - if we have customerId → one feedback per customerId
+    // - else → one feedback per customerEmail (guest)
+    const filter = resolvedCustomerId
+      ? { customerId: resolvedCustomerId }
+      : { customerEmail: normalizedEmail };
+
+    const update = {
+      channel,
+      rating,
+      comments,
+      customerId: resolvedCustomerId,
+      customerEmail: normalizedEmail,
+    };
+
+    const result = await feedbackModel.findOneAndUpdate(
+      filter,
+      { $set: update },
+      { upsert: true, new: true }
+    );
+    return result;
   },
 };
 

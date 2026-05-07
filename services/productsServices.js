@@ -13,6 +13,7 @@ const productVariantServices = require("./productVariantServices");
 const dealBuyerLogModel = require("../model/dealBuyerLogModel");
 // const productsImagesModel = require("../model/productsImagesModel");
 const reviewServices = require("../services/reviewServices");
+const { attachSkuToSizeRows } = require("../utils/variantSkuEnrichment");
 
 const productsServices = {
     getproducts: async () => {
@@ -101,7 +102,10 @@ const productsServices = {
             .populate({
                 path: "subcategory",
             });
-        return product;
+        if (!product) return null;
+        const plain = product.toObject ? product.toObject() : product;
+        attachSkuToSizeRows(plain);
+        return plain;
     },
     getProductsById: async (productId) => {
         let today = new Date(new Date());
@@ -273,6 +277,9 @@ const productsServices = {
                     title: 1,
                     description: 1,
                     longDescription: 1,
+                    sizeGuide: 1,
+                    sizeFit: 1,
+                    deliveryReturns: 1,
                     isColor: 1,
                     thumbnail: 1,
                     images: 1,
@@ -661,6 +668,7 @@ const productsServices = {
         if (Review) {
             product[0].Review = Review;
         }
+        attachSkuToSizeRows(product[0]);
         return {
             msg: "Products",
             data: {
@@ -695,6 +703,9 @@ const productsServices = {
         title,
         description,
         longDescription,
+        sizeGuide,
+        sizeFit,
+        deliveryReturns,
         isDiscount,
         isDeal,
         dealExpire,
@@ -714,187 +725,75 @@ const productsServices = {
         addons,
         isFeatured
     ) => {
-        // thumbnail = await uploadFile(thumbnail);
-        //console.log("images", images);
-
-        var image = [];
-        //Product have images
-
-        if (images.length != 0) {
-            imgArr = await Promise.all(images?.map(uploadFile));
-            console.log(imgArr);
-            image = [...imgArr]
-            var thumbnail = imgArr[0];
+        // Upload images before the transaction — file I/O is not transactional
+        let uploadedImages = [];
+        let thumbnail = "";
+        if (images && images.length > 0) {
+            uploadedImages = await Promise.all(images.map(uploadFile));
+            thumbnail = uploadedImages[0];
         }
-        // let variants = [];
-        // switch (variant.length !== 0) {
-        //     //case 1 no color no size
-        //     case variant[0].colorName === "" && variant[0].size.length === 0:
-        //         variants = await productVariantServices.handleNoColorNoSize(
-        //             variant,
-        //             isDiscount
-        //         );
-        //         break;
-        //     //Case 2 have color but not size
-        //     case variant[0].colorName !== "" && variant[0].size.length === 0:
-        //         variants = await productVariantServices.handleColorNoSize(
-        //             variant,
-        //             isDiscount
-        //         );
-        //         break;
-        //     //case 3 no color but size exist
-        //     case variant[0].colorName === "" && variant[0].size.length !== 0:
-        //         variants = await productVariantServices.handleNoColorSize(
-        //             variant,
-        //             isDiscount
-        //         );
-        //         break;
-        //     //Case 4 Multi Colors mutli size
-        //     case variant[0].colorName !== "" && variant[0].size.length !== 0:
-        //         variants = await productVariantServices.handleColorSize(
-        //             variant,
-        //             isDiscount
-        //         );
-        //         break;
-        // }
-        //case 1 no color no size
-        // if (variant[0].colorName === "" && variant[0].size.length === 0) {
-        //   let variants = [];
-        //   for (let i of variant) {
-        //     if (i.image) {
-        //       var image = await uploadFile(i.image);
-        //     } else {
-        //       image = "";
-        //     }
-        //     variants.push({
-        //       colorName: "",
-        //       colorHex: "",
-        //       actualPrice: i.actualPrice,
-        //       discountedPrice: i.discountedPrice,
-        //       quantity: i.quantity,
-        //       sku: `${i.sku}`,
-        //       size: "",
-        //       image: image,
-        //     });
-        //   }
-        //   variant = variants;
-        // }
-        //case 2 no size but color exist
-        // else if (variant[0].colorName != "" && variant[0].size.length === 0) {
-        //   let variants = [];
-        //   for (let i of variant) {
-        //     if (i.image) {
-        //       var image = await uploadFile(i.image);
-        //     } else {
-        //       image = "";
-        //     }
-        //     variants.push({
-        //       colorName: i.colorName,
-        //       colorHex: i.colorHex,
-        //       actualPrice: i.actualPrice,
-        //       discountedPrice: i.discountedPrice,
-        //       quantity: i.quantity,
-        //       sku: `${i.sku}`,
-        //       size: "",
-        //       image: image,
-        //     });
-        //   }
-        //   variant = variants;
-        // }
-        //case 3 no color but size exist
-        // else if (variant[0].colorName === "" && variant[0].size.length != 0) {
-        //   let variants = [];
-        //   for (var item of variant) {
-        //     if (item.image) {
-        //       var image = await uploadFile(item.image);
-        //     } else {
-        //       image = "";
-        //     }
-        //     for (var i of item.size) {
-        //       variants.push({
-        //         colorName: "",
-        //         colorHex: "",
-        //         actualPrice: i.actualPrice,
-        //         discountedPrice: i.discountedPrice,
-        //         quantity: i.quantity,
-        //         sku: `${item.sku}${i.name}`,
-        //         size: i.name,
-        //         image: image,
-        //       });
-        //     }
-        //   }
-        //   variant = variants;
-        // }
-        // case 3 color and size exist
-        // else if (variant[0].colorName != "" && variant[0].size.length != 0) {
-        //   let variants = [];
-        //   for (var item of variant) {
-        //     if (item.image) {
-        //       var image = await uploadFile(item.image);
-        //     } else {
-        //       image = "";
-        //     }
-        //     for (var i of item.size) {
-        //       variants.push({
-        //         colorName: item.colorName,
-        //         colorHex: item.colorHex,
-        //         actualPrice: i.actualPrice,
-        //         discountedPrice: i.discountedPrice,
-        //         quantity: i.quantity,
-        //         sku: `${item.sku}${i.name}`,
-        //         size: i.name,
-        //         image: image,
-        //       });
-        //     }
-        //   }
-        //   variant = variants;
-        // }
-        //        {'variant.sku':{$ne:variant.sku}}
 
-        products = new productsModel({
-            category: mongoose.Types.ObjectId(categoryId),
-            subcategory: mongoose.Types.ObjectId(subcategoryId),
-            name,
-            title,
-            description,
-            longDescription,
-            isDiscount,
-            isDeal,
-            dealExpire,
-            oneTimeDeal,
-            discount,
-            variant,
-            thumbnail,
-            images: image,
-            isActive,
-            vendor,
-            taxHead,
-            taxType,
-            isPercentage,
-            taxAmount,
-            metaData,
-            metaDescription,
-            tags,
-            addons,
-            isFeatured,
-        });
-        const result = await products.save();
-        console.log(result);
-        if (result) {
-            let subject = sendEmailNotificationInfo.product.title;
-            let text =
-                sendEmailNotificationInfo.product.body + `${name}. Now you can buy`;
-            await sendNotificationEmail(subject, text);
-            productMeta = new productMetaModel({
-                product: mongoose.Types.ObjectId(result._id),
-                category: mongoose.Types.ObjectId(result.category),
-                subcategory: mongoose.Types.ObjectId(result.subcategory),
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+            const product = new productsModel({
+                category: mongoose.Types.ObjectId(categoryId),
+                subcategory: mongoose.Types.ObjectId(subcategoryId),
+                name,
+                title,
+                description,
+                longDescription,
+                sizeGuide,
+                sizeFit,
+                deliveryReturns,
+                isDiscount,
+                isDeal,
+                dealExpire,
+                oneTimeDeal,
+                discount,
+                variant,
+                thumbnail,
+                images: uploadedImages,
+                isActive,
+                vendor,
+                taxHead,
+                taxType,
+                isPercentage,
+                taxAmount,
+                metaData,
+                metaDescription,
+                tags,
+                addons,
+                isFeatured,
+            });
+
+            const result = await product.save({ session });
+
+            const meta = new productMetaModel({
+                product: result._id,
+                category: result.category,
+                subcategory: result.subcategory,
                 metaData,
                 metaDescription,
             });
-            await productMeta.save();
+            await meta.save({ session });
+
+            await session.commitTransaction();
+
+            // Fire-and-forget: email failure must never affect the response
+            const subject = sendEmailNotificationInfo.product.title;
+            const text = sendEmailNotificationInfo.product.body + `${name}. Now you can buy`;
+            sendNotificationEmail(subject, text).catch((err) =>
+                console.error("Product notification email failed (non-fatal):", err.message)
+            );
+
+            return result;
+        } catch (err) {
+            await session.abortTransaction();
+            throw err;
+        } finally {
+            session.endSession();
         }
-        return result;
     },
     update: async (
         _id,
@@ -904,6 +803,9 @@ const productsServices = {
         title,
         description,
         longDescription,
+        sizeGuide,
+        sizeFit,
+        deliveryReturns,
         isDiscount,
         isDeal,
         dealExpire,
@@ -936,6 +838,9 @@ const productsServices = {
             title,
             description,
             longDescription,
+            sizeGuide,
+            sizeFit,
+            deliveryReturns,
             isDiscount,
             isDeal,
             dealExpire,
@@ -945,7 +850,7 @@ const productsServices = {
             thumbnail,
             vendor,
             isTaxable,
-            images: oldImages,
+            images: Array.isArray(oldImages) ? oldImages : [],
             isActive,
             taxHead,
             taxType,
@@ -959,10 +864,32 @@ const productsServices = {
 
         }
 
-        if (images.length) {
-            images = await Promise.all(images?.map(uploadFile));
-            updatedData.images = [...images, ...updatedData.images]
-            updatedData.thumbnail = images[0]
+        // images payload can be:
+        // - base64 data URLs (upload needed)
+        // - already-stored paths like "images/xxx.jpeg" (no upload)
+        // - omitted entirely
+        const incomingImages = Array.isArray(images)
+            ? images
+            : images
+                ? [images]
+                : [];
+        const base64Images = incomingImages.filter(
+            (x) => typeof x === "string" && x.startsWith("data:")
+        );
+        const pathImages = incomingImages.filter(
+            (x) => typeof x === "string" && x !== "" && !x.startsWith("data:")
+        );
+
+        if (base64Images.length || pathImages.length) {
+            const uploaded = base64Images.length
+                ? await Promise.all(base64Images.map(uploadFile))
+                : [];
+            const merged = [...uploaded, ...pathImages, ...(updatedData.images || [])].filter(Boolean);
+            // de-dupe while keeping order
+            updatedData.images = [...new Set(merged)];
+            if (!updatedData.thumbnail && updatedData.images.length) {
+                updatedData.thumbnail = updatedData.images[0];
+            }
         }
 
         result = await productsModel.findOneAndUpdate(

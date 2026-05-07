@@ -3,6 +3,8 @@ const expressAsyncHandler = require("express-async-handler");
 const exchangeOrderModel = require("../model/returnOrderModel");
 const returnOrderServices = require("../services/returnOrderServices");
 const orderModel = require("../model/orderModel");
+const orderLogModel = require("../model/orderLogModel");
+const mongoose = require("mongoose");
 const { Stats } = require("fs");
 const returnOrderRouter = express.Router();
 const multer = require("multer");
@@ -33,54 +35,68 @@ returnOrderRouter.post(
         if (!orderId || !exchangeReason || !shipmentType) {
             return res.status(400).send({ msg: "Fields Missing" });
         }
-        console.log(1);
-        const Return = await orderModel.findOne({ _id: orderId, status: { $eq: "Return" } }, { placedOn: 1 });
-        const delivered = await orderModel.findOne(
-            {
-                _id: orderId,
-                status: { $eq: "Delivered" },
-            },
-            { placedOn: 1 }
-        );
-        if (Return) {
-            return res.status(200).send({ msg: "You Have Already Made Request for Return" });
+
+        const raw = String(orderId).trim();
+        let order = null;
+        if (mongoose.Types.ObjectId.isValid(raw)) {
+            order = await orderModel.findById(raw, { _id: 1, orderId: 1, status: 1 }).lean();
         }
-        if (delivered) {
-            let date = new Date(new Date().toLocaleDateString());
-            let placedOn30DaysPlus = new Date(delivered.placedOn);
-            placedOn30DaysPlus = placedOn30DaysPlus.setDate(
-                placedOn30DaysPlus.getDate() + 30
-            );
-            placedOn30DaysPlus = new Date(placedOn30DaysPlus);
-            if (date > placedOn30DaysPlus) {
-                return res
-                    .status(200)
-                    .send({ msg: "Order return request applicable under 30 days" });
-            } else {
-                const result = await returnOrderServices.exchangeOrder(
-                    orderId,
-                    isOrderReturn,
-                    shipmentType,
-                    returnProduct,
-                    exchangeReason,
-                    images
-                );
-                if (result) {
-                    return res.status(200).send({
-                        msg: "Order return request has been submitted",
-                        data: result,
-                    });
-                } else {
-                    return res
-                        .status(200)
-                        .send({ msg: "Order return request not submitted" });
-                }
-            }
+        if (!order) {
+            order = await orderModel.findOne({ orderId: raw }, { _id: 1, orderId: 1, status: 1 }).lean();
+        }
+        if (!order) {
+            return res.status(404).send({ msg: "Order Not Found" });
+        }
+
+        // Prevent duplicate requests: returnOrderModel has unique orderId.
+        const existing = await exchangeOrderModel.findOne({ orderId: order._id }, { _id: 1 }).lean();
+        if (existing) {
+            return res.status(409).send({ msg: "You Have Already Made Request for Return" });
+        }
+
+        // Return/exchange allowed only after Delivered
+        if (order.status !== "Delivered") {
+            return res.status(400).send({ msg: "Order return request is Not Applicable" });
+        }
+
+        // Eligibility window: 30 days from Delivered event (fallback to order updatedAt if needed)
+        const deliveredLog = await orderLogModel
+            .findOne({ orderId: order._id, orderStatus: "Delivered" }, { time: 1 })
+            .sort({ time: -1 })
+            .lean();
+
+        const deliveredAt = deliveredLog && deliveredLog.time ? new Date(deliveredLog.time) : null;
+        if (!deliveredAt || isNaN(deliveredAt.getTime())) {
+            // If we can't determine delivery timestamp, allow request but mark as applicable to Delivered state only.
+            // (We already ensured order.status === "Delivered".)
         } else {
+            const now = new Date();
+            const deadline = new Date(deliveredAt);
+            deadline.setDate(deadline.getDate() + 30);
+            if (now > deadline) {
+                return res.status(400).send({ msg: "Order return request applicable under 30 days" });
+            }
+        }
+
+        if (!Array.isArray(returnProduct) || returnProduct.length === 0) {
+            return res.status(400).send({ msg: "returnProduct is required" });
+        }
+
+        const result = await returnOrderServices.exchangeOrder(
+            order._id,
+            Boolean(isOrderReturn),
+            shipmentType,
+            returnProduct,
+            exchangeReason,
+            images
+        );
+        if (result) {
             return res.status(200).send({
-                msg: "Order return request is Not Applicable",
+                msg: "Order return request has been submitted",
+                data: result,
             });
         }
+        return res.status(400).send({ msg: "Order return request not submitted" });
     })
 );
 returnOrderRouter.get(

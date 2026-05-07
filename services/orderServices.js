@@ -31,41 +31,162 @@ const orderServices = {
         const randomId = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
         return randomId;
     },
+
+    /**
+     * Maps catalog variant (flat or size[]) + cart line to a string `size` and unit price for the order document.
+     */
+    resolveLineSizeAndPrice: (variant, requestedSize, requestedPrice) => {
+        const num = (v) =>
+            typeof v === "number" && !isNaN(v) ? v : parseFloat(v) || 0;
+
+        if (variant.size && Array.isArray(variant.size) && variant.size.length > 0) {
+            const want =
+                requestedSize != null && requestedSize !== ""
+                    ? String(requestedSize).trim().toLowerCase()
+                    : "";
+            let row = null;
+            if (want) {
+                row = variant.size.find(
+                    (s) =>
+                        s &&
+                        String(s.name || "").trim().toLowerCase() === want
+                );
+            }
+            if (!row && want) {
+                row = variant.size.find(
+                    (s) =>
+                        s &&
+                        String(s.name || "").trim().toLowerCase().includes(want)
+                );
+            }
+            if (!row) {
+                row = variant.size[0];
+            }
+            const unit =
+                row.discountedPrice > 0 ? row.discountedPrice : row.actualPrice;
+            const priceOut = num(requestedPrice) > 0 ? num(requestedPrice) : num(unit);
+            return {
+                sizeStr: row.name != null ? String(row.name) : "",
+                unitPrice: priceOut,
+            };
+        }
+
+        const legacySize =
+            typeof variant.size === "string" ? variant.size : "";
+        const sizeStr =
+            requestedSize != null && requestedSize !== ""
+                ? String(requestedSize)
+                : legacySize;
+        const unit =
+            variant.discountedPrice > 0
+                ? variant.discountedPrice
+                : variant.actualPrice;
+        const priceOut = num(requestedPrice) > 0 ? num(requestedPrice) : num(unit);
+        return { sizeStr, unitPrice: priceOut };
+    },
+
     orderTracking: async (orderId) => {
-        let orderTrack = await orderLogModel.aggregate([
-            {
-                $match: {
-                    orderId,
-                },
-            },
+        // Backward compatible tracking:
+        // - UI may pass public order number (order.orderId), trackingId, or Mongo _id
+        // - OrderLog.orderStatus may be stored as either OrderStatus ObjectId OR status string
+        if (!orderId) return null;
+
+        const raw = String(orderId).trim();
+
+        let order = null;
+        if (mongoose.Types.ObjectId.isValid(raw)) {
+            order = await orderModel.findById(raw, { _id: 1, orderId: 1, trackingId: 1, status: 1, placedOn: 1, courierType: 1, isDeliver: 1 }).lean();
+        }
+        if (!order) {
+            order = await orderModel.findOne(
+                { $or: [{ orderId: raw }, { trackingId: raw }] },
+                { _id: 1, orderId: 1, trackingId: 1, status: 1, placedOn: 1, courierType: 1, isDeliver: 1 }
+            ).lean();
+        }
+        if (!order) return null;
+
+        const logs = await orderLogModel.aggregate([
+            { $match: { orderId: new mongoose.Types.ObjectId(order._id) } },
             {
                 $lookup: {
                     from: "orderstatuses",
-                    localField: "orderStatus",
-                    foreignField: "_id",
-                    as: "status",
+                    let: { statusVal: "$orderStatus" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $or: [
+                                        // When orderStatus is stored as a string name (e.g. "Delivered")
+                                        { $eq: ["$orderStatusName", "$$statusVal"] },
+                                        // When orderStatus is stored as an ObjectId
+                                        {
+                                            $and: [
+                                                { $eq: [{ $type: "$$statusVal" }, "objectId"] },
+                                                { $eq: ["$_id", "$$statusVal"] },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            },
+                        },
+                        { $project: { _id: 1, orderStatusName: 1 } },
+                    ],
+                    as: "statusDoc",
                 },
             },
             {
-                $unwind: {
-                    path: "$status",
+                $addFields: {
+                    statusResolved: {
+                        $ifNull: [
+                            { $arrayElemAt: ["$statusDoc.orderStatusName", 0] },
+                            "$orderStatus",
+                        ],
+                    },
                 },
             },
             {
                 $project: {
+                    _id: 0,
                     orderId: 1,
-                    time: {
-                        $dateToString: {
-                            format: "%Y-%m-%d %H:%M:%S",
-                            date: "$time",
-                        },
-                    },
-                    status: "$status.orderStatusName",
+                    time: 1,
+                    status: "$statusResolved",
+                    deliveryPartner: 1,
+                    message: 1,
                 },
             },
+            { $sort: { time: 1 } },
         ]);
 
-        return orderTrack;
+        // If there are no logs yet, at least return current order status as a single entry.
+        const timeline =
+            logs && logs.length
+                ? logs.map((l) => ({
+                    time: l.time,
+                    status: l.status,
+                    deliveryPartner: l.deliveryPartner || null,
+                    message: l.message || "",
+                }))
+                : [
+                    {
+                        time: order.placedOn,
+                        status: order.status || "Pending",
+                        deliveryPartner: order.courierType || null,
+                        message: "",
+                    },
+                ];
+
+        return {
+            order: {
+                _id: order._id,
+                orderId: order.orderId,
+                trackingId: order.trackingId,
+                status: order.status,
+                placedOn: order.placedOn,
+                courierType: order.courierType,
+                isDeliver: order.isDeliver,
+            },
+            timeline,
+        };
     },
     orderDispatch: async (
         order,
@@ -1148,6 +1269,20 @@ const orderServices = {
         shippingAddress
     ) => {
         try {
+            if (
+                customer == null ||
+                customer === "" ||
+                !mongoose.Types.ObjectId.isValid(String(customer))
+            ) {
+                const result = {
+                    message: {
+                        msg: "Invalid customer reference",
+                    },
+                };
+                throw result;
+            }
+            customer = new mongoose.Types.ObjectId(customer);
+
             var productArr = [];
             var currentDate = new Date(new Date().toLocaleString());
             var productLength = product.length;
@@ -1155,8 +1290,10 @@ const orderServices = {
             for (let i = 0; i < productLength; i++) {
                 const productId = product[i].productId;
                 const quantity = product[i].quantity;
-                const price = product[i].price;
+                let price = parseFloat(product[i].price);
+                if (isNaN(price)) price = 0;
                 const sku = product[i].sku;
+                const requestedSize = product[i].size;
 
                 const Product = await productModel.findOne(
                     {
@@ -1175,16 +1312,24 @@ const orderServices = {
                 }
 
                 const variant = Product.variant[0];
-                console.log("variant", variant)
-                let variantSize = variant?.size !== undefined ? variant?.size : "";
-                let variantColour = variant?.colorName !== undefined ? variant?.colorName : "";
+                console.log("variant", variant);
+                let variantColour =
+                    variant?.colorName !== undefined ? variant?.colorName : "";
+
+                // Order schema stores `size` as a string. Catalog may use variant.size[] (per-size pricing).
+                const { sizeStr, unitPrice } = orderServices.resolveLineSizeAndPrice(
+                    variant,
+                    requestedSize,
+                    price
+                );
+                price = unitPrice;
 
                 const productInfo = {
                     productId: productId,
                     quantity: quantity,
                     price: price,
                     sku: sku,
-                    size: variantSize,
+                    size: sizeStr,
                     colour: variantColour,
                 };
                 console.log("productInfo", productInfo);
@@ -1192,7 +1337,11 @@ const orderServices = {
                 productArr.push(productInfo);
             }
 
-
+            if (!productArr.length) {
+                throw new Error(
+                    "No matching products: check productId and sku exist on each variant in the catalog."
+                );
+            }
 
             // //check customer already buy deal product or not
             // var productArr = [];
@@ -1263,7 +1412,7 @@ const orderServices = {
             //   }
             // }
             var order = new orderModel({
-                customer: mongoose.Types.ObjectId(customer),
+                customer: customer,
                 product: productArr,
                 paymentMode,
                 payment,
@@ -1291,7 +1440,31 @@ const orderServices = {
             const CustomerName = await CustomerModel.findOne({ _id: result.customer });
 
             let Name = "";
-            if (CustomerName) {
+            if (CustomerName && billingAddress) {
+                const customerUpdate = {};
+                if (billingAddress.email != null)
+                    customerUpdate.email = billingAddress.email;
+                if (billingAddress.contact != null)
+                    customerUpdate.contact = billingAddress.contact;
+                if (billingAddress.addressLine != null)
+                    customerUpdate.address = billingAddress.addressLine;
+                if (billingAddress.province != null)
+                    customerUpdate.province = billingAddress.province;
+                if (billingAddress.zipCode != null)
+                    customerUpdate.zipCode = billingAddress.zipCode;
+
+                if (Object.keys(customerUpdate).length > 0) {
+                    await customerModel.findOneAndUpdate(
+                        { _id: customerId },
+                        customerUpdate,
+                        { new: true }
+                    );
+                }
+
+
+
+
+
                 Name = `${CustomerName.firstName} ${CustomerName.lastName}`;
             }
             if (result) {
@@ -1381,6 +1554,7 @@ const orderServices = {
             return Result;
         } catch (e) {
             console.log(e);
+            throw e;
         }
     },
     customerClearHistory: async (customer) => {
@@ -1627,3 +1801,4 @@ const orderServices = {
 };
 
 module.exports = orderServices;
+
