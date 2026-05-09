@@ -2,6 +2,8 @@ const productsModel = require("../model/productsModel");
 const productMetaModel = require("../model/productMetaModel");
 const projection = require("../config/mongoProjection");
 const reviewModel = require("../model/reviewModel");
+const favouriteModel = require("../model/favouritesModel");
+const addToCartModel = require("../model/addToCartModel");
 const mongoose = require("mongoose");
 const uploadFile = require("../utils/uploadFile");
 const ProductQuantityLogModel = require("../model/productQuntityLogModel");
@@ -914,10 +916,24 @@ const productsServices = {
         return result;
     },
     delete: async (_id) => {
-        var _id = mongoose.Types.ObjectId(_id);
-        const result = await productsModel.findOneAndUpdate({ _id: _id }, { isActive: false }, { upsert: true });
+        if (!mongoose.Types.ObjectId.isValid(_id)) return null;
+        const productId = new mongoose.Types.ObjectId(_id);
 
-        return result;
+        const deletedProduct = await productsModel.findByIdAndDelete(productId);
+        if (!deletedProduct) return null;
+
+        await Promise.allSettled([
+            productMetaModel.deleteOne({ product: productId }),
+            reviewModel.deleteMany({ productId }),
+            favouriteModel.deleteMany({ product: productId }),
+            dealBuyerLogModel.deleteMany({ product: productId }),
+            addToCartModel.updateMany(
+                { "products.productId": productId },
+                { $pull: { products: { productId } } }
+            ),
+        ]);
+
+        return deletedProduct;
     },
     getMultipleProducts: async (ids) => {
         const list = await productsModel.find(
