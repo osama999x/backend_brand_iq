@@ -870,11 +870,15 @@ const productsServices = {
         // - base64 data URLs (upload needed)
         // - already-stored paths like "images/xxx.jpeg" (no upload)
         // - omitted entirely
-        const incomingImages = Array.isArray(images)
-            ? images
-            : images
-                ? [images]
+        const newImagesList = Array.isArray(newImages)
+            ? newImages
+            : newImages
+                ? [newImages]
                 : [];
+        const incomingImages = [
+            ...(Array.isArray(images) ? images : images ? [images] : []),
+            ...newImagesList,
+        ];
         const base64Images = incomingImages.filter(
             (x) => typeof x === "string" && x.startsWith("data:")
         );
@@ -884,20 +888,35 @@ const productsServices = {
 
         if (base64Images.length || pathImages.length) {
             const uploaded = base64Images.length
-                ? await Promise.all(base64Images.map(uploadFile))
+                ? (await Promise.all(base64Images.map(uploadFile))).filter(Boolean)
                 : [];
             const merged = [...uploaded, ...pathImages, ...(updatedData.images || [])].filter(Boolean);
-            // de-dupe while keeping order
             updatedData.images = [...new Set(merged)];
-            if (!updatedData.thumbnail && updatedData.images.length) {
-                updatedData.thumbnail = updatedData.images[0];
+        }
+
+        if (
+            typeof updatedData.thumbnail === "string" &&
+            updatedData.thumbnail.startsWith("data:")
+        ) {
+            const uploadedThumb = await uploadFile(updatedData.thumbnail);
+            if (uploadedThumb) {
+                updatedData.thumbnail = uploadedThumb;
             }
         }
 
-        result = await productsModel.findOneAndUpdate(
+        if (
+            (!updatedData.thumbnail ||
+                (typeof updatedData.thumbnail === "string" &&
+                    updatedData.thumbnail.startsWith("data:"))) &&
+            updatedData.images.length
+        ) {
+            updatedData.thumbnail = updatedData.images[0];
+        }
+
+        const result = await productsModel.findOneAndUpdate(
             { _id },
             updatedData,
-            { upsert: true }
+            { new: true, upsert: true }
         );
 
 
