@@ -10,7 +10,7 @@ const sendEmail = async (email) => {
     var transporter = nodemailer.createTransport({
         host: process.env.MAILHOST,
         port: process.env.MAILPORT,
-        secure: false,
+        secure: true,
         auth: {
             user: process.env.MAIL,
             pass: process.env.MAILPASS,
@@ -19,12 +19,12 @@ const sendEmail = async (email) => {
 
 
     var mailOptions = {
-        from: `Shopeez ${process.env.MAIL}`,
+        from: `Brand IQ ${process.env.MAIL}`,
         to: email,
-        subject: "Shopeez OTP",
+        subject: "Brand IQ OTP",
         text: `Dear User,
 
-        Thank you for registering with Shopeez.
+        Thank you for registering with Brand IQ.
 
         Your OTP for Email verification is as below.
         To ensure the security of your Account, we have generated a One-Time Password (OTP) for your authentication.
@@ -34,7 +34,7 @@ const sendEmail = async (email) => {
 
         If you did not request this code, please ignore this email.
 
-        For any assistance or concerns, please contact our support team at Shopeez. `
+        For any assistance or concerns, please contact our support team at Brand IQ. `
     };
     let user = await saveOtp.otpById(email, Otp);
     //If email is sent
