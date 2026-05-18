@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 fs = require("fs");
 util = require("util");
 writeFile = util.promisify(fs.writeFile);
@@ -24,7 +25,7 @@ const uploadFile = async (file) => {
         const { fileType, fileData } = parsed;
         const [fileMainType, fileSubType] = fileType.split("/");
         const fileBuffer = Buffer.from(fileData, "base64");
-        const fileName = Date.now() + "." + fileSubType;
+        const fileName = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${fileSubType}`;
         let filePath = null;
         let filePathPrefix = null;
         if (fileMainType === "image") {

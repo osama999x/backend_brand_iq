@@ -890,7 +890,12 @@ const productsServices = {
             const uploaded = base64Images.length
                 ? (await Promise.all(base64Images.map(uploadFile))).filter(Boolean)
                 : [];
-            const merged = [...uploaded, ...pathImages, ...(updatedData.images || [])].filter(Boolean);
+            // Keep existing paths first, then append new paths from the request
+            const merged = [
+                ...(updatedData.images || []),
+                ...pathImages,
+                ...uploaded,
+            ].filter(Boolean);
             updatedData.images = [...new Set(merged)];
         }
 
