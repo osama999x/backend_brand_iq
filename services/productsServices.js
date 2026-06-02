@@ -832,6 +832,23 @@ const productsServices = {
         isFeatured
     ) => {
 
+        // NOTE:
+        // The product schema does NOT have a top-level `isDiscount` field.
+        // Discount flag lives on `variant[].isDiscount` (default false).
+        // So we normalize the incoming flag and mirror it to each variant row.
+        const normalizedIsDiscount =
+            isDiscount === true || isDiscount === "true" || isDiscount === 1 || isDiscount === "1";
+        const normalizedVariant = Array.isArray(variant)
+            ? variant.map((v) => ({
+                ...v,
+                // If caller explicitly sets isDiscount=true/false, honor it.
+                // Otherwise, fall back to whether discountedPrice looks set.
+                isDiscount:
+                    typeof v?.isDiscount === "boolean"
+                        ? v.isDiscount
+                        : normalizedIsDiscount || Number(v?.discountedPrice || 0) > 0,
+            }))
+            : variant;
 
         let updatedData = {
             category: mongoose.Types.ObjectId(category),
@@ -843,12 +860,14 @@ const productsServices = {
             sizeGuide,
             sizeFit,
             deliveryReturns,
-            isDiscount,
+            // Keep for backward compatibility with older code paths,
+            // but the DB schema doesn't store top-level `isDiscount`.
+            isDiscount: normalizedIsDiscount,
             isDeal,
             dealExpire,
             oneTimeDeal,
             discount,
-            variant,
+            variant: normalizedVariant,
             thumbnail,
             vendor,
             isTaxable,
