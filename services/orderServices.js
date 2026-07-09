@@ -236,7 +236,8 @@ const orderServices = {
                     "Delivered",
                     trackingId,
                     courierType,
-                    true
+                    true,
+                    false
                 ),
             ]);
             const getPointPerOrder = await pointManageModel.findOne({
@@ -350,59 +351,86 @@ const orderServices = {
         //   }
         // }
     },
-    orderCancel: async (order) => {
-        console.log(order);
-        totalBill = order.totalBill;
-        var customerId = order.customer._id;
-        product = order.product;
-        redeemValue = order.redeemValue;
-        couponCode = order.couponCode;
-        let orderId = order._id;
-        let secondOrderId = order.orderId;
-        let orderCourierType = order.courierType;
-        let parcelId = order.trackingId;
+    orderCancel: async (order, options = {}) => {
+        const customerId = order.customer?._id ?? order.customer;
+        const product = order.product;
+        const redeemValue = order.redeemValue || 0;
+        const couponCode = order.couponCode;
+        const orderId = order._id;
+        const secondOrderId = order.orderId;
+        const orderCourierType = order.courierType;
+        const parcelId = order.trackingId;
+
         try {
-            let canceled;
-            canceled =
-                orderCourierType === "POSTEX"
-                    ? await courierServices.cancelOrder(parcelId)
-                    : await courierServices.swyftCancelOrder(parcelId);
-            if (canceled.statusCode === "200" || canceled.status === 200) {
-                const user = await customerModel.findById(
-                    { _id: customerId },
-                    { email: 1 }
-                );
-                email = user.email;
-                let subject = sendEmailNotificationInfo.orderResponse.title;
-                let text = `your order ${secondOrderId} has been Canceled due to some problem. Please try later!`;
-                await Promise.all([
-                    orderServices.updateOrderStatus(
-                        orderId,
-                        "Canceled",
-                        null,
-                        null,
-                        false
-                    ),
-                    //order logs
-                    orderLogService(orderCourierType, "Canceled", orderId),
-                    //send mail to user
-                    sendNotificationEmail(subject, text, email),
-                    //update product inventory
-                    productLogServices.productLog(product, "Canceled", customerId),
-                    productsServices.updateLogDealProduct(product, customerId),
-                ]);
-                if (couponCode !== "00") {
-                    await coupanPolicyServices.refundCoupon(customerId, couponCode);
+            const skipCourier =
+                options.skipCourier === true || order.courierBooked !== true;
+
+            if (!skipCourier && parcelId && orderCourierType) {
+                const canceled =
+                    orderCourierType === "POSTEX"
+                        ? await courierServices.cancelOrder(parcelId)
+                        : await courierServices.swyftCancelOrder(parcelId);
+                if (
+                    !(
+                        canceled.statusCode === "200" ||
+                        canceled.status === 200
+                    )
+                ) {
+                    return false;
                 }
-                //update cutomer point that was consume in cancel or rejected order
-                if (redeemValue > 0) {
-                    await customerModel.findOneAndUpdate(
-                        { _id: customerId },
-                        { $inc: { points: +redeemValue } }
+            }
+
+            const user = await customerModel.findById(customerId, { email: 1 });
+            const email = user?.email;
+            const subject = sendEmailNotificationInfo.orderResponse.title;
+            const text = `your order ${secondOrderId} has been Canceled due to some problem. Please try later!`;
+
+            await Promise.all([
+                orderServices.updateOrderStatus(
+                    orderId,
+                    "Canceled",
+                    order.trackingId,
+                    order.courierType,
+                    false
+                ),
+                orderLogService(orderCourierType || "SYSTEM", "Canceled", orderId),
+                email
+                    ? sendNotificationEmail(subject, text, email)
+                    : Promise.resolve(),
+                productLogServices.productLog(product, "Canceled", customerId),
+                productsServices.updateLogDealProduct(customerId, product),
+            ]);
+
+            if (couponCode && couponCode !== "00") {
+                await coupanPolicyServices.refundCoupon(customerId, couponCode);
+            }
+
+            if (redeemValue > 0) {
+                await customerModel.findOneAndUpdate(
+                    { _id: customerId },
+                    { $inc: { points: +redeemValue } }
+                );
+            }
+
+            if (order.points > 0) {
+                await pointModel.deleteMany({
+                    customer: customerId,
+                    orderId: secondOrderId,
+                });
+                const updatedCustomer = await customerModel.findOneAndUpdate(
+                    { _id: customerId },
+                    { $inc: { points: -order.points } },
+                    { new: true }
+                );
+                if (updatedCustomer) {
+                    await pointServices.assaignPointMembership(
+                        customerId,
+                        updatedCustomer.points
                     );
                 }
-                return true;
             }
+
+            return true;
         } catch (error) {
             console.log(error);
             throw new Error(error);
@@ -413,17 +441,26 @@ const orderServices = {
         status,
         trackingId,
         courierType,
-        isDeliver
+        isDeliver,
+        courierBooked
     ) => {
+        const update = {
+            status,
+            webStatus: status,
+            isDeliver,
+        };
+        if (trackingId !== undefined) {
+            update.trackingId = trackingId;
+        }
+        if (courierType !== undefined) {
+            update.courierType = courierType;
+        }
+        if (courierBooked !== undefined) {
+            update.courierBooked = courierBooked;
+        }
         const result = await orderModel.findOneAndUpdate(
             { _id: orderId },
-            {
-                status,
-                webStatus: "Delivered",
-                trackingId,
-                courierType,
-                isDeliver,
-            },
+            update,
             { new: true }
         );
         return result;
@@ -931,13 +968,30 @@ const orderServices = {
         console.log(order)
         return order;
     },
-    customerOrder: async (_id) => {
-        const order = await orderModel
-            .findById({ _id }, projection.projection)
-            .populate({
-                path: "customer",
-            });
+    resolveOrder: async (orderId) => {
+        if (!orderId) return null;
+
+        const raw = String(orderId).trim();
+        let order = null;
+
+        if (mongoose.Types.ObjectId.isValid(raw)) {
+            order = await orderModel
+                .findById(raw, projection.projection)
+                .populate({ path: "customer" });
+        }
+        if (!order) {
+            order = await orderModel
+                .findOne(
+                    { $or: [{ orderId: raw }, { trackingId: raw }] },
+                    projection.projection
+                )
+                .populate({ path: "customer" });
+        }
+
         return order;
+    },
+    customerOrder: async (orderId) => {
+        return orderServices.resolveOrder(orderId);
     },
     checkDealProduct: async (customer, product) => {
         const currentDate = new Date(new Date().toLocaleDateString());

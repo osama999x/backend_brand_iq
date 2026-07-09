@@ -7,6 +7,10 @@ const promotionCampaignModel = require("../model/promotionCampaignModel");
 const promotionModel = require("../model/promotionModel");
 const { attachSkuToSizeRows } = require("../utils/variantSkuEnrichment");
 const homeHeroServices = require("./homeHeroServices");
+const {
+    GENDER_VALUES,
+    buildCategoryGenderQuery,
+} = require("../utils/categoryGender");
 
 // ─── Shared Helpers ──────────────────────────────────────────────────────────
 
@@ -105,7 +109,7 @@ const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const buildSidebarFilterOptions = async (gender) => {
     const categoryQuery = { isActive: true };
-    if (gender) categoryQuery.gender = gender;
+    if (gender) Object.assign(categoryQuery, buildCategoryGenderQuery(gender));
 
     const categories = await categoryModel
         .find(categoryQuery, { _id: 1, name: 1, icon: 1, gender: 1 })
@@ -129,7 +133,7 @@ const buildSidebarFilterOptions = async (gender) => {
     return {
         categories,
         subcategories,
-        genders: ["men", "women", "juniors", "unisex"],
+        genders: GENDER_VALUES,
         priceRanges,
     };
 };
@@ -141,7 +145,7 @@ const homeServices = {
     get: async (gender, filters = {}) => {
         const currentDate = new Date();
         const categoryMatch = { isActive: true, isFeatured: true };
-        if (gender) categoryMatch.gender = gender;
+        if (gender) Object.assign(categoryMatch, buildCategoryGenderQuery(gender));
 
         // When gender is provided, pre-fetch matching category IDs to filter featuredProducts
         let featuredProductQuery = {
@@ -150,7 +154,9 @@ const homeServices = {
             $or: [{ isFeatured: true }, { isDiscount: true }],
         };
         if (gender) {
-            const genderCatIds = await categoryModel.find({ gender, isActive: true }, { _id: 1 }).lean();
+            const genderCatIds = await categoryModel
+                .find({ isActive: true, ...buildCategoryGenderQuery(gender) }, { _id: 1 })
+                .lean();
             featuredProductQuery.category = { $in: genderCatIds.map((c) => c._id) };
         }
         featuredProductQuery = applyFilters(featuredProductQuery, filters);
@@ -617,7 +623,7 @@ const homeServices = {
 
     getAllCategories: async (gender) => {
         const match = { isActive: true };
-        if (gender) match.gender = gender;
+        if (gender) Object.assign(match, buildCategoryGenderQuery(gender));
         return categoryModel.aggregate([
             { $match: match },
             {

@@ -6,8 +6,7 @@ const categoryServices = require("../services/categoryServices");
 const productsServices = require("../services/productsServices");
 const subCategoryServices = require("../services/subCategoryServices");
 const categoryRouter = express.Router();
-
-const GENDER_VALUES = ["men", "women", "juniors", "unisex"];
+const { GENDER_VALUES } = require("../utils/categoryGender");
 
 categoryRouter.get(
     "/all",

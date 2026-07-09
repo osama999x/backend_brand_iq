@@ -727,6 +727,21 @@ const productsServices = {
         addons,
         isFeatured
     ) => {
+        // Normalize discount flags on variants.
+        // If product-level isDiscount is true OR a variant has discountedPrice > 0, mark that variant as discounted.
+        const normalizedVariants = Array.isArray(variant)
+            ? variant.map((v) => {
+                const discountedPrice = Number(v?.discountedPrice || 0);
+                const hasDiscount =
+                    Boolean(isDiscount) ||
+                    (Number.isFinite(discountedPrice) && discountedPrice > 0);
+                return {
+                    ...v,
+                    isDiscount: Boolean(v?.isDiscount) || hasDiscount,
+                };
+            })
+            : variant;
+
         // Upload images before the transaction — file I/O is not transactional
         let uploadedImages = [];
         let thumbnail = "";
@@ -753,7 +768,7 @@ const productsServices = {
                 dealExpire,
                 oneTimeDeal,
                 discount,
-                variant,
+                variant: normalizedVariants,
                 thumbnail,
                 images: uploadedImages,
                 isActive,
@@ -832,22 +847,17 @@ const productsServices = {
         isFeatured
     ) => {
 
-        // NOTE:
-        // The product schema does NOT have a top-level `isDiscount` field.
-        // Discount flag lives on `variant[].isDiscount` (default false).
-        // So we normalize the incoming flag and mirror it to each variant row.
-        const normalizedIsDiscount =
-            isDiscount === true || isDiscount === "true" || isDiscount === 1 || isDiscount === "1";
-        const normalizedVariant = Array.isArray(variant)
-            ? variant.map((v) => ({
-                ...v,
-                // If caller explicitly sets isDiscount=true/false, honor it.
-                // Otherwise, fall back to whether discountedPrice looks set.
-                isDiscount:
-                    typeof v?.isDiscount === "boolean"
-                        ? v.isDiscount
-                        : normalizedIsDiscount || Number(v?.discountedPrice || 0) > 0,
-            }))
+        const normalizedVariants = Array.isArray(variant)
+            ? variant.map((v) => {
+                const discountedPrice = Number(v?.discountedPrice || 0);
+                const hasDiscount =
+                    Boolean(isDiscount) ||
+                    (Number.isFinite(discountedPrice) && discountedPrice > 0);
+                return {
+                    ...v,
+                    isDiscount: Boolean(v?.isDiscount) || hasDiscount,
+                };
+            })
             : variant;
 
         let updatedData = {
@@ -860,14 +870,12 @@ const productsServices = {
             sizeGuide,
             sizeFit,
             deliveryReturns,
-            // Keep for backward compatibility with older code paths,
-            // but the DB schema doesn't store top-level `isDiscount`.
-            isDiscount: normalizedIsDiscount,
+            isDiscount,
             isDeal,
             dealExpire,
             oneTimeDeal,
             discount,
-            variant: normalizedVariant,
+            variant: normalizedVariants,
             thumbnail,
             vendor,
             isTaxable,
@@ -1011,21 +1019,18 @@ const productsServices = {
         }
     },
     updateLogDealProduct: async (customerId, product) => {
-        const updatedDeals = [];
+        const results = [];
 
         for (const productItem of product) {
             const productId = productItem.productId;
-
-            // Use updateOne to update a single document
-            const deal = await dealBuyerLogModel.updateOne(
-                { customer: customerId, product: productId },
-                // Your update operation goes here
-            );
-
-            updatedDeals.push(deal);
+            const result = await dealBuyerLogModel.deleteOne({
+                customer: customerId,
+                product: productId,
+            });
+            results.push(result);
         }
 
-        return updatedDeals;
+        return results;
     }
     ,
     test: async () => {

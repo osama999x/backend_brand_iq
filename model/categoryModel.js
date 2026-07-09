@@ -29,7 +29,7 @@ const schema = new Schema(
         },
         gender: {
             type: String,
-            enum: ["men", "women", "juniors", "unisex"],
+            enum: ["men", "women", "juniors", "unisex", "cosmetics"],
             default: "unisex",
         },
     },

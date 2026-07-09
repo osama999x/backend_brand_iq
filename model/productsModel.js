@@ -90,6 +90,10 @@ const schema = new Schema(
             default: false,
             required: true,
         },
+        isDiscount: {
+            type: Boolean,
+            default: false,
+        },
         dealExpire: {
             type: Date,
         },

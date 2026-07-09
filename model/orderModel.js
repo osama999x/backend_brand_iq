@@ -124,6 +124,10 @@ const schema = new Schema(
         isDeliver: {
             type: Boolean,
             default: false,
+        },
+        courierBooked: {
+            type: Boolean,
+            default: false,
         }
         , Reigon: {
             type: Schema.Types.ObjectId,

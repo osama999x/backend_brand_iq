@@ -85,17 +85,8 @@ orderRouter.post(
         //     msg: "Fields Missing",
         //   });
         // }
-        const order = await orderServices.customerOrder(orderId);
-        // if (
-        //   orderStatusType === "Canceled" &&
-        //   (!order || (order.status !== "Delivered" && order.status !== "Canceled"))
-        // ) {
-        //   return res.status(400).send({
-        //     msg: "You can't proceed this order with given instruction",
-        //   });
-        // }
+        const order = await orderServices.resolveOrder(orderId);
         if (
-            //orderStatusType === "Delivered" &&
             !order ||
             (order.status !== "Pending" && order.status !== "Canceled")
         ) {
@@ -123,35 +114,59 @@ orderRouter.post(
         }
     })
 );
-orderRouter.get(
-    "/orderCancel",
-    expressAsyncHandler(async (req, res) => {
-        const { orderId } = req.query;
-        if (!orderId) {
-            return res.status(400).send({
-                msg: "Fields Missing",
-            });
+const cancelOrderHandler = expressAsyncHandler(async (req, res) => {
+    const rawOrderId = req.params.orderId || req.body.orderId || req.query.orderId;
+    if (!rawOrderId || !String(rawOrderId).trim()) {
+        return res.status(400).send({
+            msg: "orderId is required",
+        });
+    }
+
+    try {
+        const order = await orderServices.resolveOrder(String(rawOrderId).trim());
+        if (!order) {
+            return res.status(404).send({ msg: "Order not found" });
         }
-        const order = await orderServices.customerOrder(orderId);
-        if (
-            !order ||
-            (order.status !== "Delivered" && order.status !== "Canceled") ||
-            !order.isDeliver !== false
-        ) {
+
+        if (order.status === "Canceled") {
+            return res.status(400).send({ msg: "Order already canceled" });
+        }
+
+        const canCancelPending =
+            order.status === "Pending" && order.isDeliver === false;
+        const canCancelAfterDispatch =
+            order.status === "Delivered" && order.isDeliver === true;
+
+        if (!canCancelPending && !canCancelAfterDispatch) {
             return res.status(400).send({
                 msg: "You can't proceed this order with given instruction",
             });
         }
-        const result = await orderServices.orderCancel(order);
+
+        const result = await orderServices.orderCancel(order, {
+            skipCourier: canCancelPending,
+        });
+
         if (result) {
             return res.status(200).send({
                 msg: "Orders canceled Successfully ",
             });
-        } else {
-            return res.status(400).send({ msg: "Failed!" });
         }
-    })
-);
+        return res.status(400).send({ msg: "Failed!" });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).send({
+            msg: e.message || "Failed to cancel order",
+        });
+    }
+});
+
+// Recommended endpoint: state-changing order lifecycle action.
+orderRouter.post("/:orderId/cancel", cancelOrderHandler);
+
+// Backward-compatible aliases (can be removed after frontend migration).
+orderRouter.post("/orderCancel", cancelOrderHandler);
+orderRouter.get("/orderCancel", cancelOrderHandler);
 orderRouter.get(
     "/all",
     expressAsyncHandler(async (req, res) => {

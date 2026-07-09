@@ -1,6 +1,7 @@
 const express = require("express");
 const expressAsyncHandler = require("express-async-handler");
 const homeServices = require("../services/homeServices");
+const { GENDER_VALUES } = require("../utils/categoryGender");
 
 const homeRouter = express.Router();
 
@@ -14,7 +15,6 @@ const parsePagination = (query) => {
 
 const SORT_OPTIONS = ["newest", "price_asc", "price_desc", "popular"];
 const BANNER_TYPES = ["newArrival", "isSale", "discount", "underPrice"];
-const GENDER_VALUES = ["men", "women", "juniors", "unisex"];
 
 /**
  * Parses optional filter query params shared by product listing routes:

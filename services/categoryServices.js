@@ -7,11 +7,12 @@ const mongoose = require("mongoose");
 const subcategoryModel = require("../model/subCategoryModel");
 const { ObjectId } = require('mongoose').Types;
 const promotionModel = require("../model/promotionModel")
+const { inferCategoryGender, buildCategoryGenderQuery } = require("../utils/categoryGender");
 
 
 const categoryServices = {
     get: async (gender) => {
-        const filter = gender ? { gender } : {};
+        const filter = gender ? buildCategoryGenderQuery(gender) : {};
         const list = await categoryModel
             .find(filter, projection.projection)
             .sort({ name: 1 });
@@ -658,7 +659,7 @@ const categoryServices = {
             thumbnail,
             description,
             isFeatured,
-            gender,
+            gender: inferCategoryGender(name, gender),
         });
         const result = await category.save();
         return result;
@@ -684,7 +685,11 @@ const categoryServices = {
                 thumbnail: uploadedThumbnail,
                 isActive,
             };
-            if (gender !== undefined) updatePayload.gender = gender;
+            if (gender !== undefined) {
+                updatePayload.gender = inferCategoryGender(name, gender);
+            } else if (name) {
+                updatePayload.gender = inferCategoryGender(name);
+            }
 
             const result = await categoryModel.findOneAndUpdate(
                 { _id: objectId },
